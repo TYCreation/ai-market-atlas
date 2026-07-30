@@ -163,8 +163,8 @@
             "zh": "下一讀 · 上修廣度"
           },
           {
-            "en": "Next read · 50-day participation",
-            "zh": "下一讀 · 50 日線參與率"
+            "en": "Next read · fifty-day participation",
+            "zh": "下一讀 · 五十日線參與率"
           },
           {
             "en": "Next read · cash conversion",
@@ -447,8 +447,8 @@
           "zh": "AI 的電力堆疊，離不開 SiC。"
         },
         "summary": {
-          "en": "A weekly view of silicon carbide across AI chip packaging, 800V data-center power, EV inverters, wafer scaling, and the supply-chain contest shaping the next infrastructure cycle.",
-          "zh": "每週追蹤碳化矽在 AI 晶片封裝、800V 資料中心電力、電動車逆變器、晶圓擴徑與供應鏈競局中的最新變化。"
+          "en": "A weekly view of silicon carbide across AI chip packaging, eight-hundred-volt data-center power, EV inverters, wafer scaling, and the supply-chain contest shaping the next infrastructure cycle.",
+          "zh": "每週追蹤碳化矽在 AI 晶片封裝、八百伏特資料中心電力、電動車逆變器、晶圓擴徑與供應鏈競局中的最新變化。"
         },
         "signal": {
           "en": "AI packaging crossover",
@@ -460,19 +460,19 @@
             "zh": "SiC 正從電動車紅海，移向 AI 基礎設施。"
           },
           "body": {
-            "en": "Twelve-inch SiC is no longer only an EV cost story. Its thermal conductivity, high-voltage performance, and compatibility with 800V data-center architectures create a second demand curve in AI packaging and power delivery. The opportunity depends on wafer quality, customer qualification, and how quickly advanced packaging moves from evaluation to production.",
-            "zh": "12 吋 SiC 已不只是電動車的降本題材。它的高導熱、高電壓性能，以及與 800V 資料中心架構的相容性，正於 AI 封裝與電力傳輸形成第二條需求曲線。機會能否落地，取決於晶圓品質、客戶認證，以及先進封裝從驗證走向量產的速度。"
+            "en": "Twelve-inch SiC is no longer only an EV cost story. Its thermal conductivity, high-voltage performance, and compatibility with eight-hundred-volt data-center architectures create a second demand curve in AI packaging and power delivery. The opportunity depends on wafer quality, customer qualification, and how quickly advanced packaging moves from evaluation to production.",
+            "zh": "十二吋 SiC 已不只是電動車的降本題材。它的高導熱、高電壓性能，以及與八百伏特資料中心架構的相容性，正於 AI 封裝與電力傳輸形成第二條需求曲線。機會能否落地，取決於晶圓品質、客戶認證，以及先進封裝從驗證走向量產的速度。"
           },
           "tags": {
             "en": [
               "300mm wafers",
               "AI packaging",
-              "800V power"
+              "eight-hundred-volt power"
             ],
             "zh": [
               "300mm 晶圓",
               "AI 封裝",
-              "800V 電力"
+              "八百伏特電力"
             ]
           }
         },

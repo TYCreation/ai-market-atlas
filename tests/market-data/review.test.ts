@@ -11,6 +11,7 @@ import {
   hashCandidate,
   reviewCandidate,
 } from "../../market-data/review.ts";
+import type { SourceFetcher } from "../../market-data/source-health.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 import { runMarketReview } from "../../scripts/market-review.ts";
 
@@ -39,7 +40,7 @@ function withoutNumericNarrative(snapshot: MarketSnapshot): MarketSnapshot {
 function reviewSnapshot(
   snapshot: unknown,
   prior: MarketSnapshot = previousSnapshot,
-  fetcher = reachableFetcher,
+  fetcher: SourceFetcher = reachableFetcher,
 ) {
   return reviewCandidate(snapshot, prior, fetcher, publicResolver);
 }
@@ -237,6 +238,29 @@ test("accepts numeric claims matched by the page citation set", async () => {
   }];
 
   assert.equal((await reviewSnapshot(snapshot)).decision, "auto_publish");
+});
+
+test("the deterministic candidate fixture is explicitly narrative-safe", async () => {
+  const snapshot = structuredClone(valid);
+  snapshot.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  snapshot.metrics["stocks.wolf.weekReturn"].display = { en: "-19.9%", zh: "-19.9%" };
+
+  const review = await reviewSnapshot(snapshot);
+
+  assert.equal(review.checks.find((check) => check.id === "narrative-evidence")?.status, "pass");
+});
+
+test("rejects a source publication year that does not match a cited metric", async () => {
+  const snapshot = reviewableCandidate();
+  snapshot.pages["/compute"].report.title = {
+    en: "Compute outlook 2026",
+    zh: "算力展望 2026",
+  };
+
+  const review = await reviewSnapshot(snapshot);
+
+  assert.equal(review.decision, "reject");
+  assert.equal(review.checks.find((check) => check.id === "narrative-evidence")?.status, "fail");
 });
 
 test("keeps review output inside the review directory for unsafe run IDs", async () => {

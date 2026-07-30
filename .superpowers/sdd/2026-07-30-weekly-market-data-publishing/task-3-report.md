@@ -330,3 +330,143 @@ Output: exit 0 with no type errors.
 
 - The original seeded report prose contains uncited numeric architecture labels such as `800V`; under the corrected full-field rule, such prose must cite a matching normalized metric/source number or the automated review correctly rejects it.
 - The pre-existing repo-wide lint/typecheck concerns recorded above remain unchanged; focused lint and the isolated Task 3 typecheck pass.
+
+## Review fix round 2
+
+### Status
+
+Both remaining review findings were reproduced with focused failing tests, fixed, and verified.
+
+### Exact changes
+
+1. **Metric-only narrative evidence**
+   - Numeric narrative claims now match only a cited metric's `numericValue` or locale-specific `display` tokens.
+   - Numeric tokens in source publisher, title, URL, publication timestamp, retrieval timestamp, and scope can no longer satisfy a narrative claim.
+   - Added a regression proving a report claim of `2026` rejects even when a cited source was published in 2026, while genuine metric-matched claims continue to pass.
+   - Reworded only the deterministic test fixture's uncited numeric architecture prose (for example, `50-day` and `800V`) so it is explicitly review-safe without changing application/UI content.
+
+2. **Connection-level SSRF pinning**
+   - DNS validation now returns the exact validated public address set as a connection pin.
+   - Added a production Node HTTP/HTTPS connector whose custom lookup callback returns only a validated pinned address, closing the DNS preflight/fetch rebinding window.
+   - The original hostname remains in the request and `Host` header, and HTTPS preserves the original hostname as SNI.
+   - Every manually followed redirect is independently resolved, validated, and pinned before its connection.
+   - Injected fetchers remain source-compatible through an optional third pin argument, preserving deterministic tests.
+   - The CLI production path now uses the pinned connector; it no longer hands guarded URLs back to the global fetch implementation.
+
+### RED evidence
+
+Command:
+
+```text
+node --experimental-strip-types --test --test-name-pattern="publication year|pins the validated|pins and revalidates|production transport" tests/market-data/review.test.ts tests/market-data/source-health.test.ts
+```
+
+Output: exit 1. TAP summary:
+
+```text
+1..4
+# tests 4
+# pass 0
+# fail 4
+```
+
+The failures reproduced:
+
+- a narrative claim of `2026` incorrectly matching source publication metadata;
+- no validated pin being supplied to the transport;
+- redirect targets not receiving independently validated pins;
+- no production connector factory capable of enforcing the pin at connection time.
+
+### GREEN verification
+
+Command:
+
+```text
+node --experimental-strip-types --test tests/market-data/quality-gate.test.ts tests/market-data/review.test.ts tests/market-data/source-health.test.ts
+```
+
+Exact final TAP summary:
+
+```text
+1..49
+# tests 49
+# suites 0
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 207.431
+```
+
+Command:
+
+```text
+npm run test:market
+```
+
+Exact final TAP summary:
+
+```text
+1..67
+# tests 67
+# suites 0
+# pass 67
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 232.873625
+```
+
+Command:
+
+```text
+npm test
+```
+
+Output: exit 0. The five-stage production build completed and rendered HTML passed:
+
+```text
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 224.314208
+```
+
+Command:
+
+```text
+npx eslint market-data/review.ts market-data/source-health.ts scripts/market-review.ts tests/market-data/review.test.ts tests/market-data/source-health.test.ts
+```
+
+Output: exit 0 with no warnings or errors.
+
+Command:
+
+```text
+npx tsc --noEmit --pretty false --allowImportingTsExtensions --moduleResolution bundler --module esnext --target es2022 --lib es2022,dom,dom.iterable --types node --resolveJsonModule --esModuleInterop market-data/review.ts market-data/source-health.ts scripts/market-review.ts tests/market-data/review.test.ts tests/market-data/source-health.test.ts
+```
+
+Output: exit 0 with no type errors.
+
+### Self-review
+
+- Verified source metadata can no longer legitimize report numbers; supported values still match metric numeric/display evidence in the correct locale.
+- Verified the raw deterministic candidate fixture passes the narrative-evidence check, avoiding a hidden sanitizer-only dependency.
+- Verified a public-first/private-second resolver is called only once and the production transport connects to the first validated public result.
+- Verified redirect hostnames receive distinct pins and are revalidated before each connection.
+- Verified the production connector preserves URL hostname, `Host`, and HTTPS SNI while its lookup callback exposes only the pinned IP.
+- Verified tests can still inject ordinary two-argument fetchers and deterministic resolvers.
+- Verified no plan/spec or application/UI file was changed.
+
+### Concerns
+
+- The connector deliberately chooses the first validated address for a request. It does not fail over to later public answers if that address is unavailable; failure is reported through the existing source-health policy.
+- Repo-wide `npx tsc --noEmit` still reports the previously documented Cloudflare ambient-type and `.ts` import-extension configuration errors. The focused Task 3 typecheck, market suite, production build, and rendered-route suite pass.
+- The earlier concern that source metadata numbers could satisfy narrative evidence is superseded by this round's metric-only matching.

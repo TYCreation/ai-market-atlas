@@ -7,7 +7,12 @@ import {
   reviewCandidate,
   type AutomatedReview,
 } from "../market-data/review.ts";
-import type { HostnameResolver, SourceFetcher } from "../market-data/source-health.ts";
+import {
+  createPinnedSourceFetcher,
+  resolveHostname,
+  type HostnameResolver,
+  type SourceFetcher,
+} from "../market-data/source-health.ts";
 import type { MarketSnapshot } from "../market-data/types.ts";
 
 type MarketReviewOptions = {
@@ -75,7 +80,8 @@ async function main(args: string[]): Promise<void> {
     candidatePath: resolve(option(args, "--candidate", "candidate/market.json")),
     previousPath: resolve(option(args, "--previous", "data/market/current.json")),
     reviewsDirectory: resolve(option(args, "--reviews-directory", "data/market/reviews")),
-    fetcher: globalThis.fetch,
+    fetcher: createPinnedSourceFetcher(),
+    resolver: resolveHostname,
     stdout: console.log,
   });
   process.exitCode = result.exitCode;

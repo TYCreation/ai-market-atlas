@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import candidate from "../fixtures/market/valid-candidate.json" with { type: "json" };
-import { checkSourceHealth } from "../../market-data/source-health.ts";
+import {
+  checkSourceHealth,
+  createPinnedSourceFetcher,
+  type NodeRequester,
+} from "../../market-data/source-health.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
 const valid = candidate as unknown as MarketSnapshot;
@@ -181,4 +185,117 @@ test("blocks redirect cycles without requesting any URL twice", async () => {
   ));
   assert.equal(requested.filter((url) => url === first).length, 1);
   assert.equal(requested.filter((url) => url === second).length, 1);
+});
+
+test("pins the validated public answer without a second resolver lookup", async () => {
+  const snapshot = structuredClone(valid);
+  const sourceUrl = "https://rebind.attacker.com/report";
+  snapshot.sources["stanford-economy"].url = sourceUrl;
+  let targetLookups = 0;
+  const pins: Array<{ hostname: string; addresses: readonly string[] } | undefined> = [];
+
+  const issues = await checkSourceHealth(
+    snapshot,
+    async (_input, _init, pin) => {
+      pins.push(pin);
+      return new Response("", { status: 200 });
+    },
+    async (hostname) => {
+      if (hostname !== "rebind.attacker.com") return publicResolver();
+      targetLookups += 1;
+      return targetLookups === 1 ? ["93.184.216.34"] : ["10.0.0.9"];
+    },
+  );
+
+  assert.equal(issues.some((issue) => issue.sourceIds.includes("stanford-economy")), false);
+  assert.equal(targetLookups, 1);
+  assert.deepEqual(
+    pins.find((pin) => pin?.hostname === "rebind.attacker.com")?.addresses,
+    ["93.184.216.34"],
+  );
+});
+
+test("pins and revalidates each public redirect hostname", async () => {
+  const snapshot = structuredClone(valid);
+  const initial = "https://pin-one.example.net/report";
+  const redirected = "https://pin-two.example.net/report";
+  snapshot.sources["stanford-economy"].url = initial;
+  const pins = new Map<string, readonly string[]>();
+
+  const issues = await checkSourceHealth(
+    snapshot,
+    async (input, _init, pin) => {
+      pins.set(String(input), pin?.addresses ?? []);
+      return String(input) === initial
+        ? new Response("", { status: 302, headers: { location: redirected } })
+        : new Response("", { status: 200 });
+    },
+    async (hostname) =>
+      hostname === "pin-one.example.net"
+        ? ["93.184.216.34"]
+        : hostname === "pin-two.example.net"
+          ? ["1.1.1.1"]
+          : publicResolver(),
+  );
+
+  assert.equal(issues.some((issue) => issue.sourceIds.includes("stanford-economy")), false);
+  assert.deepEqual(pins.get(initial), ["93.184.216.34"]);
+  assert.deepEqual(pins.get(redirected), ["1.1.1.1"]);
+});
+
+test("the production transport uses its supplied pin while preserving Host and SNI", async () => {
+  let connectionAddress: string | undefined;
+  let connectionFamily: number | undefined;
+  let requestOptions: Parameters<NodeRequester>[1] | undefined;
+  const requester = ((
+    _url: URL,
+    options: Parameters<NodeRequester>[1],
+    onResponse: Parameters<NodeRequester>[2],
+  ) => {
+    requestOptions = options;
+    return ({
+      once() {
+        return this;
+      },
+      end() {
+        const pinnedLookup = options.lookup as (
+          hostname: string,
+          options: unknown,
+          callback: (
+            error: NodeJS.ErrnoException | null,
+            address: string,
+            family: number,
+          ) => void,
+        ) => void;
+        pinnedLookup(
+          "rebind.attacker.com",
+          { family: 4 },
+          (_error, address, family) => {
+            connectionAddress = address;
+            connectionFamily = family;
+          },
+        );
+        onResponse({
+          statusCode: 200,
+          headers: {},
+          resume() {},
+        } as Parameters<NodeRequester>[2] extends (response: infer T) => void ? T : never);
+      },
+      destroy() {},
+    }) as unknown as ReturnType<NodeRequester>;
+  }) as NodeRequester;
+  const transport = createPinnedSourceFetcher(requester);
+
+  const response = await transport(
+    "https://rebind.attacker.com/report",
+    { redirect: "manual" },
+    { hostname: "rebind.attacker.com", addresses: ["93.184.216.34"] },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(connectionAddress, "93.184.216.34");
+  assert.equal(connectionFamily, 4);
+  assert.equal(requestOptions?.hostname, "rebind.attacker.com");
+  assert.equal(requestOptions?.servername, "rebind.attacker.com");
+  assert.equal((requestOptions?.headers as Record<string, string>).host, "rebind.attacker.com");
 });

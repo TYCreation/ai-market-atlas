@@ -1,4 +1,11 @@
 import { lookup } from "node:dns/promises";
+import {
+  request as httpRequest,
+  type ClientRequest,
+  type IncomingMessage,
+  type RequestOptions,
+} from "node:http";
+import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
 import type { GateIssue } from "./quality-gate.ts";
 import { sortGateIssues } from "./quality-gate.ts";
@@ -7,9 +14,21 @@ import type { MarketSnapshot, MetricRecord, SourceRecord } from "./types.ts";
 export type SourceFetcher = (
   input: string | URL | Request,
   init?: RequestInit,
+  pin?: PinnedTarget,
 ) => Promise<Response>;
 
 export type HostnameResolver = (hostname: string) => Promise<readonly string[]>;
+
+export type PinnedTarget = {
+  hostname: string;
+  addresses: readonly string[];
+};
+
+export type NodeRequester = (
+  url: URL,
+  options: RequestOptions & { servername?: string },
+  onResponse: (response: IncomingMessage) => void,
+) => ClientRequest;
 
 type FetchResult = {
   reachable: boolean;
@@ -157,21 +176,23 @@ function isLocalHostname(hostname: string): boolean {
   );
 }
 
-async function isPublicTarget(
+async function publicTarget(
   url: URL,
   resolver: HostnameResolver,
   resolutionCache: Map<string, Promise<readonly string[]>>,
-): Promise<boolean> {
+): Promise<PinnedTarget | undefined> {
   if (
     (url.protocol !== "http:" && url.protocol !== "https:") ||
     url.username.length > 0 ||
     url.password.length > 0
   ) {
-    return false;
+    return undefined;
   }
   const hostname = normalizedHostname(url);
-  if (!hostname || isLocalHostname(hostname)) return false;
-  if (isIP(hostname) !== 0) return isPublicAddress(hostname);
+  if (!hostname || isLocalHostname(hostname)) return undefined;
+  if (isIP(hostname) !== 0) {
+    return isPublicAddress(hostname) ? { hostname, addresses: [hostname] } : undefined;
+  }
   let addresses = resolutionCache.get(hostname);
   if (!addresses) {
     addresses = resolver(hostname);
@@ -179,10 +200,76 @@ async function isPublicTarget(
   }
   try {
     const resolved = await addresses;
-    return resolved.length > 0 && resolved.every(isPublicAddress);
+    return resolved.length > 0 && resolved.every(isPublicAddress)
+      ? { hostname, addresses: [...resolved] }
+      : undefined;
   } catch {
-    return false;
+    return undefined;
   }
+}
+
+const defaultNodeRequester: NodeRequester = (url, options, onResponse) => (
+  url.protocol === "https:"
+    ? httpsRequest(url, options, onResponse)
+    : httpRequest(url, options, onResponse)
+);
+
+export function createPinnedSourceFetcher(
+  requester: NodeRequester = defaultNodeRequester,
+): SourceFetcher {
+  return async (input, init = {}, pin) => {
+    const url = new URL(input instanceof Request ? input.url : input.toString());
+    const hostname = normalizedHostname(url);
+    if (
+      !pin ||
+      pin.hostname !== hostname ||
+      pin.addresses.length === 0 ||
+      !pin.addresses.every(isPublicAddress)
+    ) {
+      throw new Error("source request requires validated public address pins");
+    }
+    const address = pin.addresses[0];
+    const family = isIP(address);
+    const headers = Object.fromEntries(new Headers(init.headers).entries());
+    headers.host = url.host;
+    const requestOptions: RequestOptions & { servername?: string } = {
+      method: init.method ?? "GET",
+      hostname,
+      family,
+      headers,
+      signal: init.signal ?? undefined,
+      lookup: ((
+        _requestedHostname: string,
+        _options: unknown,
+        callback: (error: NodeJS.ErrnoException | null, address: string, family: number) => void,
+      ) => callback(null, address, family)) as NonNullable<RequestOptions["lookup"]>,
+      ...(url.protocol === "https:" ? { servername: hostname } : {}),
+    };
+
+    return new Promise<Response>((resolve, reject) => {
+      const request = requester(url, requestOptions, (response) => {
+        response.resume();
+        const responseHeaders = new Headers();
+        for (const [name, value] of Object.entries(response.headers)) {
+          if (Array.isArray(value)) {
+            for (const item of value) responseHeaders.append(name, item);
+          } else if (value !== undefined) {
+            responseHeaders.set(name, value);
+          }
+        }
+        try {
+          resolve(new Response(null, {
+            status: response.statusCode ?? 500,
+            headers: responseHeaders,
+          }));
+        } catch (error) {
+          reject(error);
+        }
+      });
+      request.once("error", reject);
+      request.end();
+    });
+  };
 }
 
 function sourceRequester(fetcher: SourceFetcher, resolver: HostnameResolver) {
@@ -199,12 +286,13 @@ function sourceRequester(fetcher: SourceFetcher, resolver: HostnameResolver) {
       } catch {
         return { failed: true };
       }
-      if (!await isPublicTarget(url, resolver, resolutionCache)) return { failed: true };
+      const pin = await publicTarget(url, resolver, resolutionCache);
+      if (!pin) return { failed: true };
       try {
         const response = await fetcher(url.href, {
           redirect: "manual",
           signal: AbortSignal.timeout(10_000),
-        });
+        }, pin);
         return {
           failed: false,
           status: response.status,

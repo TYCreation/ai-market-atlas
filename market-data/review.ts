@@ -134,19 +134,6 @@ function citedNumbers(snapshot: MarketSnapshot, metricIds: string[], locale: "en
     const metric = snapshot.metrics[metricId];
     if (!metric) continue;
     values.push(metric.numericValue, ...numericClaims(metric.display[locale]));
-    for (const sourceId of metric.sourceIds) {
-      const source = snapshot.sources[sourceId];
-      if (!source) continue;
-      const sourceText = [
-        source.publisher,
-        source.title,
-        source.url ?? "",
-        source.publishedAt,
-        source.retrievedAt,
-        source.scope[locale],
-      ].join(" ");
-      values.push(...numericClaims(sourceText));
-    }
   }
   return values;
 }
