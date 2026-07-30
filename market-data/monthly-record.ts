@@ -1,4 +1,5 @@
-import type { AutomatedReview } from "./review.ts";
+import { assertArchivedAutoPublishReview, type AutomatedReview } from "./review.ts";
+import { assertSourceRecord } from "./schema.ts";
 import type {
   BilingualText,
   MetricRecord,
@@ -45,10 +46,6 @@ function isBilingualText(value: unknown): value is BilingualText {
   return isRecord(value) && typeof value.en === "string" && typeof value.zh === "string";
 }
 
-function isSourceRecord(value: unknown): value is SourceRecord {
-  return isRecord(value) && typeof value.id === "string" && typeof value.publisher === "string" && typeof value.title === "string" && isBilingualText(value.scope);
-}
-
 function isMetricRecord(value: unknown): value is MetricRecord {
   return isRecord(value) && typeof value.id === "string" && isBilingualText(value.display);
 }
@@ -71,15 +68,6 @@ function isLegacyProvenance(value: unknown): value is LegacyMonthlyArchiveProven
     typeof value.recordedAt === "string";
 }
 
-function isAutomatedReview(value: unknown): value is AutomatedReview {
-  return isRecord(value) &&
-    value.schemaVersion === 1 &&
-    typeof value.runId === "string" &&
-    value.decision === "auto_publish" &&
-    Array.isArray(value.checks) &&
-    Array.isArray(value.issues);
-}
-
 export function assertMonthlyArchiveRecord(value: unknown): asserts value is MonthlyArchiveRecord {
   if (!isRecord(value) ||
     typeof value.month !== "string" ||
@@ -98,9 +86,19 @@ export function assertMonthlyArchiveRecord(value: unknown): asserts value is Mon
     !Array.isArray(value.sourceIds) ||
     !value.sourceIds.every((sourceId) => typeof sourceId === "string") ||
     !Array.isArray(value.sources) ||
-    !value.sources.every(isSourceRecord) ||
-    (!isAutomatedReview(value.review) && !isLegacyProvenance(value.review))) {
+    !isRecord(value.review)) {
     throw new Error("monthly archive record is invalid");
+  }
+
+  try {
+    for (const [index, source] of value.sources.entries()) {
+      assertSourceRecord(source, `monthly archive sources[${index}]`);
+    }
+    if (!isLegacyProvenance(value.review)) {
+      assertArchivedAutoPublishReview(value.review, value.runId);
+    }
+  } catch (error) {
+    throw new Error(`monthly archive record is invalid: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   const sourceIds = value.sources.map((source) => source.id).sort();

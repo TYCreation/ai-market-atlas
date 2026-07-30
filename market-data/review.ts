@@ -62,6 +62,30 @@ export function isSafeMarketRunId(runId: string, cadence?: MarketSnapshot["caden
 
 type ReviewCheck = AutomatedReview["checks"][number];
 type CheckId = ReviewCheck["id"];
+const REQUIRED_CHECK_IDS: CheckId[] = [
+  "schema",
+  "completed-session",
+  "required-data",
+  "source-health",
+  "source-conflict",
+  "anomaly",
+  "bilingual",
+  "narrative-evidence",
+  "no-change-integrity",
+];
+const SHA256 = /^[a-f0-9]{64}$/;
+const GATE_ISSUE_CODES = new Set<GateIssue["code"]>([
+  "SOURCE_CONFLICT",
+  "UNEXPLAINED_PRICE_MOVE",
+  "FINANCIAL_DELTA",
+  "FORECAST_DELTA",
+  "MISSING_REQUIRED",
+  "LOW_CONFIDENCE",
+  "THESIS_REVERSAL",
+  "BILINGUAL_MISMATCH",
+  "MATERIAL_CHANGE_MISMATCH",
+  "SOURCE_UNREACHABLE",
+]);
 
 const CHECK_CODES: Record<Exclude<CheckId, "schema" | "completed-session" | "narrative-evidence">, GateIssue["code"][]> = {
   "required-data": ["MISSING_REQUIRED", "LOW_CONFIDENCE"],
@@ -318,6 +342,87 @@ export async function reviewCandidate(
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const expected = value.includes(".") ? value : value.replace("Z", ".000Z");
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value) &&
+    !Number.isNaN(Date.parse(value)) &&
+    new Date(value).toISOString() === expected;
+}
+
+function isIssue(value: unknown): value is GateIssue {
+  return isRecord(value) &&
+    typeof value.code === "string" && GATE_ISSUE_CODES.has(value.code as GateIssue["code"]) &&
+    value.severity === "warn" &&
+    typeof value.message === "string" &&
+    value.message.length > 0 &&
+    Array.isArray(value.sourceIds) &&
+    value.sourceIds.every((sourceId) => typeof sourceId === "string") &&
+    (value.metricId === undefined || typeof value.metricId === "string") &&
+    (value.page === undefined || ["/", "/stocks", "/compute", "/energy", "/models", "/sic"].includes(value.page as string)) &&
+    (value.oldValue === undefined || typeof value.oldValue === "number" && Number.isFinite(value.oldValue)) &&
+    (value.newValue === undefined || typeof value.newValue === "number" && Number.isFinite(value.newValue));
+}
+
+/** Validates review invariants that remain verifiable after a snapshot is distilled into an archive. */
+export function assertArchivedAutoPublishReview(
+  value: unknown,
+  expectedRunId: string,
+): asserts value is AutomatedReview {
+  if (!isRecord(value) ||
+    value.schemaVersion !== 1 ||
+    value.runId !== expectedRunId ||
+    !isSafeMarketRunId(value.runId) ||
+    typeof value.candidateSha256 !== "string" ||
+    !SHA256.test(value.candidateSha256) ||
+    value.reviewId !== `${value.runId}:${value.candidateSha256}` ||
+    !isIsoTimestamp(value.reviewedAt) ||
+    value.decision !== "auto_publish" ||
+    !Number.isSafeInteger(value.reviewedMetricCount) ||
+    value.reviewedMetricCount <= 0 ||
+    !Number.isSafeInteger(value.reviewedSourceCount) ||
+    value.reviewedSourceCount <= 0 ||
+    !Array.isArray(value.checks) ||
+    !Array.isArray(value.issues) ||
+    !value.issues.every(isIssue)) {
+    throw new Error("archived automated review is invalid");
+  }
+
+  const checkIds = new Set<string>();
+  const checkIssueCodes = new Set<string>();
+  for (const check of value.checks) {
+    if (!isRecord(check) ||
+      typeof check.id !== "string" ||
+      !REQUIRED_CHECK_IDS.includes(check.id as CheckId) ||
+      checkIds.has(check.id) ||
+      (check.status !== "pass" && check.status !== "warn") ||
+      !Array.isArray(check.issueCodes) ||
+      !check.issueCodes.every((code) => typeof code === "string") ||
+      JSON.stringify([...check.issueCodes].sort()) !== JSON.stringify(check.issueCodes) ||
+      new Set(check.issueCodes).size !== check.issueCodes.length ||
+      (check.status === "pass" && check.issueCodes.length !== 0) ||
+      (check.status === "warn" && check.issueCodes.length === 0)) {
+      throw new Error("archived automated review checks are invalid");
+    }
+    checkIds.add(check.id);
+    for (const code of check.issueCodes) checkIssueCodes.add(code);
+  }
+  if (checkIds.size !== REQUIRED_CHECK_IDS.length || REQUIRED_CHECK_IDS.some((id) => !checkIds.has(id))) {
+    throw new Error("archived automated review checks are incomplete");
+  }
+  const issueCodes = new Set(value.issues.map((issue) => issue.code));
+  if (issueCodes.size !== checkIssueCodes.size || [...issueCodes].some((code) => !checkIssueCodes.has(code))) {
+    throw new Error("archived automated review issue checks are inconsistent");
+  }
+  if (JSON.stringify(sortGateIssues(value.issues)) !== JSON.stringify(value.issues)) {
+    throw new Error("archived automated review issues are not deterministic");
+  }
+}
+
 export function assertAutoPublishReview(review: AutomatedReview, snapshot: unknown): void {
   if (review.schemaVersion !== 1) throw new Error("automated review schema is unsupported");
   if (review.candidateSha256 !== hashCandidate(snapshot)) {
@@ -339,20 +444,9 @@ export function assertAutoPublishReview(review: AutomatedReview, snapshot: unkno
   if (review.decision !== "auto_publish") {
     throw new Error(`automated review decision is ${review.decision}`);
   }
-  const expectedChecks: CheckId[] = [
-    "schema",
-    "completed-session",
-    "required-data",
-    "source-health",
-    "source-conflict",
-    "anomaly",
-    "bilingual",
-    "narrative-evidence",
-    "no-change-integrity",
-  ];
   if (
-    review.checks.length !== expectedChecks.length ||
-    expectedChecks.some((id) => !review.checks.some((check) => check.id === id))
+    review.checks.length !== REQUIRED_CHECK_IDS.length ||
+    REQUIRED_CHECK_IDS.some((id) => !review.checks.some((check) => check.id === id))
   ) {
     throw new Error("automated review checks are incomplete");
   }

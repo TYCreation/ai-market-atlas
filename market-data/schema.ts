@@ -84,21 +84,30 @@ function assertSafePublicUrl(value: unknown, path: string): void {
   }
 }
 
-function assertSource(key: string, value: unknown, ids: Set<string>): SourceRecord {
-  const source = requireRecord(value, `sources.${key}`);
-  const id = requireString(source.id, `sources.${key}.id`);
-  if (id !== key || ids.has(id)) fail(`duplicate source ID ${id}`);
-  ids.add(id);
-  if (!SOURCE_KINDS.has(requireString(source.kind, `sources.${key}.kind`))) {
-    fail(`sources.${key}.kind is unsupported`);
+export function assertSourceRecord(
+  value: unknown,
+  path = "source",
+  expectedId?: string,
+): asserts value is SourceRecord {
+  const source = requireRecord(value, path);
+  const id = requireString(source.id, `${path}.id`);
+  if (expectedId !== undefined && id !== expectedId) fail(`${path}.id must equal ${expectedId}`);
+  if (!SOURCE_KINDS.has(requireString(source.kind, `${path}.kind`))) {
+    fail(`${path}.kind is unsupported`);
   }
-  requireString(source.publisher, `sources.${key}.publisher`);
-  requireString(source.title, `sources.${key}.title`);
-  if (source.url !== undefined) assertSafePublicUrl(source.url, `sources.${key}.url`);
-  requireIsoTimestamp(source.publishedAt, `sources.${key}.publishedAt`);
-  requireIsoTimestamp(source.retrievedAt, `sources.${key}.retrievedAt`);
-  requireBilingual(source.scope, `sources.${key}.scope`);
-  return source as SourceRecord;
+  requireString(source.publisher, `${path}.publisher`);
+  requireString(source.title, `${path}.title`);
+  if (source.url !== undefined) assertSafePublicUrl(source.url, `${path}.url`);
+  requireIsoTimestamp(source.publishedAt, `${path}.publishedAt`);
+  requireIsoTimestamp(source.retrievedAt, `${path}.retrievedAt`);
+  requireBilingual(source.scope, `${path}.scope`);
+}
+
+function assertSource(key: string, value: unknown, ids: Set<string>): SourceRecord {
+  assertSourceRecord(value, `sources.${key}`, key);
+  if (ids.has(value.id)) fail(`duplicate source ID ${value.id}`);
+  ids.add(value.id);
+  return value;
 }
 
 function assertMetric(

@@ -46,3 +46,54 @@ test("parses a real month-end promotion with immutable sources and review proven
   assert.equal(entry.review.kind, "automated-review");
   assert.equal(entry.review.review.runId, "2026-07-25-month-end");
 });
+
+test("rejects incomplete sources and forged automated review provenance", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  candidate.runId = "2026-07-25-month-end";
+  candidate.cadence = "month-end";
+  await writeFile(paths.candidatePath, JSON.stringify(candidate));
+  paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
+  await promoteCandidate(paths);
+
+  const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8"));
+  const record = index["2026-07"];
+  const invalidRecords = [
+    (() => {
+      const invalid = structuredClone(record);
+      delete invalid.sources[0].publishedAt;
+      return invalid;
+    })(),
+    (() => {
+      const invalid = structuredClone(record);
+      invalid.sources[0].url = "https://example.com/?api_key=leaked";
+      return invalid;
+    })(),
+    (() => {
+      const invalid = structuredClone(record);
+      invalid.review.runId = "2026-08-01-saturday";
+      return invalid;
+    })(),
+    (() => {
+      const invalid = structuredClone(record);
+      invalid.review.checks = [];
+      return invalid;
+    })(),
+    (() => {
+      const invalid = structuredClone(record);
+      invalid.review.checks[0].status = "fail";
+      return invalid;
+    })(),
+    (() => {
+      const invalid = structuredClone(record);
+      invalid.review.candidateSha256 = "not-a-sha256";
+      invalid.review.reviewId = `${invalid.review.runId}:not-a-sha256`;
+      return invalid;
+    })(),
+  ];
+
+  for (const invalid of invalidRecords) {
+    assert.throws(() => parseMonthlyArchiveIndex({ "2026-07": invalid }), /monthly archive record is invalid/);
+  }
+});

@@ -70,3 +70,33 @@ Complete. The archive reader and writer now share `MonthlyArchiveRecord` from `m
 ### Concerns
 
 - The existing repository-wide `npx tsc --noEmit` configuration/type failures remain outside the requested verification surface; required market tests, rendered tests/build, and lint pass.
+
+---
+
+## Review Fix Round 2
+
+### Status
+
+Complete. Archived source records now use the same complete validation exported by `market-data/schema.ts`. Archived automated reviews use the self-contained integrity validator exported by `market-data/review.ts`; it verifies only facts retained by the archive, without claiming to recompute the original candidate hash.
+
+### RED / GREEN evidence
+
+- RED: `npm run test:market -- --test-name-pattern='forged automated review|month-end promotion'` failed with `Missing expected exception.` because the parser accepted incomplete sources and forged review data.
+- GREEN: the same focused market command passed after validation hardening. Negative cases cover missing source timestamps, a secret-bearing URL, a wrong review run ID, empty checks, failed checks, and malformed hash/review IDs. Normal auto-publish and typed legacy records still parse.
+
+### Verification outputs
+
+- Focused monthly/storage tests — exit 0; `tests 91`, `pass 91`, `fail 0`.
+- `npm run test:market` — exit 0; `tests 91`, `pass 91`, `fail 0`.
+- `npm test` — exit 0; build completed and rendered-route tests reported `tests 8`, `pass 8`, `fail 0`.
+- `npm run lint` — exit 0; no lint findings.
+
+### Self-review
+
+- `assertSourceRecord` is exported from the snapshot schema and checks source ID, allowed kind, publisher/title, safe optional public URL, valid timestamps, and bilingual scope. The archive reader therefore cannot supply missing source fields to `ArchiveReport`.
+- `assertArchivedAutoPublishReview` requires a safe matching run ID, SHA-256-shaped candidate hash, canonical review ID, auto-publish decision, valid timestamp, positive safe counts, the full required check set with only pass/warn statuses, consistent issue codes, sorted deterministic warning-only issues, and no block severity.
+- The archive validator does not recompute a candidate hash from a distilled record; it validates all review invariants that are still self-contained.
+
+### Concerns
+
+- The existing repository-wide `npx tsc --noEmit` configuration/type failures remain outside the requested verification surface; all required checks pass.
