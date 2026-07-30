@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import {
+  assertMarketBriefMatchesSnapshot,
   buildMarketBrief,
   generateMarketBriefAssets,
   isMarketBriefPayload,
@@ -137,6 +138,80 @@ test("generates one bilingual brief from the promoted snapshot", async () => {
   assert.match(brief.notInvestmentAdvice.en, /not investment advice/i);
 });
 
+test("semantic validation rejects synchronized editorial and feature tampering", async (t) => {
+  const saturday = await currentSnapshot();
+  const wednesday = makeWednesday(saturday);
+  wednesday.pages["/sic"].changed = true;
+  wednesday.pages["/sic"].changeReasons = ["rounded-value-change"];
+  const canonical = buildMarketBrief(wednesday);
+  const cases: Array<
+    [string, (brief: MarketBriefPayload) => void]
+  > = [
+    [
+      "title",
+      (brief) => {
+        brief.labels.title = { en: "Forged title", zh: "偽造標題" };
+      },
+    ],
+    [
+      "summary",
+      (brief) => {
+        brief.labels.summary = { en: "Forged summary", zh: "偽造摘要" };
+      },
+    ],
+    [
+      "methodology",
+      (brief) => {
+        brief.methodology = { en: "Forged method", zh: "偽造方法" };
+      },
+    ],
+    [
+      "disclaimer",
+      (brief) => {
+        brief.notInvestmentAdvice = {
+          en: "Forged disclaimer",
+          zh: "偽造免責聲明",
+        };
+      },
+    ],
+    [
+      "tag",
+      (brief) => {
+        brief.labels.tags.en[0] = "Forged tag";
+        brief.labels.tags.zh[0] = "偽造標籤";
+      },
+    ],
+    [
+      "featured subset omitting the changed page",
+      (brief) => {
+        brief.featuredSignalIds = [
+          "pulse.infrastructure_spend",
+          "stocks.basket_30d",
+          "compute.accelerator_pool",
+          "energy.announced_power_gw",
+          "models.production_agents",
+        ];
+      },
+    ],
+  ];
+
+  for (const [name, mutate] of cases) {
+    await t.test(name, () => {
+      const tampered = structuredClone(canonical);
+      mutate(tampered);
+      assert.throws(
+        () =>
+          assertMarketBriefMatchesSnapshot(
+            tampered,
+            wednesday,
+            "tampered brief",
+          ),
+        /semantics.*snapshot/i,
+      );
+    });
+  }
+});
+
 test("keeps canonical and public HyperFrames assets synchronized", async () => {
   const snapshot = await currentSnapshot();
   const paths = await makeAssetWorkspace(snapshot);
@@ -172,16 +247,11 @@ test("checked-in canonical and public assets are byte-identical with the same em
   assert.deepEqual(embeddedBrief(canonicalHtml), JSON.parse(canonicalData));
 });
 
-test("reuses prior content but stamps the current Wednesday envelope", async () => {
+test("unchanged Wednesday preserves canonical prior editorial content while stamping its envelope", async () => {
   const saturday = await currentSnapshot();
   const { paths, prior } = await generatePriorBrief(saturday);
 
   const wednesday = makeWednesday(saturday);
-  wednesday.pages["/"].report.title = {
-    en: "Current title that must not replace reused content",
-    zh: "不應取代重用內容的本期標題",
-  };
-  for (const page of Object.values(wednesday.pages)) page.changed = true;
   await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
   await generateMarketBriefAssets(paths);
@@ -191,11 +261,34 @@ test("reuses prior content but stamps the current Wednesday envelope", async () 
   assert.equal(brief.cadence, "wednesday");
   assert.equal(brief.dataCutoff, wednesday.dataCutoff);
   assert.deepEqual(brief.sourceIds, prior.sourceIds);
+  assert.deepEqual(brief.signals, prior.signals);
   assert.deepEqual(brief.labels, prior.labels);
+  assert.deepEqual(brief.methodology, prior.methodology);
+  assert.deepEqual(brief.notInvestmentAdvice, prior.notInvestmentAdvice);
   assert.ok(brief.featuredSignalIds.length >= 3);
   assert.ok(brief.featuredSignalIds.length <= 5);
   assert.deepEqual(brief.nextWeekObservations, []);
   assert.deepEqual(embeddedBrief(await readFile(paths.canonicalHtml, "utf8")), brief);
+});
+
+test("unchanged Wednesday does not trust synchronized prior editorial tampering", async () => {
+  const saturday = await currentSnapshot();
+  const { paths, prior } = await generatePriorBrief(saturday);
+  prior.labels.title = { en: "Forged prior title", zh: "偽造前期標題" };
+  prior.labels.summary = { en: "Forged prior summary", zh: "偽造前期摘要" };
+  await writeFile(paths.canonicalData, `${JSON.stringify(prior)}\n`);
+
+  const wednesday = makeWednesday(saturday);
+  await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
+
+  await generateMarketBriefAssets(paths);
+
+  const brief = JSON.parse(
+    await readFile(paths.canonicalData, "utf8"),
+  ) as MarketBriefPayload;
+  assert.deepEqual(brief.labels.title, saturday.pages["/"].report.title);
+  assert.deepEqual(brief.labels.summary, saturday.pages["/"].report.summary);
+  assert.doesNotMatch(brief.labels.title.en, /forged/i);
 });
 
 test("prioritizes a changed /sic key signal before Wednesday page balancing", async () => {
@@ -204,6 +297,8 @@ test("prioritizes a changed /sic key signal before Wednesday page balancing", as
   const wednesday = makeWednesday(saturday);
   const changedId = "sic.market_2030_usd_b";
   wednesday.metrics[changedId].display = { en: "$24B", zh: "$24B" };
+  wednesday.pages["/sic"].changed = true;
+  wednesday.pages["/sic"].changeReasons = ["rounded-value-change"];
   wednesday.pages["/"].report.title = { en: "Fresh Wednesday", zh: "本期週三更新" };
   await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
@@ -227,6 +322,8 @@ test("prioritizes a genuinely added /sic signal when a Wednesday ID is replaced"
   replacement.display = { en: "$24B replacement", zh: "$24B 新增" };
   wednesday.metrics[replacementId] = replacement;
   wednesday.keySignalIds[wednesday.keySignalIds.length - 1] = replacementId;
+  wednesday.pages["/sic"].changed = true;
+  wednesday.pages["/sic"].changeReasons = ["first-party-event"];
   await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
   await generateMarketBriefAssets(paths);
@@ -243,7 +340,7 @@ test("prioritizes a genuinely added /sic signal when a Wednesday ID is replaced"
   assert.ok(brief.featuredSignalIds.length <= 5);
 });
 
-test("does not treat reorder-only positional mismatches as changed signal records", async () => {
+test("reorder-only Wednesday remains page-balanced without reviewed changed pages", async () => {
   const saturday = await currentSnapshot();
   const { paths } = await generatePriorBrief(saturday);
   const wednesday = makeWednesday(saturday);
@@ -267,55 +364,6 @@ test("does not treat reorder-only positional mismatches as changed signal record
     featuredSicCount < 4,
     `reorder-only cut falsely prioritized ${featuredSicCount} /sic signals: ${brief.featuredSignalIds.join(", ")}`,
   );
-});
-
-test("detects key-signal changes from IDs, values, kinds, and source bindings", async (t) => {
-  const mutations: Array<[string, (snapshot: MarketSnapshot) => void]> = [
-    [
-      "IDs",
-      (snapshot) => {
-        [snapshot.keySignalIds[0], snapshot.keySignalIds[1]] = [
-          snapshot.keySignalIds[1],
-          snapshot.keySignalIds[0],
-        ];
-      },
-    ],
-    [
-      "values",
-      (snapshot) => {
-        snapshot.metrics["sic.market_2030_usd_b"].display.en = "$24B";
-      },
-    ],
-    [
-      "kinds",
-      (snapshot) => {
-        snapshot.metrics["sic.market_2030_usd_b"].kind = "published";
-      },
-    ],
-    [
-      "source bindings",
-      (snapshot) => {
-        snapshot.metrics["sic.market_2030_usd_b"].sourceIds.push("iea-energy-ai");
-      },
-    ],
-  ];
-
-  for (const [name, mutate] of mutations) {
-    await t.test(name, async () => {
-      const saturday = await currentSnapshot();
-      const { paths } = await generatePriorBrief(saturday);
-      const wednesday = makeWednesday(saturday);
-      wednesday.pages["/"].report.title = { en: `Fresh ${name}`, zh: `本期${name}` };
-      mutate(wednesday);
-      await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
-
-      await generateMarketBriefAssets(paths);
-
-      const brief = JSON.parse(await readFile(paths.canonicalData, "utf8")) as MarketBriefPayload;
-      assert.equal(brief.runId, wednesday.runId);
-      assert.equal(brief.labels.title.en, `Fresh ${name}`);
-    });
-  }
 });
 
 test("enforces cadence-specific featured-signal bounds and uniqueness", async () => {
@@ -351,7 +399,7 @@ test("rejects duplicate snapshot key signals", async () => {
   assert.throws(() => buildMarketBrief(snapshot), /duplicate key signal/i);
 });
 
-test("rejects duplicate featured IDs in a prior brief instead of reusing it", async () => {
+test("regenerates instead of reusing prior duplicate featured IDs", async () => {
   const saturday = await currentSnapshot();
   const { paths, prior } = await generatePriorBrief(saturday);
   prior.featuredSignalIds[4] = prior.featuredSignalIds[0];
@@ -367,7 +415,7 @@ test("rejects duplicate featured IDs in a prior brief instead of reusing it", as
   assert.equal(new Set(brief.featuredSignalIds).size, brief.featuredSignalIds.length);
 });
 
-test("rejects lower- and upper-bound violations in a prior complete brief", async (t) => {
+test("regenerates instead of reusing prior feature-bound violations", async (t) => {
   for (const [name, featuredSignalIds] of [
     ["below lower bound", [0, 1, 2, 3]],
     ["above upper bound", [0, 1, 2, 3, 4, 5, 6, 7, 8]],

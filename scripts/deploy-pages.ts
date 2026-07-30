@@ -62,6 +62,116 @@ type PublicationLockOwner = {
 
 const PUBLICATION_LOCK_NAME = ".market-publication.lock";
 const STALE_LOCK_AGE_MS = 60 * 60 * 1_000;
+export const LAST_GOOD_ANCHOR_NAME = ".pages-last-good-anchor.json";
+
+export type LastGoodAnchor = {
+  schemaVersion: 1;
+  runId: string;
+  candidateSha256: string;
+  artifactTreeSha256: string;
+  manifestSha256: string;
+};
+
+function assertLastGoodAnchor(value: unknown): asserts value is LastGoodAnchor {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    Object.keys(value).sort().join(",") !==
+      [
+        "artifactTreeSha256",
+        "candidateSha256",
+        "manifestSha256",
+        "runId",
+        "schemaVersion",
+      ]
+        .sort()
+        .join(",")
+  ) {
+    throw new Error("last-good anchor is invalid");
+  }
+  const anchor = value as Partial<LastGoodAnchor>;
+  if (
+    anchor.schemaVersion !== 1 ||
+    typeof anchor.runId !== "string" ||
+    !isSafeMarketRunId(anchor.runId) ||
+    typeof anchor.candidateSha256 !== "string" ||
+    !/^[a-f0-9]{64}$/.test(anchor.candidateSha256) ||
+    typeof anchor.artifactTreeSha256 !== "string" ||
+    !/^[a-f0-9]{64}$/.test(anchor.artifactTreeSha256) ||
+    typeof anchor.manifestSha256 !== "string" ||
+    !/^[a-f0-9]{64}$/.test(anchor.manifestSha256)
+  ) {
+    throw new Error("last-good anchor is invalid");
+  }
+}
+
+function lastGoodAnchorPath(projectRoot: string): string {
+  return join(resolve(projectRoot), "work", LAST_GOOD_ANCHOR_NAME);
+}
+
+export async function readLastGoodAnchor(
+  projectRoot: string,
+): Promise<LastGoodAnchor> {
+  const path = lastGoodAnchorPath(projectRoot);
+  let metadata;
+  try {
+    metadata = await lstat(path);
+  } catch (error) {
+    if (isMissing(error)) throw new Error("last-good anchor is missing");
+    throw error;
+  }
+  if (metadata.isSymbolicLink() || !metadata.isFile()) {
+    throw new Error("last-good anchor is unsafe");
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(await readFile(path, "utf8")) as unknown;
+  } catch {
+    throw new Error("last-good anchor is invalid");
+  }
+  assertLastGoodAnchor(value);
+  return value;
+}
+
+export async function writeLastGoodAnchorAtomically(
+  projectRoot: string,
+  anchor: LastGoodAnchor,
+): Promise<void> {
+  assertLastGoodAnchor(anchor);
+  const workDirectory = join(resolve(projectRoot), "work");
+  await mkdir(workDirectory, { recursive: true });
+  const workMetadata = await lstat(workDirectory);
+  if (workMetadata.isSymbolicLink() || !workMetadata.isDirectory()) {
+    throw new Error("last-good anchor work directory is unsafe");
+  }
+  const destination = lastGoodAnchorPath(projectRoot);
+  try {
+    const destinationMetadata = await lstat(destination);
+    if (
+      destinationMetadata.isSymbolicLink() ||
+      !destinationMetadata.isFile()
+    ) {
+      throw new Error("last-good anchor is unsafe");
+    }
+  } catch (error) {
+    if (!isMissing(error)) throw error;
+  }
+  const temporary = join(
+    workDirectory,
+    `.${LAST_GOOD_ANCHOR_NAME}.${process.pid}.${randomUUID()}.tmp`,
+  );
+  try {
+    await writeFile(temporary, `${JSON.stringify(anchor, null, 2)}\n`, {
+      flag: "wx",
+      mode: 0o600,
+    });
+    await rename(temporary, destination);
+  } catch (error) {
+    await rm(temporary, { force: true });
+    throw error;
+  }
+}
 
 function isPublicationLockOwner(value: unknown): value is PublicationLockOwner {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -479,6 +589,30 @@ export async function readDeploymentManifest(
   return manifest;
 }
 
+export async function validateLastGoodDirectory(
+  directory: string,
+  anchor: LastGoodAnchor,
+): Promise<DeploymentManifest> {
+  assertLastGoodAnchor(anchor);
+  try {
+    const manifest = await readDeploymentManifest(directory, {
+      expectedCandidateSha256: anchor.candidateSha256,
+      expectedArtifactTreeSha256: anchor.artifactTreeSha256,
+      expectedManifestSha256: anchor.manifestSha256,
+    });
+    if (manifest.runId !== anchor.runId) {
+      throw new Error("run identity does not match");
+    }
+    return manifest;
+  } catch (error) {
+    throw new Error(
+      `last-good directory does not match anchor: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+}
+
 export async function revalidatePublicationState(options: {
   runId: string;
   candidatePath: string;
@@ -499,9 +633,9 @@ export async function revalidatePublicationState(options: {
   });
 }
 
-async function pathExistsAsSafeDirectory(path: string): Promise<boolean> {
+async function pathExists(path: string): Promise<boolean> {
   try {
-    await assertDirectoryTreeSafe(path);
+    await lstat(path);
     return true;
   } catch (error) {
     if (isMissing(error)) return false;
@@ -559,7 +693,17 @@ async function runLockedDeployPagesAtProjectRoot(
     monthlyIndexPath: join(marketRoot, "monthly", "index.json"),
   };
 
-  if (!(await pathExistsAsSafeDirectory(lastGoodDirectory))) {
+  let lastGoodAnchor: LastGoodAnchor;
+  try {
+    lastGoodAnchor = await readLastGoodAnchor(projectRoot);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !/last-good anchor is missing/i.test(error.message) ||
+      (await pathExists(lastGoodDirectory))
+    ) {
+      throw error;
+    }
     const current = await readSnapshot(currentPath, "current snapshot");
     const currentExport = await runtime.exportPages({
       projectRoot,
@@ -579,6 +723,16 @@ async function runLockedDeployPagesAtProjectRoot(
           routeIdentities: currentExport.routeIdentities,
         },
       );
+      const seededAnchor: LastGoodAnchor = {
+        schemaVersion: 1,
+        runId: currentExport.runId,
+        candidateSha256: currentExport.candidateSha256,
+        artifactTreeSha256: currentExport.artifactTreeSha256,
+        manifestSha256: currentExport.manifestSha256,
+      };
+      await validateLastGoodDirectory(lastGoodDirectory, seededAnchor);
+      await writeLastGoodAnchorAtomically(projectRoot, seededAnchor);
+      lastGoodAnchor = seededAnchor;
     } catch (error) {
       await rm(lastGoodDirectory, { recursive: true, force: true });
       throw new Error(
@@ -587,9 +741,8 @@ async function runLockedDeployPagesAtProjectRoot(
         }`,
       );
     }
-  } else {
-    await readDeploymentManifest(lastGoodDirectory);
   }
+  await validateLastGoodDirectory(lastGoodDirectory, lastGoodAnchor);
 
   const candidateExport = await runtime.exportPages({
     projectRoot,
@@ -616,17 +769,26 @@ async function runLockedDeployPagesAtProjectRoot(
   >();
   const dependencies = {
     deploy: async (directory: string, branch: string) => {
-      const manifest = await readDeploymentManifest(
-        directory,
-        resolve(directory) === resolve(candidateDirectory)
-          ? {
-              expectedCandidateSha256: authorization.candidateSha256,
-              expectedArtifactTreeSha256:
-                candidateExport.artifactTreeSha256,
-              expectedManifestSha256: candidateExport.manifestSha256,
-            }
-          : {},
-      );
+      const resolvedDirectory = resolve(directory);
+      let manifest: DeploymentManifest;
+      if (resolvedDirectory === resolve(lastGoodDirectory)) {
+        manifest = await validateLastGoodDirectory(
+          directory,
+          lastGoodAnchor,
+        );
+      } else {
+        manifest = await readDeploymentManifest(
+          directory,
+          resolvedDirectory === resolve(candidateDirectory)
+            ? {
+                expectedCandidateSha256: authorization.candidateSha256,
+                expectedArtifactTreeSha256:
+                  candidateExport.artifactTreeSha256,
+                expectedManifestSha256: candidateExport.manifestSha256,
+              }
+            : {},
+        );
+      }
       const url = await wranglerDeploy(directory, branch);
       const active = {
         directory,
@@ -673,7 +835,29 @@ async function runLockedDeployPagesAtProjectRoot(
         expectedArtifactTreeSha256: candidateExport.artifactTreeSha256,
         expectedManifestSha256: candidateExport.manifestSha256,
       }),
-    copyDirectory: copyDirectoryAtomically,
+    copyDirectory: async (
+      from: string,
+      to: string,
+      expectedArtifactTreeSha256: string,
+      expectedManifestSha256: string,
+    ) => {
+      await copyDirectoryAtomically(
+        from,
+        to,
+        expectedArtifactTreeSha256,
+        expectedManifestSha256,
+      );
+      const nextAnchor: LastGoodAnchor = {
+        schemaVersion: 1,
+        runId: candidateExport.runId,
+        candidateSha256: candidateExport.candidateSha256,
+        artifactTreeSha256: candidateExport.artifactTreeSha256,
+        manifestSha256: candidateExport.manifestSha256,
+      };
+      await validateLastGoodDirectory(lastGoodDirectory, nextAnchor);
+      await writeLastGoodAnchorAtomically(projectRoot, nextAnchor);
+      lastGoodAnchor = nextAnchor;
+    },
     promote: (expectedCandidateSha256: string) =>
       promoteCandidate(storagePaths, expectedCandidateSha256),
     restoreSnapshot: (promotion: Awaited<ReturnType<typeof promoteCandidate>>) =>

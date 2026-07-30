@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import {
   mkdir,
   mkdtemp,
@@ -52,4 +53,28 @@ test("artifact digest rejects symlinks instead of following them", async () => {
   await symlink(join(root, "index.html"), join(root, "linked.html"));
 
   await assert.rejects(() => hashArtifactTree(root), /symlink/i);
+});
+
+test("artifact digest orders UTF-8 paths bytewise instead of by host locale", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-artifact-byte-order-"));
+  await writeFile(join(root, "Z.txt"), "upper");
+  await writeFile(join(root, "a.txt"), "lower");
+  const expected = createHash("sha256");
+  for (const [relativePath, contents] of [
+    ["Z.txt", "upper"],
+    ["a.txt", "lower"],
+  ]) {
+    const pathBytes = Buffer.from(relativePath, "utf8");
+    const contentBytes = Buffer.from(contents, "utf8");
+    const pathLength = Buffer.alloc(8);
+    pathLength.writeBigUInt64BE(BigInt(pathBytes.length));
+    const contentLength = Buffer.alloc(8);
+    contentLength.writeBigUInt64BE(BigInt(contentBytes.length));
+    expected.update(pathLength);
+    expected.update(pathBytes);
+    expected.update(contentLength);
+    expected.update(contentBytes);
+  }
+
+  assert.equal(await hashArtifactTree(root), expected.digest("hex"));
 });

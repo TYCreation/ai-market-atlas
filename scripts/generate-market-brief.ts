@@ -1,6 +1,7 @@
 import { realpath, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import type {
   BilingualText,
@@ -92,10 +93,7 @@ function assertSnapshotBriefCardinality(snapshot: MarketSnapshot): void {
   }
 }
 
-function featuredSignalIds(
-  snapshot: MarketSnapshot,
-  changedSignalIds: ReadonlySet<string> = new Set(),
-): string[] {
+function featuredSignalIds(snapshot: MarketSnapshot): string[] {
   const limit = CADENCE_BOUNDS[snapshot.cadence].max;
   const ordered = snapshot.keySignalIds.map((id) => {
     const metric = snapshot.metrics[id];
@@ -106,13 +104,8 @@ function featuredSignalIds(
   const changedPages = new Set<PageSlug>();
 
   if (snapshot.cadence === "wednesday") {
-    for (const metric of ordered) {
-      if (changedSignalIds.has(metric.id)) changedPages.add(metric.page);
-    }
-    if (changedSignalIds.size === 0) {
-      for (const page of PAGE_ORDER) {
-        if (snapshot.pages[page].changed) changedPages.add(page);
-      }
+    for (const page of PAGE_ORDER) {
+      if (snapshot.pages[page].changed) changedPages.add(page);
     }
     for (const metric of ordered) {
       if (changedPages.has(metric.page) && selected.length < limit) {
@@ -139,10 +132,7 @@ function nextWeekObservations(snapshot: MarketSnapshot): BilingualText[] {
   return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.slice(0, 1));
 }
 
-export function buildMarketBrief(
-  snapshot: MarketSnapshot,
-  changedSignalIds: ReadonlySet<string> = new Set(),
-): MarketBriefPayload {
+export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
   assertMarketSnapshot(snapshot);
   assertSnapshotBriefCardinality(snapshot);
   const signals = snapshot.keySignalIds.map((id): MarketBriefSignal => {
@@ -168,7 +158,7 @@ export function buildMarketBrief(
     dataCutoff: snapshot.dataCutoff,
     sourceIds,
     signals,
-    featuredSignalIds: featuredSignalIds(snapshot, changedSignalIds),
+    featuredSignalIds: featuredSignalIds(snapshot),
     nextWeekObservations: nextWeekObservations(snapshot),
     labels: {
       eyebrow: report.eyebrow,
@@ -306,116 +296,10 @@ export function assertMarketBriefMatchesSnapshot(
   if (!isMarketBriefPayload(value)) {
     throw new Error(`${label} is not a valid market brief payload`);
   }
-  if (
-    value.runId !== snapshot.runId ||
-    value.cadence !== snapshot.cadence ||
-    value.dataCutoff !== snapshot.dataCutoff
-  ) {
-    throw new Error(`${label} envelope does not match snapshot`);
+  const canonical = buildMarketBrief(snapshot);
+  if (!isDeepStrictEqual(value, canonical)) {
+    throw new Error(`${label} semantics do not match snapshot`);
   }
-  const snapshotSignalIds = new Set(snapshot.keySignalIds);
-  if (
-    value.signals.length !== snapshotSignalIds.size ||
-    value.signals.some((signal) => !snapshotSignalIds.has(signal.id))
-  ) {
-    throw new Error(`${label} signals do not match snapshot`);
-  }
-  for (const signal of value.signals) {
-    const metric = snapshot.metrics[signal.id];
-    const reportSignal = metric
-      ? snapshot.pages[metric.page].report.signal
-      : undefined;
-    if (
-      !metric ||
-      metric.page !== signal.page ||
-      metric.kind !== signal.kind ||
-      metric.display.zh !== signal.zh.value ||
-      metric.display.en !== signal.en.value ||
-      reportSignal?.zh !== signal.zh.label ||
-      reportSignal?.en !== signal.en.label ||
-      !sameStringSet(metric.sourceIds, signal.sourceIds)
-    ) {
-      throw new Error(
-        `${label} signal ${signal.id} does not match snapshot identity`,
-      );
-    }
-  }
-  const boundSourceIds = [
-    ...new Set(
-      snapshot.keySignalIds.flatMap(
-        (signalId) => snapshot.metrics[signalId]?.sourceIds ?? [],
-      ),
-    ),
-  ];
-  if (
-    !sameStringSet(value.sourceIds, boundSourceIds) ||
-    value.sourceIds.some((sourceId) => snapshot.sources[sourceId] === undefined)
-  ) {
-    throw new Error(`${label} sources do not match snapshot`);
-  }
-  if (
-    JSON.stringify(value.nextWeekObservations) !==
-    JSON.stringify(nextWeekObservations(snapshot))
-  ) {
-    throw new Error(`${label} observation policy does not match snapshot`);
-  }
-}
-
-function isCompleteBrief(brief: MarketBriefPayload): boolean {
-  return (
-    (brief.cadence === "saturday" || brief.cadence === "month-end") &&
-    brief.featuredSignalIds.length >= 5 &&
-    brief.featuredSignalIds.length <= 8 &&
-    brief.nextWeekObservations.length > 0
-  );
-}
-
-function sameStringSet(left: string[], right: string[]): boolean {
-  return (
-    left.length === right.length &&
-    [...left].sort().every((value, index) => value === [...right].sort()[index])
-  );
-}
-
-function changedKeySignalIds(
-  snapshot: MarketSnapshot,
-  prior: MarketBriefPayload,
-): { orderChanged: boolean; signalIds: Set<string> } {
-  const signalIds = new Set<string>();
-  const priorById = new Map(prior.signals.map((signal) => [signal.id, signal]));
-  for (const id of snapshot.keySignalIds) {
-    const metric = snapshot.metrics[id];
-    const previous = priorById.get(id);
-    if (
-      !metric ||
-      !previous ||
-      metric.page !== previous.page ||
-      metric.kind !== previous.kind ||
-      metric.display.zh !== previous.zh.value ||
-      metric.display.en !== previous.en.value ||
-      !sameStringSet(metric.sourceIds, previous.sourceIds)
-    ) {
-      signalIds.add(id);
-    }
-  }
-  return {
-    orderChanged:
-      snapshot.keySignalIds.length !== prior.signals.length ||
-      snapshot.keySignalIds.some((id, index) => id !== prior.signals[index]?.id),
-    signalIds,
-  };
-}
-
-function reusePriorContent(
-  current: MarketBriefPayload,
-  prior: MarketBriefPayload,
-): MarketBriefPayload {
-  return {
-    ...current,
-    labels: prior.labels,
-    methodology: prior.methodology,
-    notInvestmentAdvice: prior.notInvestmentAdvice,
-  };
 }
 
 function serializeBrief(brief: MarketBriefPayload): string {
@@ -435,15 +319,6 @@ function upsertEmbeddedBrief(html: string, brief: MarketBriefPayload): string {
   return html.replace(BODY_SCRIPT_ANCHOR, `\n    ${embedded}${BODY_SCRIPT_ANCHOR}`);
 }
 
-async function loadExistingBrief(path: string): Promise<MarketBriefPayload | undefined> {
-  try {
-    const value = JSON.parse(await readFile(path, "utf8")) as unknown;
-    return isMarketBriefPayload(value) ? value : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 async function loadSnapshot(path: string): Promise<MarketSnapshot> {
   const resolved = await realpath(resolve(path));
   const file = await stat(resolved);
@@ -456,23 +331,8 @@ async function loadSnapshot(path: string): Promise<MarketSnapshot> {
 export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): Promise<void> {
   const snapshot = await loadSnapshot(paths.snapshotPath);
   assertSnapshotBriefCardinality(snapshot);
-  const existing = await loadExistingBrief(paths.canonicalData);
-  const changes =
-    snapshot.cadence === "wednesday" && existing && isCompleteBrief(existing)
-      ? changedKeySignalIds(snapshot, existing)
-      : { orderChanged: false, signalIds: new Set<string>() };
-  const current = buildMarketBrief(snapshot, changes.signalIds);
-  const brief =
-    snapshot.cadence === "wednesday" &&
-    existing &&
-    isCompleteBrief(existing) &&
-    changes.signalIds.size === 0 &&
-    !changes.orderChanged
-      ? reusePriorContent(current, existing)
-      : current;
-  if (!isMarketBriefPayload(brief)) {
-    throw new Error("Invalid generated market brief payload");
-  }
+  const brief = buildMarketBrief(snapshot);
+  assertMarketBriefMatchesSnapshot(brief, snapshot, "Generated market brief");
   const data = serializeBrief(brief);
   const canonicalHtml = await readFile(paths.canonicalHtml, "utf8");
   const html = upsertEmbeddedBrief(canonicalHtml, brief);

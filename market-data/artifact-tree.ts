@@ -45,7 +45,10 @@ export async function hashArtifactTree(directory: string): Promise<string> {
     throw new Error("artifact tree root must be a real directory");
   }
   const files = (await artifactFiles(root, root)).sort((left, right) =>
-    left.relativePath.localeCompare(right.relativePath),
+    Buffer.compare(
+      Buffer.from(left.relativePath, "utf8"),
+      Buffer.from(right.relativePath, "utf8"),
+    ),
   );
   const hash = createHash("sha256");
   for (const file of files) {

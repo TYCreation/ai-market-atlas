@@ -16,7 +16,10 @@ import { fileURLToPath } from "node:url";
 import { projectMonthlyArchive } from "../../market-data/storage.ts";
 import { hashCandidate } from "../../market-data/review.ts";
 import { exportPages } from "../../scripts/export-pages.ts";
-import { generateMarketBriefAssets } from "../../scripts/generate-market-brief.ts";
+import {
+  generateMarketBriefAssets,
+  type MarketBriefPayload,
+} from "../../scripts/generate-market-brief.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 import { autoPublishReview } from "./helpers.ts";
 
@@ -355,6 +358,103 @@ test("rejects disagreement between canonical and public market-brief data and em
   }
 });
 
+test("rejects synchronized market-brief semantic tampering across every copied asset", async (t) => {
+  const isolatedRoot = await isolatedExportProject(true);
+  const output = join(isolatedRoot, "work", "pages-candidate");
+  const snapshot = join(isolatedRoot, "data", "market", "current.json");
+  await exportPages({
+    projectRoot: isolatedRoot,
+    snapshotPath: snapshot,
+    outputDirectory: output,
+  });
+  const dataPaths = [
+    join(
+      isolatedRoot,
+      "hyperframes",
+      "weekly-ai-market-brief",
+      "data.json",
+    ),
+    join(isolatedRoot, "public", "market-brief", "data.json"),
+    join(isolatedRoot, "dist", "client", "market-brief", "data.json"),
+  ];
+  const htmlPaths = [
+    join(
+      isolatedRoot,
+      "hyperframes",
+      "weekly-ai-market-brief",
+      "index.html",
+    ),
+    join(isolatedRoot, "public", "market-brief", "index.html"),
+    join(isolatedRoot, "dist", "client", "market-brief", "index.html"),
+  ];
+  const originalData = await readFile(dataPaths[0], "utf8");
+  const originalHtml = await Promise.all(
+    htmlPaths.map((path) => readFile(path, "utf8")),
+  );
+  const cases: Array<[string, (brief: MarketBriefPayload) => void]> = [
+    ["title", (brief) => (brief.labels.title.en = "Forged title")],
+    ["summary", (brief) => (brief.labels.summary.zh = "偽造摘要")],
+    ["methodology", (brief) => (brief.methodology.en = "Forged method")],
+    [
+      "disclaimer",
+      (brief) => (brief.notInvestmentAdvice.zh = "偽造免責聲明"),
+    ],
+    ["tag", (brief) => (brief.labels.tags.en[0] = "Forged tag")],
+    [
+      "featured subset",
+      (brief) => {
+        brief.featuredSignalIds = [
+          "pulse.accelerator_market",
+          "pulse.power_queue",
+          "pulse.enterprise_agents",
+          "stocks.positive_breadth",
+          "stocks.median_forward_pe",
+          "stocks.catalyst_count",
+          "compute.hbm_demand",
+          "compute.packaging_lead_weeks",
+        ];
+      },
+    ],
+  ];
+
+  try {
+    for (const [name, mutate] of cases) {
+      await t.test(name, async () => {
+        const brief = JSON.parse(originalData) as MarketBriefPayload;
+        mutate(brief);
+        const serialized = `${JSON.stringify(brief, null, 2)}\n`;
+        await Promise.all(dataPaths.map((path) => writeFile(path, serialized)));
+        await Promise.all(
+          htmlPaths.map((path, index) =>
+            writeFile(
+              path,
+              originalHtml[index].replace(
+                /<script id="embedded-market-brief" type="application\/json">[\s\S]*?<\/script>/,
+                `<script id="embedded-market-brief" type="application/json">${JSON.stringify(
+                  brief,
+                ).replaceAll("<", "\\u003c")}</script>`,
+              ),
+            ),
+          ),
+        );
+
+        await assert.rejects(
+          () =>
+            exportPages({
+              projectRoot: isolatedRoot,
+              snapshotPath: snapshot,
+              outputDirectory: output,
+              build: false,
+            }),
+          /semantics.*snapshot/i,
+        );
+      });
+    }
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
+});
+
 test("exports the canonical changed-sic Wednesday brief without reconstructing a different feature subset", async () => {
   const isolatedRoot = await isolatedExportProject(true);
   const isolatedSnapshotPath = join(
@@ -389,6 +489,8 @@ test("exports the canonical changed-sic Wednesday brief without reconstructing a
     en: "$24B",
     zh: "240 億美元",
   };
+  snapshot.pages["/sic"].changed = true;
+  snapshot.pages["/sic"].changeReasons = ["rounded-value-change"];
   await writeFile(
     isolatedSnapshotPath,
     `${JSON.stringify(snapshot, null, 2)}\n`,
