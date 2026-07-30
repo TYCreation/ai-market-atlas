@@ -122,15 +122,71 @@ test("allows financial and forecast threshold crossings with newly cited sources
   moved.sources["new-company-filing"] = {
     ...structuredClone(moved.sources["nvidia-q1-fy27"]),
     id: "new-company-filing",
+    publishedAt: "2026-07-31T00:00:00.000Z",
   };
   moved.sources["new-research-report"] = {
     ...structuredClone(moved.sources["stanford-economy"]),
     id: "new-research-report",
+    publishedAt: "2026-07-31T00:00:00.000Z",
   };
   moved.metrics["stocks.median_forward_pe"].numericValue += 10.01;
   moved.metrics["stocks.median_forward_pe"].sourceIds.push("new-company-filing");
   moved.metrics["sic.market_2030_usd_b"].numericValue *= 1.101;
   moved.metrics["sic.market_2030_usd_b"].sourceIds.push("new-research-report");
+
+  const issues = evaluateQualityGate(moved, prior).issues;
+
+  assert.equal(issues.some((issue) => issue.code === "FINANCIAL_DELTA"), false);
+  assert.equal(issues.some((issue) => issue.code === "FORECAST_DELTA"), false);
+});
+
+test("does not treat re-keyed identical provenance as a new anomaly source", () => {
+  const prior = structuredClone(valid);
+  prior.metrics["sic.market_2030_usd_b"].sourceIds.push("stanford-economy");
+  const moved = structuredClone(prior);
+  moved.sources["rekeyed-company"] = {
+    ...structuredClone(moved.sources["nvidia-q1-fy27"]),
+    id: "rekeyed-company",
+  };
+  moved.sources["rekeyed-research"] = {
+    ...structuredClone(moved.sources["stanford-economy"]),
+    id: "rekeyed-research",
+  };
+  moved.metrics["stocks.median_forward_pe"].numericValue += 10.01;
+  moved.metrics["stocks.median_forward_pe"].sourceIds =
+    moved.metrics["stocks.median_forward_pe"].sourceIds
+      .filter((id) => id !== "nvidia-q1-fy27")
+      .concat("rekeyed-company");
+  moved.metrics["sic.market_2030_usd_b"].numericValue *= 1.101;
+  moved.metrics["sic.market_2030_usd_b"].sourceIds =
+    moved.metrics["sic.market_2030_usd_b"].sourceIds
+      .filter((id) => id !== "stanford-economy")
+      .concat("rekeyed-research");
+
+  const issues = evaluateQualityGate(moved, prior).issues;
+
+  assert.ok(issues.some((issue) => issue.code === "FINANCIAL_DELTA"));
+  assert.ok(issues.some((issue) => issue.code === "FORECAST_DELTA"));
+});
+
+test("accepts a genuinely new source publication for anomaly evidence", () => {
+  const prior = structuredClone(valid);
+  prior.metrics["sic.market_2030_usd_b"].sourceIds.push("stanford-economy");
+  const moved = structuredClone(prior);
+  moved.sources["new-company-publication"] = {
+    ...structuredClone(moved.sources["nvidia-q1-fy27"]),
+    id: "new-company-publication",
+    publishedAt: "2026-07-31T00:00:00.000Z",
+  };
+  moved.sources["new-research-publication"] = {
+    ...structuredClone(moved.sources["stanford-economy"]),
+    id: "new-research-publication",
+    publishedAt: "2026-07-31T00:00:00.000Z",
+  };
+  moved.metrics["stocks.median_forward_pe"].numericValue += 10.01;
+  moved.metrics["stocks.median_forward_pe"].sourceIds.push("new-company-publication");
+  moved.metrics["sic.market_2030_usd_b"].numericValue *= 1.101;
+  moved.metrics["sic.market_2030_usd_b"].sourceIds.push("new-research-publication");
 
   const issues = evaluateQualityGate(moved, prior).issues;
 
@@ -191,6 +247,31 @@ test("blocks rewritten unchanged-page narrative", () => {
   ));
 });
 
+test("blocks a neutral-to-bullish stance change marked unchanged", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  changed.pages["/models"].thesisStance = "bullish";
+
+  const result = evaluateQualityGate(changed, prior);
+
+  assert.ok(result.issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models",
+  ));
+});
+
+test("blocks thesis citation changes marked unchanged", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  changed.pages["/models"].thesisMetricIds = [
+    "models.api_deployment_share",
+    "models.managed_tokens",
+  ];
+
+  assert.ok(evaluateQualityGate(changed, prior).issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models",
+  ));
+});
+
 test("does not treat object key order as rewritten narrative", () => {
   const prior = structuredClone(valid);
   const reordered = structuredClone(valid);
@@ -216,5 +297,24 @@ test("blocks a changed page without verifiable change evidence", () => {
 
   assert.ok(result.issues.some(
     (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/energy",
+  ));
+});
+
+test("does not accept a re-keyed identical first-party source as change evidence", () => {
+  const prior = structuredClone(valid);
+  const unsupported = structuredClone(valid);
+  unsupported.pages["/compute"].changed = true;
+  unsupported.pages["/compute"].changeReasons = ["first-party-event"];
+  unsupported.sources["rekeyed-nvidia"] = {
+    ...structuredClone(unsupported.sources["nvidia-q1-fy27"]),
+    id: "rekeyed-nvidia",
+  };
+  unsupported.metrics["compute.accelerator_pool"].sourceIds =
+    unsupported.metrics["compute.accelerator_pool"].sourceIds
+      .filter((id) => id !== "nvidia-q1-fy27")
+      .concat("rekeyed-nvidia");
+
+  assert.ok(evaluateQualityGate(unsupported, prior).issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/compute",
   ));
 });

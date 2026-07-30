@@ -1,9 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { reviewCandidate, type AutomatedReview } from "../market-data/review.ts";
-import type { SourceFetcher } from "../market-data/source-health.ts";
+import {
+  isSafeMarketRunId,
+  reviewCandidate,
+  type AutomatedReview,
+} from "../market-data/review.ts";
+import type { HostnameResolver, SourceFetcher } from "../market-data/source-health.ts";
 import type { MarketSnapshot } from "../market-data/types.ts";
 
 type MarketReviewOptions = {
@@ -11,6 +15,7 @@ type MarketReviewOptions = {
   previousPath: string;
   reviewsDirectory: string;
   fetcher: SourceFetcher;
+  resolver?: HostnameResolver;
   stdout?: (summary: string) => void;
 };
 
@@ -47,8 +52,15 @@ export async function runMarketReview(options: MarketReviewOptions): Promise<{
 }> {
   const candidate = await parseCandidate(options.candidatePath);
   const previous = JSON.parse(await readFile(options.previousPath, "utf8")) as MarketSnapshot;
-  const review = await reviewCandidate(candidate, previous, options.fetcher);
-  const outputPath = resolve(options.reviewsDirectory, `${review.runId}.json`);
+  const review = await reviewCandidate(candidate, previous, options.fetcher, options.resolver);
+  const reviewsDirectory = resolve(options.reviewsDirectory);
+  const filename = isSafeMarketRunId(review.runId)
+    ? `${review.runId}.json`
+    : `rejected-${review.candidateSha256}.json`;
+  const outputPath = resolve(reviewsDirectory, filename);
+  if (dirname(outputPath) !== reviewsDirectory || basename(outputPath) !== filename) {
+    throw new Error("review output must be a direct child of the review directory");
+  }
   await writeReviewAtomically(outputPath, review);
   options.stdout?.(JSON.stringify(review, null, 2));
   return {

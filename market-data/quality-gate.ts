@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from "node:util";
-import type { MarketSnapshot, MetricRecord, PageSlug } from "./types.ts";
+import type { MarketSnapshot, MetricRecord, PageSlug, SourceRecord } from "./types.ts";
 
 export type GateIssue = {
   code:
@@ -81,15 +81,50 @@ function hasSourceKind(snapshot: MarketSnapshot, metric: MetricRecord, kinds: Se
   return metric.sourceIds.some((sourceId) => kinds.has(snapshot.sources[sourceId]?.kind));
 }
 
+function normalizedProvenanceText(value: string): string {
+  return value.normalize("NFKC").trim().replaceAll(/\s+/g, " ").toLowerCase();
+}
+
+function canonicalSourceUrl(raw: string | undefined): string {
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    url.hash = "";
+    url.searchParams.sort();
+    return url.href;
+  } catch {
+    return raw;
+  }
+}
+
+function sourceFingerprint(source: SourceRecord): string {
+  return JSON.stringify([
+    canonicalSourceUrl(source.url),
+    normalizedProvenanceText(source.publisher),
+    normalizedProvenanceText(source.title),
+    new Date(source.publishedAt).toISOString(),
+  ]);
+}
+
 function hasNewSourceKind(
   current: MarketSnapshot,
   previous: MarketSnapshot,
   metric: MetricRecord,
   kinds: Set<string>,
 ): boolean {
-  const priorIds = new Set(previous.metrics?.[metric.id]?.sourceIds ?? []);
+  const priorFingerprints = new Set(
+    (previous.metrics?.[metric.id]?.sourceIds ?? [])
+      .map((sourceId) => previous.sources?.[sourceId])
+      .filter((source): source is SourceRecord => source !== undefined)
+      .map(sourceFingerprint),
+  );
   return metric.sourceIds.some(
-    (sourceId) => !priorIds.has(sourceId) && kinds.has(current.sources[sourceId]?.kind),
+    (sourceId) => {
+      const source = current.sources[sourceId];
+      return source !== undefined &&
+        kinds.has(source.kind) &&
+        !priorFingerprints.has(sourceFingerprint(source));
+    },
   );
 }
 
@@ -100,6 +135,13 @@ function previousValue(metric: MetricRecord, previous: MarketSnapshot): number |
 function reportChanged(current: MarketSnapshot, previous: MarketSnapshot, page: PageSlug): boolean {
   const prior = previous.pages?.[page];
   return prior !== undefined && !isDeepStrictEqual(current.pages[page].report, prior.report);
+}
+
+function sameMetricIdSet(left: string[], right: string[]): boolean {
+  return isDeepStrictEqual(
+    [...new Set(left)].sort(),
+    [...new Set(right)].sort(),
+  );
 }
 
 function hasPageChangeEvidence(
@@ -238,7 +280,7 @@ export function evaluateQualityGate(
         code: "THESIS_REVERSAL",
         severity: "block",
         page,
-        message: "The page thesis reverses between bullish and bearish.",
+        message: "The page stance negates its prior directional thesis.",
         sourceIds: state.thesisMetricIds.flatMap((id) => current.metrics[id]?.sourceIds ?? []).sort(),
       });
     }
@@ -248,6 +290,23 @@ export function evaluateQualityGate(
         severity: "block",
         page,
         message: "A page marked unchanged rewrites report or thesis content.",
+        sourceIds: [],
+      });
+    }
+    const priorPage = previous.pages?.[page];
+    if (
+      !state.changed &&
+      priorPage !== undefined &&
+      (
+        state.thesisStance !== priorPage.thesisStance ||
+        !sameMetricIdSet(state.thesisMetricIds, priorPage.thesisMetricIds)
+      )
+    ) {
+      issues.push({
+        code: "MATERIAL_CHANGE_MISMATCH",
+        severity: "block",
+        page,
+        message: "A page marked unchanged modifies its stance or thesis citations.",
         sourceIds: [],
       });
     }

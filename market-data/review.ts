@@ -2,7 +2,12 @@ import { createHash } from "node:crypto";
 import { evaluateQualityGate, sortGateIssues, type GateIssue } from "./quality-gate.ts";
 import { assertMarketSnapshot } from "./schema.ts";
 import { assertCompletedSession } from "./session.ts";
-import { checkSourceHealth, type SourceFetcher } from "./source-health.ts";
+import {
+  checkSourceHealth,
+  resolveHostname,
+  type HostnameResolver,
+  type SourceFetcher,
+} from "./source-health.ts";
 import type { MarketSnapshot, PageSlug } from "./types.ts";
 
 export type ReviewDecision = "auto_publish" | "manual_review" | "reject";
@@ -32,6 +37,27 @@ export type AutomatedReview = {
   reviewedMetricCount: number;
   reviewedSourceCount: number;
 };
+
+const RUN_ID = /^(\d{4})-(\d{2})-(\d{2})-(wednesday|saturday|month-end)$/;
+
+export function isSafeMarketRunId(runId: string, cadence?: MarketSnapshot["cadence"]): boolean {
+  const match = RUN_ID.exec(runId);
+  if (!match) return false;
+  const [, year, month, day, scheduledCadence] = match;
+  if (cadence !== undefined && scheduledCadence !== cadence) return false;
+  const date = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== `${year}-${month}-${day}`
+  ) {
+    return false;
+  }
+  if (scheduledCadence === "wednesday") return date.getUTCDay() === 3;
+  if (scheduledCadence === "saturday") return date.getUTCDay() === 6;
+  const nextDay = new Date(date);
+  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+  return nextDay.getUTCMonth() !== date.getUTCMonth();
+}
 
 type ReviewCheck = AutomatedReview["checks"][number];
 type CheckId = ReviewCheck["id"];
@@ -108,6 +134,19 @@ function citedNumbers(snapshot: MarketSnapshot, metricIds: string[], locale: "en
     const metric = snapshot.metrics[metricId];
     if (!metric) continue;
     values.push(metric.numericValue, ...numericClaims(metric.display[locale]));
+    for (const sourceId of metric.sourceIds) {
+      const source = snapshot.sources[sourceId];
+      if (!source) continue;
+      const sourceText = [
+        source.publisher,
+        source.title,
+        source.url ?? "",
+        source.publishedAt,
+        source.retrievedAt,
+        source.scope[locale],
+      ].join(" ");
+      values.push(...numericClaims(sourceText));
+    }
   }
   return values;
 }
@@ -122,17 +161,63 @@ function claimsMatchEvidence(snapshot: MarketSnapshot, text: string, metricIds: 
 function validateNarrativeEvidence(snapshot: MarketSnapshot): GateIssue[] {
   const issues: GateIssue[] = [];
   for (const [page, state] of Object.entries(snapshot.pages) as Array<[PageSlug, MarketSnapshot["pages"][PageSlug]]>) {
-    for (const evidence of [...state.report.supportingEvidence, ...state.report.opposingEvidence]) {
-      const mismatch = (["en", "zh"] as const).some(
-        (locale) => !claimsMatchEvidence(snapshot, evidence.text[locale], evidence.metricIds, locale),
+    const fields: Array<{
+      path: string;
+      text: MarketSnapshot["pages"][PageSlug]["report"]["title"];
+      metricIds: string[];
+    }> = [];
+    for (const field of ["eyebrow", "title", "summary", "signal"] as const) {
+      fields.push({
+        path: field,
+        text: state.report[field],
+        metricIds: state.thesisMetricIds,
+      });
+    }
+    fields.push(
+      { path: "thesis.title", text: state.report.thesis.title, metricIds: state.thesisMetricIds },
+      { path: "thesis.body", text: state.report.thesis.body, metricIds: state.thesisMetricIds },
+    );
+    for (const locale of ["en", "zh"] as const) {
+      for (const [index, tag] of state.report.thesis.tags[locale].entries()) {
+        fields.push({
+          path: `thesis.tags.${locale}[${index}]`,
+          text: { en: locale === "en" ? tag : "", zh: locale === "zh" ? tag : "" },
+          metricIds: state.thesisMetricIds,
+        });
+      }
+    }
+    for (const collection of ["catalysts", "risks", "nextObservations"] as const) {
+      for (const [index, text] of state.report[collection].entries()) {
+        fields.push({
+          path: `${collection}[${index}]`,
+          text,
+          metricIds: state.thesisMetricIds,
+        });
+      }
+    }
+    for (const collection of ["supportingEvidence", "opposingEvidence"] as const) {
+      for (const [index, evidence] of state.report[collection].entries()) {
+        fields.push({
+          path: `${collection}[${index}]`,
+          text: evidence.text,
+          metricIds: evidence.metricIds,
+        });
+      }
+    }
+
+    for (const field of fields) {
+      const mismatchedLocales = (["en", "zh"] as const).filter(
+        (locale) =>
+          field.text[locale].length > 0 &&
+          !claimsMatchEvidence(snapshot, field.text[locale], field.metricIds, locale),
       );
-      if (mismatch) {
+      if (mismatchedLocales.length > 0) {
         issues.push(issue(
           "MATERIAL_CHANGE_MISMATCH",
-          "A bilingual narrative contains a numeric claim that does not match its cited metrics.",
+          `${page}.report.${field.path} has an unsupported numeric claim in ${mismatchedLocales.join("/")}.`,
           {
             page,
-            sourceIds: evidence.metricIds.flatMap(
+            sourceIds: field.metricIds.flatMap(
               (metricId) => snapshot.metrics[metricId]?.sourceIds ?? [],
             ).sort(),
           },
@@ -179,12 +264,16 @@ export async function reviewCandidate(
   candidate: unknown,
   previous: MarketSnapshot,
   fetcher: SourceFetcher,
+  resolver: HostnameResolver = resolveHostname,
 ): Promise<AutomatedReview> {
   const candidateSha256 = hashCandidate(candidate);
   const schemaIssues: GateIssue[] = [];
   let snapshot: MarketSnapshot | undefined;
   try {
     assertMarketSnapshot(candidate);
+    if (!isSafeMarketRunId(candidate.runId, candidate.cadence)) {
+      throw new Error("Invalid market snapshot: runId must identify its scheduled cadence");
+    }
     snapshot = candidate;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invalid market snapshot";
@@ -195,7 +284,7 @@ export async function reviewCandidate(
   }
 
   const completedIssues = snapshot ? validateCompletedSessions(snapshot) : [];
-  const sourceIssues = snapshot ? await checkSourceHealth(snapshot, fetcher) : [];
+  const sourceIssues = snapshot ? await checkSourceHealth(snapshot, fetcher, resolver) : [];
   const gateIssues = snapshot
     ? evaluateQualityGate(snapshot, previous, sourceIssues).issues
     : [];
@@ -225,10 +314,7 @@ export async function reviewCandidate(
     : issues.some((candidateIssue) => candidateIssue.severity === "block")
       ? "manual_review"
       : "auto_publish";
-  const runId = snapshot?.runId ??
-    (candidate !== null && typeof candidate === "object" && typeof (candidate as Record<string, unknown>).runId === "string"
-      ? (candidate as Record<string, string>).runId
-      : "invalid-candidate");
+  const runId = snapshot?.runId ?? `invalid-${candidateSha256.slice(0, 16)}`;
 
   return {
     schemaVersion: 1,

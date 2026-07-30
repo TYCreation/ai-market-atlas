@@ -5,11 +5,13 @@ import { checkSourceHealth } from "../../market-data/source-health.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
 const valid = candidate as unknown as MarketSnapshot;
+const publicResolver = async () => ["93.184.216.34"];
 
 test("blocks an unreachable sole URL source for a required metric", async () => {
   const targetUrl = valid.sources["stanford-economy"].url;
   const issues = await checkSourceHealth(valid, async (input) =>
     new Response("", { status: String(input) === targetUrl ? 503 : 200 }),
+    publicResolver,
   );
 
   assert.ok(issues.some(
@@ -25,10 +27,10 @@ test("checks each exact cited URL once and follows redirects with a timeout sign
   const issues = await checkSourceHealth(valid, async (input, init) => {
     const url = String(input);
     counts.set(url, (counts.get(url) ?? 0) + 1);
-    assert.equal(init?.redirect, "follow");
+    assert.equal(init?.redirect, "manual");
     assert.ok(init?.signal instanceof AbortSignal);
     return new Response("", { status: 200 });
-  });
+  }, publicResolver);
 
   assert.deepEqual(issues, []);
   assert.ok(counts.size > 1);
@@ -39,6 +41,7 @@ test("warns on a forbidden source when another trusted source is reachable", asy
   const forbiddenUrl = valid.sources["iea-energy-ai"].url;
   const issues = await checkSourceHealth(valid, async (input) =>
     new Response("", { status: String(input) === forbiddenUrl ? 403 : 200 }),
+    publicResolver,
   );
 
   assert.ok(issues.some(
@@ -53,6 +56,7 @@ test("blocks forbidden access without a reachable backup and accepts redirects",
   const blockedUrl = valid.sources["stanford-economy"].url;
   const issues = await checkSourceHealth(valid, async (input) =>
     new Response("", { status: String(input) === blockedUrl ? 405 : 302 }),
+    publicResolver,
   );
 
   assert.ok(issues.some(
@@ -62,4 +66,119 @@ test("blocks forbidden access without a reachable backup and accepts redirects",
       issue.severity === "block",
   ));
   assert.equal(issues.some((issue) => issue.sourceIds.includes("iea-energy-ai")), false);
+});
+
+test("blocks loopback, local, private, and mixed-resolution source targets before fetch", async () => {
+  const cases = [
+    { url: "http://127.0.0.1/report", answers: ["127.0.0.1"] },
+    { url: "http://10.0.0.1/report", answers: ["10.0.0.1"] },
+    { url: "http://[::1]/report", answers: ["::1"] },
+    { url: "http://[fd00::1]/report", answers: ["fd00::1"] },
+    { url: "http://[fe80::1]/report", answers: ["fe80::1"] },
+    { url: "http://localhost/report", answers: ["127.0.0.1"] },
+    { url: "https://private.attacker.com/report", answers: ["10.0.0.5"] },
+    { url: "https://mixed.attacker.com/report", answers: ["93.184.216.34", "192.168.1.5"] },
+  ];
+
+  for (const entry of cases) {
+    const snapshot = structuredClone(valid);
+    snapshot.sources["stanford-economy"].url = entry.url;
+    const requested: string[] = [];
+    const issues = await checkSourceHealth(
+      snapshot,
+      async (input) => {
+        requested.push(String(input));
+        return new Response("", { status: 200 });
+      },
+      async (hostname) =>
+        hostname === new URL(entry.url).hostname.replaceAll(/^\[|\]$/g, "")
+          ? entry.answers
+          : publicResolver(),
+    );
+
+    assert.ok(issues.some(
+      (issue) =>
+        issue.code === "SOURCE_UNREACHABLE" &&
+        issue.sourceIds.includes("stanford-economy") &&
+        issue.severity === "block",
+    ));
+    assert.equal(requested.includes(entry.url), false);
+  }
+});
+
+test("blocks redirects to private targets before following them", async () => {
+  const snapshot = structuredClone(valid);
+  const initial = "https://safe-origin.example.net/report";
+  const privateTarget = "http://169.254.169.254/latest/meta-data";
+  snapshot.sources["stanford-economy"].url = initial;
+  const requested: string[] = [];
+
+  const issues = await checkSourceHealth(
+    snapshot,
+    async (input) => {
+      const url = String(input);
+      requested.push(url);
+      return url === initial
+        ? new Response("", { status: 302, headers: { location: privateTarget } })
+        : new Response("", { status: 200 });
+    },
+    publicResolver,
+  );
+
+  assert.ok(issues.some(
+    (issue) => issue.sourceIds.includes("stanford-economy") && issue.severity === "block",
+  ));
+  assert.equal(requested.includes(privateTarget), false);
+});
+
+test("follows a bounded safe public redirect manually", async () => {
+  const snapshot = structuredClone(valid);
+  const initial = "https://safe-origin.example.net/report";
+  const redirected = "https://safe-target.example.net/report";
+  snapshot.sources["stanford-economy"].url = initial;
+  const requested: string[] = [];
+
+  const issues = await checkSourceHealth(
+    snapshot,
+    async (input, init) => {
+      const url = String(input);
+      requested.push(url);
+      assert.equal(init?.redirect, "manual");
+      return url === initial
+        ? new Response("", { status: 302, headers: { location: redirected } })
+        : new Response("", { status: 200 });
+    },
+    publicResolver,
+  );
+
+  assert.equal(issues.some((issue) => issue.sourceIds.includes("stanford-economy")), false);
+  assert.equal(requested.filter((url) => url === initial).length, 1);
+  assert.equal(requested.filter((url) => url === redirected).length, 1);
+});
+
+test("blocks redirect cycles without requesting any URL twice", async () => {
+  const snapshot = structuredClone(valid);
+  const first = "https://cycle-one.example.net/report";
+  const second = "https://cycle-two.example.net/report";
+  snapshot.sources["stanford-economy"].url = first;
+  const requested: string[] = [];
+
+  const issues = await checkSourceHealth(
+    snapshot,
+    async (input) => {
+      const url = String(input);
+      requested.push(url);
+      return new Response("", {
+        status: 302,
+        headers: { location: url === first ? second : first },
+      });
+    },
+    publicResolver,
+  );
+
+  assert.ok(issues.some(
+    (issue) => issue.sourceIds.includes("stanford-economy") && issue.severity === "block",
+  ));
+  assert.equal(requested.filter((url) => url === first).length, 1);
+  assert.equal(requested.filter((url) => url === second).length, 1);
 });
