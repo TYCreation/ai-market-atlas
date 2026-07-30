@@ -47,6 +47,51 @@ export type DeepDiveConfig = {
   }>;
 };
 
+export type EquityDeepDiveConfig = {
+  updated: string;
+  sectors: Array<{
+    key: "compute" | "energy" | "sic" | "software";
+    name: string;
+    week: string;
+    month: string;
+    breadth: number;
+    signal: string;
+  }>;
+  equities: Array<{
+    ticker: string;
+    company: string;
+    sector: "compute" | "energy" | "sic" | "software";
+    price: string;
+    week: string;
+    month: string;
+    strength: number;
+    forwardPe: string;
+    revenueGrowth: string;
+    catalyst: string;
+    risk: string;
+    stance: string;
+  }>;
+  catalysts: Array<{
+    date: string;
+    event: string;
+    companies: string;
+    impact: string;
+  }>;
+  baskets: Array<{
+    name: string;
+    focus: string;
+    performance: string;
+    risk: string;
+    tickers: string[];
+  }>;
+  risks: Array<{
+    title: string;
+    level: "high" | "medium" | "low";
+    metric: string;
+    body: string;
+  }>;
+};
+
 export type DashboardConfig = {
   slug: string;
   eyebrow: string;
@@ -90,6 +135,7 @@ export type DashboardConfig = {
     owner: string;
   }>;
   deepDive?: DeepDiveConfig;
+  equityDive?: EquityDeepDiveConfig;
 };
 
 export const marketPulse: DashboardConfig = {
@@ -758,6 +804,382 @@ export const sic: DashboardConfig = {
       { title: "China capacity and price pressure", body: "Subsidized substrate expansion threatens margins across lower-end segments." },
       { title: "AI packaging timing remains uncertain", body: "Interposer commercialization may not become material until 2028–2030." },
       { title: "Export controls cut both ways", body: "Restrictions may disrupt Western equipment supply while accelerating domestic substitution in China." },
+    ],
+  },
+};
+
+export const stocks: DashboardConfig = {
+  slug: "/stocks",
+  eyebrow: "Capital layer · AI public equities",
+  title: "AI stories meet market prices.",
+  summary:
+    "A weekly capital-markets view connecting AI infrastructure themes to public equities—tracking leadership, relative strength, valuation, earnings catalysts, and the risks hidden beneath headline momentum.",
+  signal: "Leadership broadening",
+  orbitValue: "79",
+  orbitLabel: "market appetite",
+  kpis: [
+    {
+      label: "AI equity basket",
+      value: "+6.4%",
+      foot: "modeled 30-day return",
+      delta: "vs. S&P 500 +3.1%",
+    },
+    {
+      label: "Positive breadth",
+      value: "68%",
+      foot: "tracked names above 50D MA",
+      delta: "↑ 11 pts this month",
+    },
+    {
+      label: "Median forward P/E",
+      value: "31.8×",
+      foot: "12-stock AI monitor",
+      delta: "premium remains wide",
+    },
+    {
+      label: "Near-term catalysts",
+      value: "12",
+      foot: "next four weeks",
+      delta: "earnings + product events",
+    },
+  ],
+  thesis: {
+    title: "The next leg needs earnings breadth, not another headline.",
+    body:
+      "AI equity leadership is widening from accelerator vendors into networking, power, cooling, and workflow software. The durable signal is no longer capex announcements alone; it is upward earnings revisions across the stack. Relative strength remains constructive, but elevated valuation makes revenue conversion and margin quality the market’s next filter.",
+    tags: ["Earnings breadth", "Relative strength", "Valuation discipline"],
+  },
+  chart: {
+    label: "AI equity leadership index",
+    values: [38, 42, 39, 48, 52, 57, 55, 64, 69, 73, 71, 79],
+    caption: {
+      "30D":
+        "Leadership broadened as power, networking, and software names joined the accelerator trade.",
+      Q3: "Earnings revisions and booked infrastructure revenue are the highest-conviction confirmation signals.",
+      "2027":
+        "The market rewards companies that turn AI capex into repeatable free cash flow rather than narrative exposure.",
+    },
+  },
+  clusters: [
+    {
+      name: "Compute",
+      score: 91,
+      state: "Leadership",
+      note: "Accelerators, HBM, foundry, and networking retain the strongest relative strength.",
+      critical: true,
+    },
+    {
+      name: "Energy",
+      score: 76,
+      state: "Broadening",
+      note: "Cooling and power names gain as data-center bottlenecks move downstream.",
+    },
+    {
+      name: "SiC & power",
+      score: 58,
+      state: "Volatile",
+      note: "AI optionality is rising, but automotive exposure keeps earnings dispersion high.",
+    },
+    {
+      name: "Software",
+      score: 67,
+      state: "Selective",
+      note: "Workflow owners outperform undifferentiated AI feature stories.",
+    },
+  ],
+  table: {
+    title: "AI theme allocation board",
+    columns: ["Theme", "1 week", "1 month", "Breadth", "Market signal"],
+    rows: [
+      ["Compute leaders", "+3.8%", "+9.7%", "83%", "Momentum intact"],
+      ["Memory & foundry", "+2.6%", "+7.1%", "75%", "Estimates rising"],
+      ["Power & cooling", "+4.4%", "+11.8%", "72%", "Leadership broadening"],
+      ["SiC & devices", "−1.9%", "+2.4%", "42%", "High dispersion"],
+      ["AI software", "+1.7%", "+5.9%", "61%", "Quality selective"],
+    ],
+  },
+  watchlist: [
+    {
+      priority: "01 · Highest",
+      title: "Earnings revisions",
+      body:
+        "Track changes in next-twelve-month estimates. Rising prices without rising earnings create the most fragile form of AI leadership.",
+      owner: "Next read · revision breadth",
+    },
+    {
+      priority: "02 · High",
+      title: "Market breadth",
+      body:
+        "A healthy AI cycle spreads beyond one or two mega-caps into memory, networking, power, and application leaders.",
+      owner: "Next read · 50-day participation",
+    },
+    {
+      priority: "03 · High",
+      title: "Capex conversion",
+      body:
+        "Booked revenue, utilization, and free cash flow matter more than announced capacity when valuations already price in growth.",
+      owner: "Next read · cash conversion",
+    },
+  ],
+  equityDive: {
+    updated: "July 30, 2026 · illustrative weekly model",
+    sectors: [
+      { key: "compute", name: "Compute leaders", week: "+3.8%", month: "+9.7%", breadth: 83, signal: "Momentum intact" },
+      { key: "energy", name: "Power & cooling", week: "+4.4%", month: "+11.8%", breadth: 72, signal: "Breakout" },
+      { key: "sic", name: "SiC & devices", week: "−1.9%", month: "+2.4%", breadth: 42, signal: "High dispersion" },
+      { key: "software", name: "AI software", week: "+1.7%", month: "+5.9%", breadth: 61, signal: "Quality selective" },
+    ],
+    equities: [
+      {
+        ticker: "NVDA",
+        company: "NVIDIA",
+        sector: "compute",
+        price: "$194.70",
+        week: "+5.8%",
+        month: "+12.4%",
+        strength: 96,
+        forwardPe: "34.8×",
+        revenueGrowth: "+48%",
+        catalyst: "Rubin platform ramp",
+        risk: "Customer concentration",
+        stance: "Leader",
+      },
+      {
+        ticker: "AVGO",
+        company: "Broadcom",
+        sector: "compute",
+        price: "$362.40",
+        week: "+4.9%",
+        month: "+10.1%",
+        strength: 93,
+        forwardPe: "32.1×",
+        revenueGrowth: "+31%",
+        catalyst: "Custom AI silicon wins",
+        risk: "Program concentration",
+        stance: "Leader",
+      },
+      {
+        ticker: "AMD",
+        company: "AMD",
+        sector: "compute",
+        price: "$241.30",
+        week: "+3.2%",
+        month: "+8.6%",
+        strength: 86,
+        forwardPe: "37.6×",
+        revenueGrowth: "+29%",
+        catalyst: "Rack-scale deployments",
+        risk: "Software execution",
+        stance: "Building",
+      },
+      {
+        ticker: "TSM",
+        company: "TSMC",
+        sector: "compute",
+        price: "$287.10",
+        week: "+1.9%",
+        month: "+7.4%",
+        strength: 84,
+        forwardPe: "25.4×",
+        revenueGrowth: "+24%",
+        catalyst: "Advanced packaging output",
+        risk: "Geopolitical exposure",
+        stance: "Core",
+      },
+      {
+        ticker: "VRT",
+        company: "Vertiv",
+        sector: "energy",
+        price: "$176.80",
+        week: "+6.7%",
+        month: "+15.3%",
+        strength: 94,
+        forwardPe: "36.2×",
+        revenueGrowth: "+27%",
+        catalyst: "Liquid-cooling backlog",
+        risk: "Valuation compression",
+        stance: "Breakout",
+      },
+      {
+        ticker: "ETN",
+        company: "Eaton",
+        sector: "energy",
+        price: "$472.60",
+        week: "+3.4%",
+        month: "+8.2%",
+        strength: 81,
+        forwardPe: "29.7×",
+        revenueGrowth: "+14%",
+        catalyst: "Data-center power orders",
+        risk: "Long-cycle normalization",
+        stance: "Core",
+      },
+      {
+        ticker: "CEG",
+        company: "Constellation Energy",
+        sector: "energy",
+        price: "$418.20",
+        week: "+4.1%",
+        month: "+13.7%",
+        strength: 89,
+        forwardPe: "30.5×",
+        revenueGrowth: "+18%",
+        catalyst: "Nuclear power contracts",
+        risk: "Policy and power pricing",
+        stance: "Leader",
+      },
+      {
+        ticker: "WOLF",
+        company: "Wolfspeed",
+        sector: "sic",
+        price: "$23.09",
+        week: "−21.4%",
+        month: "−8.9%",
+        strength: 24,
+        forwardPe: "N/M",
+        revenueGrowth: "+19%",
+        catalyst: "300mm qualifications",
+        risk: "Financing and execution",
+        stance: "Speculative",
+      },
+      {
+        ticker: "ON",
+        company: "onsemi",
+        sector: "sic",
+        price: "$86.81",
+        week: "+0.1%",
+        month: "+4.6%",
+        strength: 57,
+        forwardPe: "18.9×",
+        revenueGrowth: "+8%",
+        catalyst: "Physical AI portfolio",
+        risk: "Auto-cycle weakness",
+        stance: "Watch",
+      },
+      {
+        ticker: "NOW",
+        company: "ServiceNow",
+        sector: "software",
+        price: "$1,238",
+        week: "+2.8%",
+        month: "+6.5%",
+        strength: 78,
+        forwardPe: "46.7×",
+        revenueGrowth: "+22%",
+        catalyst: "Agentic workflow adoption",
+        risk: "Premium valuation",
+        stance: "Quality",
+      },
+      {
+        ticker: "PLTR",
+        company: "Palantir",
+        sector: "software",
+        price: "$191.40",
+        week: "+4.2%",
+        month: "+11.1%",
+        strength: 91,
+        forwardPe: "71.5×",
+        revenueGrowth: "+36%",
+        catalyst: "Enterprise platform expansion",
+        risk: "Extreme multiple",
+        stance: "Momentum",
+      },
+      {
+        ticker: "CRM",
+        company: "Salesforce",
+        sector: "software",
+        price: "$329.70",
+        week: "−0.8%",
+        month: "+1.9%",
+        strength: 52,
+        forwardPe: "24.6×",
+        revenueGrowth: "+10%",
+        catalyst: "Agentforce monetization",
+        risk: "Seat-growth pressure",
+        stance: "Prove it",
+      },
+    ],
+    catalysts: [
+      {
+        date: "07.31",
+        event: "Cloud capex read-through",
+        companies: "MSFT · AMZN · GOOGL",
+        impact: "Tests whether booked accelerator and data-center demand remains ahead of supply.",
+      },
+      {
+        date: "08.06",
+        event: "Power and cooling earnings",
+        companies: "VRT · ETN",
+        impact: "Backlog quality and lead-time commentary can confirm the broadening infrastructure trade.",
+      },
+      {
+        date: "08.12",
+        event: "AI software cohort",
+        companies: "PLTR · CRM · NOW",
+        impact: "Production deployments and contract expansion separate workflow value from feature adoption.",
+      },
+      {
+        date: "08.19",
+        event: "Semiconductor supply update",
+        companies: "TSM · AMD · AVGO",
+        impact: "Advanced packaging, networking, and custom silicon visibility set the next estimate revision cycle.",
+      },
+    ],
+    baskets: [
+      {
+        name: "Compute core",
+        focus: "Platform leaders across accelerators, custom silicon, foundry, and networking.",
+        performance: "+9.7% / 30D",
+        risk: "High",
+        tickers: ["NVDA", "AVGO", "AMD", "TSM"],
+      },
+      {
+        name: "Power bottleneck",
+        focus: "Electrical equipment, cooling, and generation exposed to AI data-center buildouts.",
+        performance: "+11.8% / 30D",
+        risk: "Medium",
+        tickers: ["VRT", "ETN", "CEG"],
+      },
+      {
+        name: "SiC optionality",
+        focus: "Wide-bandgap devices with EV demand today and AI power upside tomorrow.",
+        performance: "+2.4% / 30D",
+        risk: "Very high",
+        tickers: ["WOLF", "ON", "STM"],
+      },
+      {
+        name: "Workflow winners",
+        focus: "Software vendors that own enterprise context, distribution, and measurable outcomes.",
+        performance: "+5.9% / 30D",
+        risk: "High",
+        tickers: ["NOW", "PLTR", "CRM"],
+      },
+    ],
+    risks: [
+      {
+        title: "Valuation compression",
+        level: "high",
+        metric: "31.8× median P/E",
+        body: "A modest rate or margin shock can erase months of performance when expectations are already elevated.",
+      },
+      {
+        title: "Earnings concentration",
+        level: "high",
+        metric: "4 names = 61%",
+        body: "A narrow share of the basket still drives most modeled earnings growth and index contribution.",
+      },
+      {
+        title: "Capex digestion",
+        level: "medium",
+        metric: "$2.8T pipeline",
+        body: "Announced infrastructure must become utilized capacity before customer returns come under pressure.",
+      },
+      {
+        title: "Policy and geopolitics",
+        level: "medium",
+        metric: "3 supply nodes",
+        body: "Export controls, tariffs, and geographic concentration can disrupt both demand and manufacturing.",
+      },
     ],
   },
 };

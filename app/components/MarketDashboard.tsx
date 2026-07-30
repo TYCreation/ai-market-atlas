@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { DashboardConfig } from "../content";
 import { chineseDashboards } from "../content-zh";
+import { EquityMarketDeepDive } from "./EquityMarketDeepDive";
 import { SiCDeepDive } from "./SiCDeepDive";
 
 type Locale = "zh" | "en";
@@ -13,6 +14,7 @@ const copy = {
     brandTag: "市場情報",
     nav: [
       { href: "/", label: "市場脈動" },
+      { href: "/stocks", label: "AI 股票市場" },
       { href: "/compute", label: "算力與晶片" },
       { href: "/energy", label: "資料中心與能源" },
       { href: "/models", label: "模型與代理" },
@@ -45,6 +47,7 @@ const copy = {
     brandTag: "Market intelligence",
     nav: [
       { href: "/", label: "Market Pulse" },
+      { href: "/stocks", label: "AI Equity Market" },
       { href: "/compute", label: "Compute & Chips" },
       { href: "/energy", label: "Data Centers & Energy" },
       { href: "/models", label: "Models & Agents" },
@@ -292,11 +295,15 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
           <SiCDeepDive data={activeConfig.deepDive} locale={locale} />
         ) : null}
 
+        {activeConfig.equityDive ? (
+          <EquityMarketDeepDive data={activeConfig.equityDive} locale={locale} />
+        ) : null}
+
         <section className="section">
           <div className="section-head">
             <div>
               <p className="section-kicker">
-                {activeConfig.deepDive
+                {activeConfig.deepDive || activeConfig.equityDive
                   ? locale === "zh"
                     ? "08 · 領導者觀察清單"
                     : "08 · Leadership watchlist"

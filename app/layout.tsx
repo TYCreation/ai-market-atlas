@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
   const description =
-    "A concise intelligence dashboard tracking AI compute, data-center energy, models, and enterprise agents.";
+    "Weekly AI market intelligence across public equities, compute, data-center energy, models, enterprise agents, and SiC.";
 
   return {
     metadataBase: new URL(origin),
@@ -39,10 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: `${origin}/og.png`,
-          width: 1792,
-          height: 896,
-          alt: "AI Market Atlas intelligence dashboard",
+          url: `${origin}/og-equities.jpg`,
+          width: 1774,
+          height: 887,
+          alt: "AI Market Atlas weekly AI market intelligence",
         },
       ],
     },
@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: "AI Market Atlas",
       description,
-      images: [`${origin}/og.png`],
+      images: [`${origin}/og-equities.jpg`],
     },
   };
 }
