@@ -13,6 +13,9 @@
     "test:market": "node --experimental-strip-types --test tests/market-data/*.test.ts",
     "market:seed": "node --experimental-strip-types scripts/seed-market-snapshot.ts",
     "market:review": "node --experimental-strip-types scripts/market-review.ts",
+    "market:validate": "node --experimental-strip-types scripts/market-update.ts validate",
+    "market:promote": "node --experimental-strip-types scripts/market-update.ts promote",
+    "market:prune": "node --experimental-strip-types scripts/market-update.ts prune",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

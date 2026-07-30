@@ -1,29 +1,83 @@
-import { cp, mkdir, mkdtemp } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { hashCandidate, type AutomatedReview } from "../../market-data/review.ts";
+import type { MarketSnapshot } from "../../market-data/types.ts";
 
 export function pathsFor(root: string) {
   return {
     root,
-    candidate: join(root, "candidate", "market.json"),
-    current: join(root, "data", "market", "current.json"),
-    runs: join(root, "data", "market", "runs"),
-    monthly: join(root, "data", "market", "monthly"),
+    candidatePath: join(root, "candidate.json"),
+    reviewPath: join(root, "reviews", "2026-08-01-saturday.json"),
+    currentPath: join(root, "current.json"),
+    runsDir: join(root, "runs"),
+    monthlyIndexPath: join(root, "monthly", "index.json"),
   };
 }
 
 export async function makeFixtureWorkspace() {
   const root = await mkdtemp(join(tmpdir(), "market-fixture-"));
   const paths = pathsFor(root);
-  await Promise.all([mkdir(dirname(paths.candidate), { recursive: true }), mkdir(paths.runs, { recursive: true }), mkdir(paths.monthly, { recursive: true })]);
-  const fixture = new URL("../fixtures/market/valid-candidate.json", import.meta.url);
-  await Promise.all([cp(fixture, paths.candidate), cp(fixture, paths.current)]);
+  await Promise.all([
+    mkdir(dirname(paths.candidatePath), { recursive: true }),
+    mkdir(dirname(paths.reviewPath), { recursive: true }),
+    mkdir(paths.runsDir, { recursive: true }),
+    mkdir(dirname(paths.monthlyIndexPath), { recursive: true }),
+  ]);
+  const candidateFixture = new URL("../fixtures/market/valid-candidate.json", import.meta.url);
+  const previousFixture = new URL("../../data/market/current.json", import.meta.url);
+  await Promise.all([
+    cp(candidateFixture, paths.candidatePath),
+    cp(previousFixture, paths.currentPath),
+    writeFile(paths.monthlyIndexPath, "{}\n"),
+  ]);
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
   return paths;
 }
 
 export async function makeBlockedFixtureWorkspace() {
   const paths = await makeFixtureWorkspace();
-  const blocked = join(paths.root, "blocked");
-  await mkdir(blocked);
-  return { ...paths, blocked };
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  const review = autoPublishReview(candidate);
+  review.decision = "manual_review";
+  review.issues = [{
+    code: "SOURCE_CONFLICT",
+    severity: "block",
+    message: "conflicting sources",
+    sourceIds: [],
+  }];
+  await writeFile(paths.reviewPath, `${JSON.stringify(review)}\n`);
+  return paths;
+}
+
+export function autoPublishReview(snapshot: MarketSnapshot): AutomatedReview {
+  const candidateSha256 = hashCandidate(snapshot);
+  return {
+    schemaVersion: 1,
+    reviewId: `${snapshot.runId}:${candidateSha256}`,
+    runId: snapshot.runId,
+    reviewedAt: snapshot.generatedAt,
+    candidateSha256,
+    decision: "auto_publish",
+    checks: [
+      "schema",
+      "completed-session",
+      "required-data",
+      "source-health",
+      "source-conflict",
+      "anomaly",
+      "bilingual",
+      "narrative-evidence",
+      "no-change-integrity",
+    ].map((id) => ({ id: id as AutomatedReview["checks"][number]["id"], status: "pass" as const, issueCodes: [] })),
+    issues: [],
+    reviewedMetricCount: Object.keys(snapshot.metrics).length,
+    reviewedSourceCount: Object.keys(snapshot.sources).length,
+  };
+}
+
+export async function writePublishableReview(candidatePath: string, reviewPath: string): Promise<void> {
+  const candidate = JSON.parse(await readFile(candidatePath, "utf8")) as MarketSnapshot;
+  await mkdir(dirname(reviewPath), { recursive: true });
+  await writeFile(reviewPath, `${JSON.stringify(autoPublishReview(candidate))}\n`);
 }

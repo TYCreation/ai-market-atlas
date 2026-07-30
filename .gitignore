@@ -39,6 +39,10 @@ next-env.d.ts
 /dist/
 /.wrangler/
 /outputs/
-/work/
 /.worktrees/
 /.superpowers/
+/data/market/candidate.json
+/data/market/runs/
+/data/market/reviews/
+/work/pages-candidate/
+/work/pages-last-good/
