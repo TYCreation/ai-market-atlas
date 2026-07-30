@@ -20,4 +20,4 @@ python3 -m http.server 8877
 
 ## Deployment
 
-Cloudflare Pages — `ai-market-atlas.pages.dev`
+Cloudflare Pages — https://aimarketatlas.pages.dev
