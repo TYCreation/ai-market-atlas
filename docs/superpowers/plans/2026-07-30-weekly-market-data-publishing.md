@@ -15,6 +15,7 @@
 - U.S. AI equities are primary; Taiwan, Korea, and Europe supply-chain listings remain in scope.
 - Start with free public and first-party sources; keep the source-adapter interface open for future paid APIs.
 - Normal updates publish automatically; source conflict, missing data, anomalous movement, thesis reversal, or failed validation requires approval.
+- Every preview and production publication requires a machine-generated review whose candidate SHA-256 matches and whose decision is `auto_publish`.
 - Never invent a missing value. Keep the last verified value, original date, and `waiting` status.
 - Every changed public number needs a source, period, and retrieval timestamp.
 - English and Traditional Chinese must use one shared numeric snapshot.
@@ -34,6 +35,7 @@
 - `market-data/normalize.ts`: canonical dates, ordering, confidence, and completed-session rules.
 - `market-data/source-health.ts`: injected, timeout-bounded source-link checks.
 - `market-data/quality-gate.ts`: all automatic-publish and manual-review rules.
+- `market-data/review.ts`: immutable automated-review decision and candidate hashing.
 - `market-data/storage.ts`: candidate loading, promotion, 90-day pruning, and monthly archive writes.
 - `market-data/view-model.ts`: dashboard/source-panel values derived from the current snapshot.
 - `market-data/monthly.ts`: archive index and archive lookup helpers.
@@ -41,8 +43,10 @@
 - `data/market/current.json`: promoted source of truth used by the website.
 - `data/market/monthly/index.json`: permanent public monthly archive records.
 - `data/market/candidate.json`: ignored automation output awaiting validation.
+- `data/market/reviews/<runId>.json`: ignored 90-day automated-review audit record; month-end reviews are copied into the permanent archive.
 - `scripts/seed-market-snapshot.ts`: one-time converter from the current illustrative dashboard.
 - `scripts/market-update.ts`: `validate`, `promote`, and `prune` commands.
+- `scripts/market-review.ts`: create and persist the required automated-review report.
 - `scripts/generate-market-brief.ts`: HyperFrames data generation and canonical-copy synchronization.
 - `scripts/export-pages.ts`: render every static route, including archive routes.
 - `scripts/deploy-pages.ts`: Cloudflare deployment, verification, and restoration.
@@ -412,20 +416,24 @@ git commit -m "Normalize completed market sessions"
 
 ---
 
-### Task 3: Guarded Quality Gate
+### Task 3: Automated Review and Guarded Quality Gate
 
 **Files:**
 - Create: `market-data/source-health.ts`
 - Create: `market-data/quality-gate.ts`
+- Create: `market-data/review.ts`
+- Create: `scripts/market-review.ts`
 - Create: `tests/market-data/source-health.test.ts`
 - Create: `tests/market-data/quality-gate.test.ts`
+- Create: `tests/market-data/review.test.ts`
 - Create: `tests/fixtures/market/conflicting-prices.json`
 - Create: `tests/fixtures/market/missing-required.json`
 - Create: `tests/fixtures/market/thesis-reversal.json`
+- Modify: `package.json`
 
 **Interfaces:**
 - Consumes: normalized current and previous `MarketSnapshot`.
-- Produces: `checkSourceHealth(snapshot, fetcher): Promise<GateIssue[]>`, `evaluateQualityGate(current, previous, externalIssues?): GateResult`.
+- Produces: `checkSourceHealth(snapshot, fetcher): Promise<GateIssue[]>`, `evaluateQualityGate(current, previous, externalIssues?): GateResult`, `hashCandidate(candidate: unknown): string`, `reviewCandidate(candidate: unknown, previous, fetcher): Promise<AutomatedReview>`, `assertAutoPublishReview(review, snapshot): void`.
 
 ```ts
 export type GateIssue = {
@@ -453,11 +461,41 @@ export type GateResult = {
   publishable: boolean;
   issues: GateIssue[];
 };
+
+export type ReviewDecision = "auto_publish" | "manual_review" | "reject";
+
+export type AutomatedReview = {
+  schemaVersion: 1;
+  reviewId: string;
+  runId: string;
+  reviewedAt: string;
+  candidateSha256: string;
+  decision: ReviewDecision;
+  checks: Array<{
+    id:
+      | "schema"
+      | "completed-session"
+      | "required-data"
+      | "source-health"
+      | "source-conflict"
+      | "anomaly"
+      | "bilingual"
+      | "narrative-evidence"
+      | "no-change-integrity";
+    status: "pass" | "warn" | "fail";
+    issueCodes: GateIssue["code"][];
+  }>;
+  issues: GateIssue[];
+  reviewedMetricCount: number;
+  reviewedSourceCount: number;
+};
 ```
 
 - [ ] **Step 1: Write failing threshold tests**
 
 ```ts
+const reachableFetcher = async () => new Response("", { status: 200 });
+
 test("blocks prices that disagree by more than one percent", () => {
   const result = evaluateQualityGate(conflicting, previous);
   assert.equal(result.publishable, false);
@@ -478,6 +516,29 @@ test("blocks a thesis stance reversal", () => {
 test("blocks an unreachable sole source for a required metric", async () => {
   const issues = await checkSourceHealth(candidate, async () => new Response("", { status: 503 }));
   assert.ok(issues.some((issue) => issue.code === "SOURCE_UNREACHABLE"));
+});
+
+test("creates an auto-publish review bound to the exact candidate", async () => {
+  const review = await reviewCandidate(candidate, previous, reachableFetcher);
+  assert.equal(review.decision, "auto_publish");
+  assert.equal(review.candidateSha256, hashCandidate(candidate));
+  assert.doesNotThrow(() => assertAutoPublishReview(review, candidate));
+});
+
+test("rejects a passed review after candidate content changes", async () => {
+  const review = await reviewCandidate(candidate, previous, reachableFetcher);
+  const changed = structuredClone(candidate);
+  changed.metrics["stocks.nvda.price"].numericValue += 1;
+  assert.throws(
+    () => assertAutoPublishReview(review, changed),
+    /review candidate hash does not match/,
+  );
+});
+
+test("routes a source conflict to manual review", async () => {
+  const review = await reviewCandidate(conflicting, previous, reachableFetcher);
+  assert.equal(review.decision, "manual_review");
+  assert.ok(review.issues.some((issue) => issue.code === "SOURCE_CONFLICT"));
 });
 ```
 
@@ -505,16 +566,32 @@ Return all issues in stable `code`, `metricId`, `page` order so reports and test
 
 `checkSourceHealth` receives an injected fetch-compatible function, uses a 10-second timeout, follows redirects, and accepts 2xx/3xx results. It checks the exact URLs cited by required, thesis, and key-signal metrics, caching each URL result for the duration of the run so no source is requested twice. A 403/405 response is a warning only when a second reachable high-confidence source covers that metric; otherwise it blocks. Merge its issues into `evaluateQualityGate` before deciding `publishable`.
 
-- [ ] **Step 4: Run the complete gate suite**
+- [ ] **Step 4: Implement the immutable automated-review decision**
+
+Canonicalize the normalized snapshot by recursively sorting object keys, serialize it without whitespace, and calculate lowercase SHA-256. Run schema, completed-session, required-data, source-health, source-conflict, anomaly, bilingual, narrative-evidence, and no-change-integrity checks every time.
+
+The narrative-evidence check extracts numeric claims from the bilingual report fields and requires each claim to match the normalized number/display of one of that field’s cited metric IDs. An unmatched numeric claim is a reject-level failure.
+
+Decision mapping is fixed:
+
+- schema, completed-session, bilingual, narrative-evidence, source-unreachable-without-backup, or review-integrity failure → `reject`;
+- source conflict, unexplained anomaly, more than 20% required data waiting, or thesis reversal → `manual_review`;
+- warnings only or no issues → `auto_publish`.
+
+`scripts/market-review.ts` writes `data/market/reviews/<runId>.json` atomically and prints the full decision summary. It exits `0` only for `auto_publish`, `2` for `manual_review`, and `3` for `reject`.
+
+Add `"market:review": "node --experimental-strip-types scripts/market-review.ts"` to `package.json`.
+
+- [ ] **Step 5: Run the complete automated-review suite**
 
 Run: `npm run test:market`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add market-data/source-health.ts market-data/quality-gate.ts tests/market-data/source-health.test.ts tests/market-data/quality-gate.test.ts tests/fixtures/market
-git commit -m "Add guarded market quality gate"
+git add package.json market-data/source-health.ts market-data/quality-gate.ts market-data/review.ts scripts/market-review.ts tests/market-data/source-health.test.ts tests/market-data/quality-gate.test.ts tests/market-data/review.test.ts tests/fixtures/market
+git commit -m "Add automated market review gate"
 ```
 
 ---
@@ -525,12 +602,13 @@ git commit -m "Add guarded market quality gate"
 - Create: `market-data/storage.ts`
 - Create: `scripts/market-update.ts`
 - Create: `tests/market-data/storage.test.ts`
+- Modify: `tests/market-data/helpers.ts`
 - Modify: `.gitignore`
 - Modify: `package.json`
 
 **Interfaces:**
-- Consumes: `normalizeCandidate`, `checkSourceHealth`, `evaluateQualityGate`.
-- Produces: `validateCandidate(paths): Promise<GateResult>`, `promoteCandidate(paths): Promise<PromotionResult>`, `restoreCurrent(paths, promotion): Promise<void>`, `pruneRuns(root, now): Promise<string[]>`.
+- Consumes: `normalizeCandidate`, `reviewCandidate`, `assertAutoPublishReview`.
+- Produces: `validateCandidate(paths): Promise<MarketSnapshot>`, `promoteCandidate(paths): Promise<PromotionResult>`, `restoreCurrent(paths, promotion): Promise<void>`, `pruneRuns(root, now): Promise<string[]>`.
 
 ```ts
 export type PromotionResult = {
@@ -548,6 +626,7 @@ test("promotes only a publishable candidate and archives the previous snapshot",
   const root = await makeFixtureWorkspace();
   const result = await promoteCandidate({
     candidatePath: `${root}/candidate.json`,
+    reviewPath: `${root}/reviews/2026-08-01-saturday.json`,
     currentPath: `${root}/current.json`,
     runsDir: `${root}/runs`,
     monthlyIndexPath: `${root}/monthly/index.json`,
@@ -560,8 +639,19 @@ test("promotes only a publishable candidate and archives the previous snapshot",
 test("does not change current.json when the gate blocks", async () => {
   const root = await makeBlockedFixtureWorkspace();
   const before = await readFile(`${root}/current.json`, "utf8");
-  await assert.rejects(() => promoteCandidate(pathsFor(root)), /manual approval required/);
+  await assert.rejects(
+    () => promoteCandidate(pathsFor(root)),
+    /automated review decision is manual_review/,
+  );
   assert.equal(await readFile(`${root}/current.json`, "utf8"), before);
+});
+
+test("refuses promotion when review is missing or bound to another hash", async () => {
+  const root = await makeFixtureWorkspace();
+  await assert.rejects(
+    () => promoteCandidate({ ...pathsFor(root), reviewPath: `${root}/reviews/missing.json` }),
+    /matching auto_publish review required/,
+  );
 });
 ```
 
@@ -572,7 +662,7 @@ Expected: FAIL because `market-data/storage.ts` is absent.
 
 - [ ] **Step 3: Implement atomic promotion and retention**
 
-`validateCandidate` loads through the selected `SourceAdapter`, normalizes against current, checks source health, and passes those issues into the quality gate. Write candidate/current files through a sibling temporary filename, validate the written file, then rename it into place. Never remove a broad directory. `pruneRuns` deletes only files whose names match `^\d{4}-\d{2}-\d{2}-(wednesday|saturday)\.json$` and whose parsed date is older than 90 days. Monthly records are never pruned.
+`validateCandidate` loads through the selected `SourceAdapter` and performs schema/normalization checks without authorizing publication. `promoteCandidate` loads the persisted review, calls `assertAutoPublishReview`, recomputes the candidate SHA-256, and refuses any missing, stale, non-`auto_publish`, or mismatched review. Write candidate/current files through a sibling temporary filename, validate the written file, then rename it into place. Never remove a broad directory. `pruneRuns` deletes only files whose names match `^\d{4}-\d{2}-\d{2}-(wednesday|saturday)\.json$` and review files with the same safe run-ID pattern when their parsed date is older than 90 days. Monthly records and their reviews are never pruned.
 
 For `cadence: "month-end"`, append a complete archive record to `data/market/monthly/index.json`, keyed by `YYYY-MM`, and reject duplicate month keys.
 
@@ -590,13 +680,14 @@ For `cadence: "month-end"`, append a complete archive record to `data/market/mon
 }
 ```
 
-`validate` prints JSON with `publishable` and `issues`; it exits `0` only when publishable. `promote` re-runs validation and refuses blocked candidates. `prune` prints the exact removed run filenames.
+`validate` prints normalized schema/session status and exits `0` only when structurally valid. `promote` re-runs validation and refuses a candidate without its matching `auto_publish` review. `prune` prints the exact removed run and review filenames.
 
 - [ ] **Step 5: Ignore only ephemeral inputs and deploy work**
 
 ```gitignore
 /data/market/candidate.json
 /data/market/runs/
+/data/market/reviews/
 /work/pages-candidate/
 /work/pages-last-good/
 /.superpowers/
@@ -607,10 +698,10 @@ Keep `data/market/current.json` and `data/market/monthly/index.json` tracked.
 - [ ] **Step 6: Verify and commit**
 
 Run: `npm run test:market && npm run market:validate -- --candidate tests/fixtures/market/valid-candidate.json`
-Expected: all tests PASS and validation prints `"publishable": true`.
+Expected: all tests PASS and validation prints `"valid": true`.
 
 ```bash
-git add .gitignore package.json market-data/storage.ts scripts/market-update.ts tests/market-data/storage.test.ts
+git add .gitignore package.json market-data/storage.ts scripts/market-update.ts tests/market-data/helpers.ts tests/market-data/storage.test.ts
 git commit -m "Add guarded snapshot promotion CLI"
 ```
 
@@ -912,6 +1003,16 @@ export type PublishDependencies = {
   promote(): Promise<PromotionResult>;
   restoreSnapshot(promotion: PromotionResult): Promise<void>;
 };
+
+export type PublishOptions = {
+  runId: string;
+  candidatePath: string;
+  reviewPath: string;
+  candidateDirectory: string;
+  lastGoodDirectory: string;
+  productionBaseUrl: string;
+  routes: string[];
+};
 ```
 
 - [ ] **Step 1: Write a failing restoration test**
@@ -958,7 +1059,7 @@ Retry only temporary network failures, at most twice. A content mismatch fails i
 
 - [ ] **Step 5: Implement publish and restore**
 
-Before the first automated publication, seed `work/pages-last-good` from a verified export of the current production version. Deploy the candidate first to Cloudflare branch `market-update-<runId>` and verify the returned preview URL. Only then promote the snapshot and deploy the same assets to `main`. On each successful production verification, replace last-known-good assets with the verified candidate.
+Before the first automated publication, seed `work/pages-last-good` from a verified export of the current production version. Before any Cloudflare call, load `reviewPath`, recompute `candidatePath` SHA-256, and require `auto_publish`. Deploy the candidate first to Cloudflare branch `market-update-<runId>` and verify the returned preview URL. Only then promote the snapshot and deploy the same assets to `main`. On each successful production verification, replace last-known-good assets with the verified candidate.
 
 If production deployment or verification fails, atomically restore `current.json` with `restoreCurrent`, deploy `work/pages-last-good` to `main`, verify it, and return an error describing candidate failure, snapshot restoration, and site restoration. A preview failure never promotes or touches production.
 
@@ -1019,12 +1120,21 @@ git commit -m "Add recoverable Cloudflare Pages publishing"
 
 `market-data/pipeline.ts` composes injected storage, brief, test/build/export, and deployment dependencies. Its fixture mode always writes to an isolated temporary workspace and sets `deploymentAttempted: false`; production deployment remains available only through `scripts/deploy-pages.ts`.
 
+```ts
+export type FixturePipelineResult = {
+  review: AutomatedReview;
+  promotedRunId?: string;
+  exportedRoutes: string[];
+  deploymentAttempted: false;
+};
+```
+
 - [ ] **Step 1: Write a failing end-to-end dry-run test**
 
 ```ts
 test("validates, promotes, generates, builds, and exports a Saturday fixture", async () => {
   const result = await runFixturePipeline("tests/fixtures/market/valid-candidate.json");
-  assert.equal(result.gate.publishable, true);
+  assert.equal(result.review.decision, "auto_publish");
   assert.equal(result.promotedRunId, "2026-08-01-saturday");
   assert.ok(result.exportedRoutes.includes("/stocks"));
   assert.ok(result.exportedRoutes.includes("/archive/2026-07"));
@@ -1032,7 +1142,7 @@ test("validates, promotes, generates, builds, and exports a Saturday fixture", a
 
 test("stops before promotion when a fixture requires approval", async () => {
   const result = await runFixturePipeline("tests/fixtures/market/conflicting-prices.json");
-  assert.equal(result.gate.publishable, false);
+  assert.equal(result.review.decision, "manual_review");
   assert.equal(result.promotedRunId, undefined);
   assert.equal(result.deploymentAttempted, false);
 });
@@ -1051,8 +1161,8 @@ The prompt must direct the scheduled agent to:
 2. research first-party and free public sources;
 3. write only `data/market/candidate.json`, including both report locales and per-source observations;
 4. run `npm run market:validate`;
-5. stop and report all gate issues when blocked;
-6. run `npm run market:brief -- --snapshot data/market/candidate.json`, `npm run test:market`, `npm test`, `npm run build`, and `npm run market:export -- --snapshot data/market/candidate.json` when publishable;
+5. run `npm run market:review -- --candidate data/market/candidate.json`, persist the review report, and stop with its complete findings unless the decision is `auto_publish`;
+6. run `npm run market:brief -- --snapshot data/market/candidate.json`, `npm run test:market`, `npm test`, `npm run build`, and `npm run market:export -- --snapshot data/market/candidate.json` only after automated approval;
 7. run `npm run market:deploy`, which verifies a preview, promotes, publishes production, verifies production, and restores both snapshot and site on failure;
 8. run `npm run market:prune` only after successful production verification;
 9. report cutoff, changed/unchanged pages, sources, issues, preview, tests, deployment, restoration state, and next observations;
@@ -1081,6 +1191,7 @@ Run:
 ```bash
 npm run market:seed
 npm run market:validate -- --candidate tests/fixtures/market/valid-candidate.json
+npm run market:review -- --candidate tests/fixtures/market/valid-candidate.json --review-output work/fixture-review.json
 npm run test:market
 npm run market:brief -- --snapshot tests/fixtures/market/valid-candidate.json
 npm run check:hyperframes
@@ -1111,6 +1222,8 @@ git commit -m "Document and verify weekly market automation"
 - [ ] Every required public number resolves to a source or explicitly documented Atlas method.
 - [ ] Free-source failures keep last verified values and never invent replacements.
 - [ ] Every approved gate rule blocks promotion and deployment.
+- [ ] Every candidate has a persisted automated-review report; only a matching `auto_publish` SHA-256 can reach preview or production.
+- [ ] `manual_review` and `reject` decisions stop automatically and return a readable issue summary.
 - [ ] English and Chinese use the same numeric record.
 - [ ] HyperFrames HTML/data canonical and public copies remain synchronized.
 - [ ] Static export includes current routes and every monthly archive.
