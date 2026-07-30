@@ -12,6 +12,7 @@
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "test:market": "node --experimental-strip-types --test tests/market-data/*.test.ts",
     "market:seed": "node --experimental-strip-types scripts/seed-market-snapshot.ts",
+    "market:review": "node --experimental-strip-types scripts/market-review.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

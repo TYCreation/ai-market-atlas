@@ -1,0 +1,2655 @@
+{
+  "schemaVersion": 1,
+  "runId": "2026-08-01-saturday",
+  "cadence": "saturday",
+  "generatedAt": "2026-08-01T01:00:00.000Z",
+  "dataCutoff": "2026-08-01T01:00:00.000Z",
+  "pages": {
+    "/": {
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "thesisStance": "neutral",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "pulse.infrastructure_spend",
+        "pulse.accelerator_market",
+        "pulse.power_queue",
+        "pulse.enterprise_agents"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "AI economy · executive overview",
+          "zh": "AI 經濟 · 高層總覽"
+        },
+        "title": {
+          "en": "Markets move. Signals remain.",
+          "zh": "市場變動，信號留存。"
+        },
+        "summary": {
+          "en": "A weekly operating view of the AI economy—connecting compute supply, power availability, model economics, and enterprise adoption in one decision-ready brief.",
+          "zh": "每週掌握 AI 經濟的營運全貌，將算力供給、電力可用性、模型經濟與企業採用整合成一份可直接決策的情報簡報。"
+        },
+        "signal": {
+          "en": "Constraint rotation",
+          "zh": "制約輪動"
+        },
+        "thesis": {
+          "title": {
+            "en": "The constraint stack is rotating from silicon to electrons.",
+            "zh": "制約堆疊正從矽晶片轉向電力。"
+          },
+          "body": {
+            "en": "Accelerator availability is improving unevenly, but grid interconnection, generation contracts, and cooling retrofits now determine how quickly announced AI capacity becomes revenue. At the software layer, falling token prices widen adoption while shifting differentiation toward workflow ownership, proprietary context, and measurable task completion.",
+            "zh": "加速器供應正不均衡地改善，但電網併網、發電合約與冷卻改造，現在決定已公布的 AI 容量能多快轉化為營收。在軟體層，Token 價格下降擴大採用，同時把差異化轉向工作流程所有權、專有情境與可衡量的任務完成率。"
+          },
+          "tags": {
+            "en": [
+              "Compute supply",
+              "Power access",
+              "Agent economics"
+            ],
+            "zh": [
+              "算力供給",
+              "電力取得",
+              "代理經濟"
+            ]
+          }
+        },
+        "supportingEvidence": [],
+        "opposingEvidence": [],
+        "catalysts": [],
+        "risks": [
+          {
+            "en": "Track signed megawatts, not announced campuses. The spread between the two is becoming the best reality check on growth.",
+            "zh": "追蹤已簽約的兆瓦，而不是已公布的園區。兩者之間的差距，正成為檢驗成長真實度的最佳指標。"
+          },
+          {
+            "en": "Watch whether price compression expands total workloads fast enough to offset falling revenue per token.",
+            "zh": "觀察價格壓縮能否讓總工作負載快速擴張，足以抵銷每 Token 收入下降。"
+          },
+          {
+            "en": "Completion rate, human review burden, and gross margin matter more than seats or pilots.",
+            "zh": "完成率、人工覆核負擔與毛利率，比席次或試點數量更重要。"
+          }
+        ],
+        "nextObservations": [
+          {
+            "en": "Next read · utility queue",
+            "zh": "下一讀 · 公用事業排隊"
+          },
+          {
+            "en": "Next read · API pricing",
+            "zh": "下一讀 · API 定價"
+          },
+          {
+            "en": "Next read · production cohort",
+            "zh": "下一讀 · 正式環境群組"
+          }
+        ]
+      }
+    },
+    "/stocks": {
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "thesisStance": "neutral",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "stocks.basket_30d",
+        "stocks.positive_breadth",
+        "stocks.median_forward_pe",
+        "stocks.catalyst_count"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Capital layer · AI public equities",
+          "zh": "資本層 · AI 公開市場股票"
+        },
+        "title": {
+          "en": "AI stories meet market prices.",
+          "zh": "AI 故事，最終都要接受市場定價。"
+        },
+        "summary": {
+          "en": "A weekly capital-markets view connecting AI infrastructure themes to public equities—tracking leadership, relative strength, valuation, earnings catalysts, and the risks hidden beneath headline momentum.",
+          "zh": "每週連結 AI 基礎設施題材與公開市場股票，追蹤領漲結構、相對強弱、估值、財報催化劑，以及藏在表面動能下的風險。"
+        },
+        "signal": {
+          "en": "Leadership broadening",
+          "zh": "領漲範圍擴大"
+        },
+        "thesis": {
+          "title": {
+            "en": "The next leg needs earnings breadth, not another headline.",
+            "zh": "下一段行情需要獲利擴散，而不是另一則新聞標題。"
+          },
+          "body": {
+            "en": "AI equity leadership is widening from accelerator vendors into networking, power, cooling, and workflow software. The durable signal is no longer capex announcements alone; it is upward earnings revisions across the stack. Relative strength remains constructive, but elevated valuation makes revenue conversion and margin quality the market’s next filter.",
+            "zh": "AI 股票領漲結構正從加速器供應商，擴散至網路、電力、冷卻與工作流程軟體。持久的信號不再只是資本支出公告，而是整個堆疊的獲利預估同步上修。相對強弱仍具建設性，但高估值讓營收轉化與利潤品質成為市場下一道篩選器。"
+          },
+          "tags": {
+            "en": [
+              "Earnings breadth",
+              "Relative strength",
+              "Valuation discipline"
+            ],
+            "zh": [
+              "獲利擴散",
+              "相對強弱",
+              "估值紀律"
+            ]
+          }
+        },
+        "supportingEvidence": [],
+        "opposingEvidence": [],
+        "catalysts": [],
+        "risks": [
+          {
+            "en": "Track changes in next-twelve-month estimates. Rising prices without rising earnings create the most fragile form of AI leadership.",
+            "zh": "追蹤未來十二個月的預估變化。只有股價上漲、獲利沒有上修，是最脆弱的 AI 領漲型態。"
+          },
+          {
+            "en": "A healthy AI cycle spreads beyond one or two mega-caps into memory, networking, power, and application leaders.",
+            "zh": "健康的 AI 週期會從少數大型股，擴散到記憶體、網路、電力與應用領導者。"
+          },
+          {
+            "en": "Booked revenue, utilization, and free cash flow matter more than announced capacity when valuations already price in growth.",
+            "zh": "當估值已反映成長時，已入帳營收、利用率與自由現金流，比公布的產能更重要。"
+          }
+        ],
+        "nextObservations": [
+          {
+            "en": "Next read · revision breadth",
+            "zh": "下一讀 · 上修廣度"
+          },
+          {
+            "en": "Next read · 50-day participation",
+            "zh": "下一讀 · 50 日線參與率"
+          },
+          {
+            "en": "Next read · cash conversion",
+            "zh": "下一讀 · 現金轉化"
+          }
+        ]
+      }
+    },
+    "/compute": {
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "thesisStance": "neutral",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "compute.accelerator_pool",
+        "compute.hbm_demand",
+        "compute.packaging_lead_weeks",
+        "compute.inference_cost_change"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Infrastructure layer · compute & chips",
+          "zh": "基礎設施層 · 算力與晶片"
+        },
+        "title": {
+          "en": "Compute is abundant—until it isn’t.",
+          "zh": "算力看似充足，直到它突然不足。"
+        },
+        "summary": {
+          "en": "A supply-chain view of accelerators, memory, packaging, and networking, built to separate durable capacity from headline announcements.",
+          "zh": "從加速器、記憶體、封裝與網路供應鏈切入，區分可持續的實際產能與新聞標題中的容量承諾。"
+        },
+        "signal": {
+          "en": "Selective tightness",
+          "zh": "選擇性緊張"
+        },
+        "thesis": {
+          "title": {
+            "en": "The shortage is fragmenting, not disappearing.",
+            "zh": "短缺正在分化，而不是消失。"
+          },
+          "body": {
+            "en": "General accelerator access is improving, but the premium stack remains constrained by HBM yield, advanced packaging, and high-speed networking. The strategic question is no longer simply who can buy GPUs—it is who can assemble a balanced system, secure power, and keep utilization high enough to defend returns.",
+            "zh": "一般加速器的取得正改善，但高階堆疊仍受 HBM 良率、先進封裝與高速網路限制。策略問題已不再只是誰能買到 GPU，而是誰能組出平衡的系統、取得電力，並維持足夠高的利用率來守住報酬。"
+          },
+          "tags": {
+            "en": [
+              "HBM",
+              "Advanced packaging",
+              "Networking"
+            ],
+            "zh": [
+              "HBM",
+              "先進封裝",
+              "高速網路"
+            ]
+          }
+        },
+        "supportingEvidence": [],
+        "opposingEvidence": [],
+        "catalysts": [],
+        "risks": [
+          {
+            "en": "Memory supply matters only after platform qualification. Track approved capacity rather than aggregate wafer starts.",
+            "zh": "記憶體只有通過平台認證後才構成有效供應。應追蹤已核准產能，而非總晶圓投入量。"
+          },
+          {
+            "en": "The next profit pool belongs to operators that can keep expensive clusters fed, scheduled, and networked.",
+            "zh": "下一個利潤池屬於能讓昂貴叢集持續有工作、排程順暢且網路充足的營運商。"
+          },
+          {
+            "en": "ASIC momentum is real, but software portability and deployment scale decide where share actually shifts.",
+            "zh": "ASIC 動能確實存在，但軟體可攜性與部署規模才決定市占真正轉移的位置。"
+          }
+        ],
+        "nextObservations": [
+          {
+            "en": "Next read · supplier mix",
+            "zh": "下一讀 · 供應商組合"
+          },
+          {
+            "en": "Next read · workload density",
+            "zh": "下一讀 · 工作負載密度"
+          },
+          {
+            "en": "Next read · volume ramps",
+            "zh": "下一讀 · 出貨放量"
+          }
+        ]
+      }
+    },
+    "/energy": {
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "thesisStance": "neutral",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "energy.announced_power_gw",
+        "energy.committed_power_gw",
+        "energy.interconnection_years",
+        "energy.liquid_cooling_share"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Physical layer · data centers & energy",
+          "zh": "實體層 · 資料中心與能源"
+        },
+        "title": {
+          "en": "The AI race has entered the grid.",
+          "zh": "AI 競賽已進入電網。"
+        },
+        "summary": {
+          "en": "A project-level view of power commitments, interconnection delays, cooling transitions, and the infrastructure required to turn models into capacity.",
+          "zh": "以專案為單位追蹤電力承諾、併網延遲、冷卻轉型，以及把模型真正轉化為可用容量所需的基礎設施。"
+        },
+        "signal": {
+          "en": "Power constrained",
+          "zh": "電力受限"
+        },
+        "thesis": {
+          "title": {
+            "en": "Signed megawatts are the new compute inventory.",
+            "zh": "已簽約兆瓦，就是新的算力庫存。"
+          },
+          "body": {
+            "en": "Data-center strategy is becoming an energy procurement discipline. Markets with available generation, faster permitting, and mature cooling supply chains can convert demand into revenue years earlier. The premium is shifting toward firm power, flexible load design, and campuses that can support higher rack density without delaying commissioning.",
+            "zh": "資料中心策略正轉變為能源採購專業。具備可用發電、較快許可流程與成熟冷卻供應鏈的市場，可以提早數年把需求轉成營收。溢價正轉向穩定電力、彈性負載設計，以及能在不延誤啟用的情況下支援更高機櫃密度的園區。"
+          },
+          "tags": {
+            "en": [
+              "Grid access",
+              "Firm generation",
+              "Liquid cooling"
+            ],
+            "zh": [
+              "電網接取",
+              "穩定發電",
+              "液冷"
+            ]
+          }
+        },
+        "supportingEvidence": [],
+        "opposingEvidence": [],
+        "catalysts": [],
+        "risks": [
+          {
+            "en": "Treat projects as real only after land, power, equipment, and customer commitments converge.",
+            "zh": "只有在土地、電力、設備與客戶承諾同時到位後，才能把專案視為真實容量。"
+          },
+          {
+            "en": "Rack density is rising faster than retrofit readiness. Watch coolant distribution and heat rejection capacity.",
+            "zh": "機櫃密度上升速度快於改造準備。應追蹤冷卻液配送與排熱能力。"
+          },
+          {
+            "en": "Gas, nuclear, storage, and demand response are converging into a new portfolio for always-on compute.",
+            "zh": "天然氣、核能、儲能與需量反應正匯聚成全天候算力的新型供電組合。"
+          }
+        ],
+        "nextObservations": [
+          {
+            "en": "Next read · project conversion",
+            "zh": "下一讀 · 專案轉化"
+          },
+          {
+            "en": "Next read · design wins",
+            "zh": "下一讀 · 設計導入"
+          },
+          {
+            "en": "Next read · PPA quality",
+            "zh": "下一讀 · PPA 品質"
+          }
+        ]
+      }
+    },
+    "/models": {
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "thesisStance": "neutral",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "models.production_agents",
+        "models.software_spend_growth",
+        "models.managed_tokens",
+        "models.api_deployment_share"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Application layer · models & agents",
+          "zh": "應用層 · 模型與代理"
+        },
+        "title": {
+          "en": "Models are cheaper. Outcomes are not.",
+          "zh": "模型更便宜，成果並沒有。"
+        },
+        "summary": {
+          "en": "A commercial view of model price-performance, enterprise agent deployment, workflow ownership, and the unit economics separating pilots from production.",
+          "zh": "從商業角度觀察模型性價比、企業代理部署、工作流程所有權，以及區分試點與正式環境的單位經濟。"
+        },
+        "signal": {
+          "en": "Adoption broadening",
+          "zh": "採用面擴大"
+        },
+        "thesis": {
+          "title": {
+            "en": "The winning agent is a redesigned workflow, not a chat window.",
+            "zh": "勝出的代理是重新設計的工作流程，不是聊天視窗。"
+          },
+          "body": {
+            "en": "Model capability is converging faster than enterprise process change. Durable value appears where agents own a measurable task, operate against trusted context, escalate cleanly, and improve through feedback. As inference prices fall, distribution and workflow depth—not raw model access—capture a larger share of the economics.",
+            "zh": "模型能力的收斂速度快於企業流程改造。當代理負責可衡量的任務、使用可信情境、清楚升級例外，並透過回饋改善時，才會產生持久價值。推論價格下降後，分發與工作流程深度，而非單純模型存取，將取得更大比例的經濟價值。"
+          },
+          "tags": {
+            "en": [
+              "Workflow ownership",
+              "Trusted context",
+              "Task completion"
+            ],
+            "zh": [
+              "工作流程所有權",
+              "可信情境",
+              "任務完成"
+            ]
+          }
+        },
+        "supportingEvidence": [],
+        "opposingEvidence": [],
+        "catalysts": [],
+        "risks": [
+          {
+            "en": "Measure completed work after review, not generated content. The gap exposes hidden operating cost.",
+            "zh": "衡量覆核後真正完成的工作，而不是生成的內容。兩者差距會揭露隱藏營運成本。"
+          },
+          {
+            "en": "The most defensible agents learn from proprietary workflows without compromising governance.",
+            "zh": "最具防禦力的代理能從專有工作流程學習，同時不犧牲治理。"
+          },
+          {
+            "en": "Outcome pricing expands upside but transfers model, review, and exception risk back to the vendor.",
+            "zh": "成果定價提高上行空間，但也把模型、覆核與例外風險轉回供應商。"
+          }
+        ],
+        "nextObservations": [
+          {
+            "en": "Next read · outcome cohort",
+            "zh": "下一讀 · 成果群組"
+          },
+          {
+            "en": "Next read · data flywheel",
+            "zh": "下一讀 · 資料飛輪"
+          },
+          {
+            "en": "Next read · gross margin",
+            "zh": "下一讀 · 毛利率"
+          }
+        ]
+      }
+    },
+    "/sic": {
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "thesisStance": "neutral",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "sic.market_2030_usd_b",
+        "sic.wafer_frontier_mm",
+        "sic.packaging_watts",
+        "sic.ev_penetration"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Materials layer · SiC & power electronics",
+          "zh": "材料層 · SiC 與功率半導體"
+        },
+        "title": {
+          "en": "AI’s power stack runs through SiC.",
+          "zh": "AI 的電力堆疊，離不開 SiC。"
+        },
+        "summary": {
+          "en": "A weekly view of silicon carbide across AI chip packaging, 800V data-center power, EV inverters, wafer scaling, and the supply-chain contest shaping the next infrastructure cycle.",
+          "zh": "每週追蹤碳化矽在 AI 晶片封裝、800V 資料中心電力、電動車逆變器、晶圓擴徑與供應鏈競局中的最新變化。"
+        },
+        "signal": {
+          "en": "AI packaging crossover",
+          "zh": "跨入 AI 封裝"
+        },
+        "thesis": {
+          "title": {
+            "en": "SiC is moving from the EV red ocean into AI infrastructure.",
+            "zh": "SiC 正從電動車紅海，移向 AI 基礎設施。"
+          },
+          "body": {
+            "en": "Twelve-inch SiC is no longer only an EV cost story. Its thermal conductivity, high-voltage performance, and compatibility with 800V data-center architectures create a second demand curve in AI packaging and power delivery. The opportunity depends on wafer quality, customer qualification, and how quickly advanced packaging moves from evaluation to production.",
+            "zh": "12 吋 SiC 已不只是電動車的降本題材。它的高導熱、高電壓性能，以及與 800V 資料中心架構的相容性，正於 AI 封裝與電力傳輸形成第二條需求曲線。機會能否落地，取決於晶圓品質、客戶認證，以及先進封裝從驗證走向量產的速度。"
+          },
+          "tags": {
+            "en": [
+              "300mm wafers",
+              "AI packaging",
+              "800V power"
+            ],
+            "zh": [
+              "300mm 晶圓",
+              "AI 封裝",
+              "800V 電力"
+            ]
+          }
+        },
+        "supportingEvidence": [],
+        "opposingEvidence": [],
+        "catalysts": [],
+        "risks": [
+          {
+            "en": "Track named customer qualification and production orders, not wafer demonstrations. That is the bridge from technical proof to revenue.",
+            "zh": "追蹤具名客戶認證與量產訂單，而不是晶圓展示。這才是從技術證明跨向營收的橋梁。"
+          },
+          {
+            "en": "The Wolfspeed–Navitas dispute could reshape design freedom and IP value across SiC and GaN power devices.",
+            "zh": "Wolfspeed 與 Navitas 的爭議，可能重塑 SiC 與 GaN 功率元件的設計自由與智慧財產價值。"
+          },
+          {
+            "en": "Watch reference designs become signed data-center orders. Power architecture adoption is the fastest path to material AI revenue.",
+            "zh": "觀察參考設計能否變成已簽署的資料中心訂單。電力架構採用，是 AI 營收實質化的最快路徑。"
+          }
+        ],
+        "nextObservations": [
+          {
+            "en": "Next read · packaging customers",
+            "zh": "下一讀 · 封裝客戶"
+          },
+          {
+            "en": "Next read · injunction status",
+            "zh": "下一讀 · 禁制令進度"
+          },
+          {
+            "en": "Next read · design wins",
+            "zh": "下一讀 · 設計導入"
+          }
+        ]
+      }
+    }
+  },
+  "sources": {
+    "atlas-model": {
+      "id": "atlas-model",
+      "kind": "atlas",
+      "publisher": "AI Market Atlas",
+      "title": "Directional weekly market model",
+      "publishedAt": "2026-07-01T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "彙整下列公開資料後建立的方向性模型；模型值不是官方統計、即時行情或經稽核財務資料。",
+        "en": "A directional model built from the public materials below; model outputs are not official statistics, live prices, or audited financial data."
+      }
+    },
+    "stanford-economy": {
+      "id": "stanford-economy",
+      "kind": "research",
+      "publisher": "Stanford HAI",
+      "title": "2026 AI Index Report · Economy",
+      "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/economy",
+      "publishedAt": "2026-01-01T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "AI 投資、企業採用、營收與生產力的基準背景。",
+        "en": "Benchmark context for AI investment, enterprise adoption, revenue, and productivity."
+      }
+    },
+    "nvidia-q1-fy27": {
+      "id": "nvidia-q1-fy27",
+      "kind": "company",
+      "publisher": "NVIDIA Investor Relations",
+      "title": "First Quarter Fiscal 2027 Financial Results",
+      "url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2027/default.aspx",
+      "publishedAt": "2026-05-20T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "資料中心營收、成長率、平台進度與公司展望。",
+        "en": "Data-center revenue, growth, platform progress, and company outlook."
+      }
+    },
+    "iea-energy-ai": {
+      "id": "iea-energy-ai",
+      "kind": "official",
+      "publisher": "International Energy Agency",
+      "title": "Energy and AI · Executive summary",
+      "url": "https://www.iea.org/reports/energy-and-ai/executive-summary",
+      "publishedAt": "2026-08-01T01:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "全球資料中心用電、2030 年情境、供電結構與專案延誤風險。",
+        "en": "Global data-center electricity demand, 2030 scenarios, supply mix, and project-delay risk."
+      }
+    },
+    "iea-data-centres": {
+      "id": "iea-data-centres",
+      "kind": "official",
+      "publisher": "International Energy Agency",
+      "title": "Data Centres & Networks · Latest findings",
+      "url": "https://www.iea.org/energy-system/digitalisation/data-centres-and-data-transmission-networks",
+      "publishedAt": "2026-06-01T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "資料中心用電量、成長速度與最新全球趨勢。",
+        "en": "Latest global data-center electricity consumption and growth trends."
+      }
+    },
+    "broadcom-q2-fy26": {
+      "id": "broadcom-q2-fy26",
+      "kind": "company",
+      "publisher": "Broadcom Investor Relations",
+      "title": "Second Quarter Fiscal Year 2026 Financial Results",
+      "url": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-second-quarter-fiscal-year-2026-financial",
+      "publishedAt": "2026-06-03T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "客製 AI 加速器、AI 網路與半導體營收的公司揭露。",
+        "en": "Company disclosures on custom AI accelerators, AI networking, and semiconductor revenue."
+      }
+    },
+    "tsmc-q1-2026": {
+      "id": "tsmc-q1-2026",
+      "kind": "company",
+      "publisher": "TSMC Investor Relations",
+      "title": "First Quarter 2026 Management Report",
+      "url": "https://investor.tsmc.com/english/encrypt/files/encrypt_file/qr/phase4_reports/2026-04/9f060092ba29ff3630cfdaefd67774026195e135/1Q26ManagementReport.pdf",
+      "publishedAt": "2026-04-01T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "先進製程、資本支出、營收組合與產能展望。",
+        "en": "Advanced-node, capital-expenditure, revenue-mix, and capacity outlook."
+      }
+    },
+    "doe-data-centers": {
+      "id": "doe-data-centers",
+      "kind": "official",
+      "publisher": "U.S. Department of Energy / LBNL",
+      "title": "2024 Report on U.S. Data Center Energy Use",
+      "url": "https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers",
+      "publishedAt": "2024-12-20T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "美國資料中心用電歷史、2028 年預測區間與需求成長。",
+        "en": "U.S. data-center electricity history, 2028 forecast range, and demand growth."
+      }
+    },
+    "stanford-technical": {
+      "id": "stanford-technical",
+      "kind": "research",
+      "publisher": "Stanford HAI",
+      "title": "2026 AI Index Report · Technical Performance",
+      "url": "https://hai.stanford.edu/ai-index/2026-ai-index-report/technical-performance",
+      "publishedAt": "2026-01-01T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "模型能力、基準測試、推理進展與技術競爭背景。",
+        "en": "Model capability, benchmarks, reasoning progress, and technical competition."
+      }
+    },
+    "openai-pricing": {
+      "id": "openai-pricing",
+      "kind": "pricing",
+      "publisher": "OpenAI",
+      "title": "API pricing",
+      "url": "https://openai.com/api/pricing/",
+      "publishedAt": "2026-08-01T01:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "官方 API 定價；價格變動時以供應商頁面為準。",
+        "en": "Official API list pricing; the provider page governs when prices change."
+      }
+    },
+    "gemini-pricing": {
+      "id": "gemini-pricing",
+      "kind": "pricing",
+      "publisher": "Google AI for Developers",
+      "title": "Gemini Developer API pricing",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "publishedAt": "2026-08-01T01:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "Gemini 模型與工具的官方 API 定價及更新時間。",
+        "en": "Official Gemini model and tool pricing, including its latest update time."
+      }
+    },
+    "wolfspeed-ai": {
+      "id": "wolfspeed-ai",
+      "kind": "company",
+      "publisher": "Wolfspeed",
+      "title": "Artificial Intelligence news and SiC product updates",
+      "url": "https://www.wolfspeed.com/company/news-events/news/category/artificial-intelligence-news/",
+      "publishedAt": "2026-08-01T01:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "300mm SiC、AI 資料中心功率與先進封裝的公司公告。",
+        "en": "Company announcements on 300mm SiC, AI data-center power, and advanced packaging."
+      }
+    },
+    "onsemi-ai": {
+      "id": "onsemi-ai",
+      "kind": "company",
+      "publisher": "onsemi",
+      "title": "How onsemi Is Powering the Next Generation of AI Factories",
+      "url": "https://www.onsemi.com/company/newsroom/news-and-insights/how-onsemi-is-powering-the-next-generation-of-ai-factories",
+      "publishedAt": "2026-05-29T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "AI 資料中心的矽、SiC 與 GaN 功率產品及供應鏈觀點。",
+        "en": "Silicon, SiC, and GaN power products and supply-chain context for AI data centers."
+      }
+    },
+    "stm-q1-2026": {
+      "id": "stm-q1-2026",
+      "kind": "company",
+      "publisher": "STMicroelectronics Investor Relations",
+      "title": "Q1 2026 Earnings Results",
+      "url": "https://investors.st.com/static-files/1e089b38-2b28-48c9-8585-fe8f4ba74f33",
+      "publishedAt": "2026-04-23T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "SiC 業務、800V AI 資料中心電力架構與公司展望。",
+        "en": "SiC business, 800V AI data-center power architecture, and company outlook."
+      }
+    },
+    "infineon-200mm": {
+      "id": "infineon-200mm",
+      "kind": "company",
+      "publisher": "Infineon",
+      "title": "Next milestone on 200 mm silicon carbide",
+      "url": "https://www.infineon.com/assets/row/public/documents/corporate/press/press-releases/business-financial-press/2025/next-milestone-200-mm-silicon-carbide.pdf",
+      "publishedAt": "2025-01-01T00:00:00.000Z",
+      "retrievedAt": "2026-08-01T01:00:00.000Z",
+      "scope": {
+        "zh": "200mm SiC 量產進度與產品時程的公司公告。",
+        "en": "Company disclosure on 200mm SiC production progress and product timing."
+      }
+    }
+  },
+  "metrics": {
+    "pulse.infrastructure_spend": {
+      "id": "pulse.infrastructure_spend",
+      "page": "/",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 2800,
+      "display": {
+        "en": "$2.8T",
+        "zh": "$2.8T"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 2800,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stanford-economy",
+          "numericValue": 2800,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "pulse.accelerator_market": {
+      "id": "pulse.accelerator_market",
+      "page": "/",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 242,
+      "display": {
+        "en": "$242B",
+        "zh": "$242B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 242,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "nvidia-q1-fy27",
+          "numericValue": 242,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "pulse.power_queue": {
+      "id": "pulse.power_queue",
+      "page": "/",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 36.2,
+      "display": {
+        "en": "36.2GW",
+        "zh": "36.2GW"
+      },
+      "unit": "GW",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "iea-energy-ai",
+        "iea-data-centres"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 36.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "iea-energy-ai",
+          "numericValue": 36.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "iea-data-centres",
+          "numericValue": 36.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "pulse.enterprise_agents": {
+      "id": "pulse.enterprise_agents",
+      "page": "/",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 220,
+      "display": {
+        "en": "220+",
+        "zh": "220+"
+      },
+      "unit": "programs",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 220,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stanford-economy",
+          "numericValue": 220,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "stocks.basket_30d": {
+      "id": "stocks.basket_30d",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 6.4,
+      "display": {
+        "en": "+6.4%",
+        "zh": "+6.4%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 6.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "stocks.positive_breadth": {
+      "id": "stocks.positive_breadth",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 68,
+      "display": {
+        "en": "68%",
+        "zh": "68%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 68,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "stocks.median_forward_pe": {
+      "id": "stocks.median_forward_pe",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 31.8,
+      "display": {
+        "en": "31.8×",
+        "zh": "31.8×"
+      },
+      "unit": "x",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27",
+        "broadcom-q2-fy26",
+        "tsmc-q1-2026"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 31.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "nvidia-q1-fy27",
+          "numericValue": 31.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "broadcom-q2-fy26",
+          "numericValue": 31.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "tsmc-q1-2026",
+          "numericValue": 31.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "stocks.catalyst_count": {
+      "id": "stocks.catalyst_count",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 12,
+      "display": {
+        "en": "12",
+        "zh": "12"
+      },
+      "unit": "events",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27",
+        "broadcom-q2-fy26",
+        "tsmc-q1-2026"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 12,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "nvidia-q1-fy27",
+          "numericValue": 12,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "broadcom-q2-fy26",
+          "numericValue": 12,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "tsmc-q1-2026",
+          "numericValue": 12,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "compute.accelerator_pool": {
+      "id": "compute.accelerator_pool",
+      "page": "/compute",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 242,
+      "display": {
+        "en": "$242B",
+        "zh": "$242B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27",
+        "broadcom-q2-fy26"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 242,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "nvidia-q1-fy27",
+          "numericValue": 242,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "broadcom-q2-fy26",
+          "numericValue": 242,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "compute.hbm_demand": {
+      "id": "compute.hbm_demand",
+      "page": "/compute",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 94,
+      "display": {
+        "en": "+94%",
+        "zh": "+94%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "tsmc-q1-2026"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 94,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "tsmc-q1-2026",
+          "numericValue": 94,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "compute.packaging_lead_weeks": {
+      "id": "compute.packaging_lead_weeks",
+      "page": "/compute",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 28,
+      "display": {
+        "en": "28wk",
+        "zh": "28週"
+      },
+      "unit": "weeks",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "tsmc-q1-2026"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 28,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "tsmc-q1-2026",
+          "numericValue": 28,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "compute.inference_cost_change": {
+      "id": "compute.inference_cost_change",
+      "page": "/compute",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": -58,
+      "display": {
+        "en": "−58%",
+        "zh": "−58%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": -58,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "nvidia-q1-fy27",
+          "numericValue": -58,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "energy.announced_power_gw": {
+      "id": "energy.announced_power_gw",
+      "page": "/energy",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 36.2,
+      "display": {
+        "en": "36.2GW",
+        "zh": "36.2GW"
+      },
+      "unit": "GW",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "iea-energy-ai",
+        "iea-data-centres"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 36.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "iea-energy-ai",
+          "numericValue": 36.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "iea-data-centres",
+          "numericValue": 36.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "energy.committed_power_gw": {
+      "id": "energy.committed_power_gw",
+      "page": "/energy",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 12.8,
+      "display": {
+        "en": "12.8GW",
+        "zh": "12.8GW"
+      },
+      "unit": "GW",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "iea-energy-ai"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 12.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "iea-energy-ai",
+          "numericValue": 12.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "energy.interconnection_years": {
+      "id": "energy.interconnection_years",
+      "page": "/energy",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 4.6,
+      "display": {
+        "en": "4.6yr",
+        "zh": "4.6年"
+      },
+      "unit": "years",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "doe-data-centers"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 4.6,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "doe-data-centers",
+          "numericValue": 4.6,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "energy.liquid_cooling_share": {
+      "id": "energy.liquid_cooling_share",
+      "page": "/energy",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 42,
+      "display": {
+        "en": "42%",
+        "zh": "42%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "iea-data-centres"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 42,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "iea-data-centres",
+          "numericValue": 42,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "models.production_agents": {
+      "id": "models.production_agents",
+      "page": "/models",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 220,
+      "display": {
+        "en": "220+",
+        "zh": "220+"
+      },
+      "unit": "programs",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 220,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stanford-economy",
+          "numericValue": 220,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "models.software_spend_growth": {
+      "id": "models.software_spend_growth",
+      "page": "/models",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 37,
+      "display": {
+        "en": "+37%",
+        "zh": "+37%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 37,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stanford-economy",
+          "numericValue": 37,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "models.managed_tokens": {
+      "id": "models.managed_tokens",
+      "page": "/models",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 1800,
+      "display": {
+        "en": "1.8T",
+        "zh": "1.8T"
+      },
+      "unit": "T tokens",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "openai-pricing",
+        "gemini-pricing"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 1800,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "openai-pricing",
+          "numericValue": 1800,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "gemini-pricing",
+          "numericValue": 1800,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "models.api_deployment_share": {
+      "id": "models.api_deployment_share",
+      "page": "/models",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 68,
+      "display": {
+        "en": "68%",
+        "zh": "68%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 68,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stanford-economy",
+          "numericValue": 68,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "sic.market_2030_usd_b": {
+      "id": "sic.market_2030_usd_b",
+      "page": "/sic",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 23,
+      "display": {
+        "en": "$23B",
+        "zh": "$23B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "wolfspeed-ai",
+        "stm-q1-2026",
+        "infineon-200mm"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 23,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "wolfspeed-ai",
+          "numericValue": 23,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stm-q1-2026",
+          "numericValue": 23,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "infineon-200mm",
+          "numericValue": 23,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "sic.wafer_frontier_mm": {
+      "id": "sic.wafer_frontier_mm",
+      "page": "/sic",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 300,
+      "display": {
+        "en": "300mm",
+        "zh": "300mm"
+      },
+      "unit": "mm",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "wolfspeed-ai",
+        "infineon-200mm"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 300,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "wolfspeed-ai",
+          "numericValue": 300,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "infineon-200mm",
+          "numericValue": 300,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "sic.packaging_watts": {
+      "id": "sic.packaging_watts",
+      "page": "/sic",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 1000,
+      "display": {
+        "en": "1000W+",
+        "zh": "1000W+"
+      },
+      "unit": "W",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "wolfspeed-ai"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 1000,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "wolfspeed-ai",
+          "numericValue": 1000,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "sic.ev_penetration": {
+      "id": "sic.ev_penetration",
+      "page": "/sic",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 35,
+      "display": {
+        "en": "35%+",
+        "zh": "35%+"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "onsemi-ai",
+        "stm-q1-2026"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 35,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "onsemi-ai",
+          "numericValue": 35,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "stm-q1-2026",
+          "numericValue": 35,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified"
+    },
+    "stocks.nvda.price": {
+      "id": "stocks.nvda.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 194.7,
+      "display": {
+        "en": "$194.70",
+        "zh": "$194.70"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 194.7,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        },
+        {
+          "sourceId": "nvidia-q1-fy27",
+          "numericValue": 198,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "NVDA",
+      "securityType": "primary"
+    },
+    "stocks.nvda.weekReturn": {
+      "id": "stocks.nvda.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 5.8,
+      "display": {
+        "en": "+5.8%",
+        "zh": "+5.8%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 5.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "NVDA",
+      "securityType": "primary"
+    },
+    "stocks.nvda.monthReturn": {
+      "id": "stocks.nvda.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 12.4,
+      "display": {
+        "en": "+12.4%",
+        "zh": "+12.4%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 12.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "NVDA",
+      "securityType": "primary"
+    },
+    "stocks.avgo.price": {
+      "id": "stocks.avgo.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 362.4,
+      "display": {
+        "en": "$362.40",
+        "zh": "$362.40"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 362.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "AVGO",
+      "securityType": "primary"
+    },
+    "stocks.avgo.weekReturn": {
+      "id": "stocks.avgo.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 4.9,
+      "display": {
+        "en": "+4.9%",
+        "zh": "+4.9%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 4.9,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "AVGO",
+      "securityType": "primary"
+    },
+    "stocks.avgo.monthReturn": {
+      "id": "stocks.avgo.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 10.1,
+      "display": {
+        "en": "+10.1%",
+        "zh": "+10.1%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 10.1,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "AVGO",
+      "securityType": "primary"
+    },
+    "stocks.amd.price": {
+      "id": "stocks.amd.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 241.3,
+      "display": {
+        "en": "$241.30",
+        "zh": "$241.30"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 241.3,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "AMD",
+      "securityType": "primary"
+    },
+    "stocks.amd.weekReturn": {
+      "id": "stocks.amd.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 3.2,
+      "display": {
+        "en": "+3.2%",
+        "zh": "+3.2%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 3.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "AMD",
+      "securityType": "primary"
+    },
+    "stocks.amd.monthReturn": {
+      "id": "stocks.amd.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 8.6,
+      "display": {
+        "en": "+8.6%",
+        "zh": "+8.6%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 8.6,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "AMD",
+      "securityType": "primary"
+    },
+    "stocks.tsm.price": {
+      "id": "stocks.tsm.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 287.1,
+      "display": {
+        "en": "$287.10",
+        "zh": "$287.10"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 287.1,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "TSM",
+      "securityType": "primary"
+    },
+    "stocks.tsm.weekReturn": {
+      "id": "stocks.tsm.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 1.9,
+      "display": {
+        "en": "+1.9%",
+        "zh": "+1.9%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 1.9,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "TSM",
+      "securityType": "primary"
+    },
+    "stocks.tsm.monthReturn": {
+      "id": "stocks.tsm.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 7.4,
+      "display": {
+        "en": "+7.4%",
+        "zh": "+7.4%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 7.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "TSM",
+      "securityType": "primary"
+    },
+    "stocks.vrt.price": {
+      "id": "stocks.vrt.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 176.8,
+      "display": {
+        "en": "$176.80",
+        "zh": "$176.80"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 176.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "VRT",
+      "securityType": "primary"
+    },
+    "stocks.vrt.weekReturn": {
+      "id": "stocks.vrt.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 6.7,
+      "display": {
+        "en": "+6.7%",
+        "zh": "+6.7%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 6.7,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "VRT",
+      "securityType": "primary"
+    },
+    "stocks.vrt.monthReturn": {
+      "id": "stocks.vrt.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 15.3,
+      "display": {
+        "en": "+15.3%",
+        "zh": "+15.3%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 15.3,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "VRT",
+      "securityType": "primary"
+    },
+    "stocks.etn.price": {
+      "id": "stocks.etn.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 472.6,
+      "display": {
+        "en": "$472.60",
+        "zh": "$472.60"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 472.6,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "ETN",
+      "securityType": "primary"
+    },
+    "stocks.etn.weekReturn": {
+      "id": "stocks.etn.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 3.4,
+      "display": {
+        "en": "+3.4%",
+        "zh": "+3.4%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 3.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "ETN",
+      "securityType": "primary"
+    },
+    "stocks.etn.monthReturn": {
+      "id": "stocks.etn.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 8.2,
+      "display": {
+        "en": "+8.2%",
+        "zh": "+8.2%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 8.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "ETN",
+      "securityType": "primary"
+    },
+    "stocks.ceg.price": {
+      "id": "stocks.ceg.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 418.2,
+      "display": {
+        "en": "$418.20",
+        "zh": "$418.20"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 418.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "CEG",
+      "securityType": "primary"
+    },
+    "stocks.ceg.weekReturn": {
+      "id": "stocks.ceg.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 4.1,
+      "display": {
+        "en": "+4.1%",
+        "zh": "+4.1%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 4.1,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "CEG",
+      "securityType": "primary"
+    },
+    "stocks.ceg.monthReturn": {
+      "id": "stocks.ceg.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 13.7,
+      "display": {
+        "en": "+13.7%",
+        "zh": "+13.7%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 13.7,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "CEG",
+      "securityType": "primary"
+    },
+    "stocks.wolf.price": {
+      "id": "stocks.wolf.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 23.09,
+      "display": {
+        "en": "$23.09",
+        "zh": "$23.09"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 23.09,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "WOLF",
+      "securityType": "primary"
+    },
+    "stocks.wolf.weekReturn": {
+      "id": "stocks.wolf.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": -21.4,
+      "display": {
+        "en": "−21.4%",
+        "zh": "−21.4%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": -21.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "WOLF",
+      "securityType": "primary"
+    },
+    "stocks.wolf.monthReturn": {
+      "id": "stocks.wolf.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": -8.9,
+      "display": {
+        "en": "−8.9%",
+        "zh": "−8.9%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": -8.9,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "WOLF",
+      "securityType": "primary"
+    },
+    "stocks.on.price": {
+      "id": "stocks.on.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 86.81,
+      "display": {
+        "en": "$86.81",
+        "zh": "$86.81"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 86.81,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "ON",
+      "securityType": "primary"
+    },
+    "stocks.on.weekReturn": {
+      "id": "stocks.on.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 0.1,
+      "display": {
+        "en": "+0.1%",
+        "zh": "+0.1%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 0.1,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "ON",
+      "securityType": "primary"
+    },
+    "stocks.on.monthReturn": {
+      "id": "stocks.on.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 4.6,
+      "display": {
+        "en": "+4.6%",
+        "zh": "+4.6%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 4.6,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "ON",
+      "securityType": "primary"
+    },
+    "stocks.now.price": {
+      "id": "stocks.now.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 1238,
+      "display": {
+        "en": "$1,238",
+        "zh": "$1,238"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 1238,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "NOW",
+      "securityType": "primary"
+    },
+    "stocks.now.weekReturn": {
+      "id": "stocks.now.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 2.8,
+      "display": {
+        "en": "+2.8%",
+        "zh": "+2.8%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 2.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "NOW",
+      "securityType": "primary"
+    },
+    "stocks.now.monthReturn": {
+      "id": "stocks.now.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 6.5,
+      "display": {
+        "en": "+6.5%",
+        "zh": "+6.5%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 6.5,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "NOW",
+      "securityType": "primary"
+    },
+    "stocks.pltr.price": {
+      "id": "stocks.pltr.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 191.4,
+      "display": {
+        "en": "$191.40",
+        "zh": "$191.40"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 191.4,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "PLTR",
+      "securityType": "primary"
+    },
+    "stocks.pltr.weekReturn": {
+      "id": "stocks.pltr.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 4.2,
+      "display": {
+        "en": "+4.2%",
+        "zh": "+4.2%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 4.2,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "PLTR",
+      "securityType": "primary"
+    },
+    "stocks.pltr.monthReturn": {
+      "id": "stocks.pltr.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 11.1,
+      "display": {
+        "en": "+11.1%",
+        "zh": "+11.1%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 11.1,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "PLTR",
+      "securityType": "primary"
+    },
+    "stocks.crm.price": {
+      "id": "stocks.crm.price",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 329.7,
+      "display": {
+        "en": "$329.70",
+        "zh": "$329.70"
+      },
+      "unit": "USD",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 329.7,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "CRM",
+      "securityType": "primary"
+    },
+    "stocks.crm.weekReturn": {
+      "id": "stocks.crm.weekReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": -0.8,
+      "display": {
+        "en": "−0.8%",
+        "zh": "−0.8%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": -0.8,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "CRM",
+      "securityType": "primary"
+    },
+    "stocks.crm.monthReturn": {
+      "id": "stocks.crm.monthReturn",
+      "page": "/stocks",
+      "required": true,
+      "kind": "modeled",
+      "numericValue": 1.9,
+      "display": {
+        "en": "+1.9%",
+        "zh": "+1.9%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-01T01:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "observations": [
+        {
+          "sourceId": "atlas-model",
+          "numericValue": 1.9,
+          "asOf": "2026-08-01T01:00:00.000Z"
+        }
+      ],
+      "confidence": "medium",
+      "status": "verified",
+      "market": "US",
+      "marketTimezone": "America/New_York",
+      "primaryListing": "CRM",
+      "securityType": "primary"
+    }
+  },
+  "keySignalIds": [
+    "pulse.infrastructure_spend",
+    "pulse.accelerator_market",
+    "pulse.power_queue",
+    "pulse.enterprise_agents",
+    "stocks.basket_30d",
+    "stocks.positive_breadth",
+    "stocks.median_forward_pe",
+    "stocks.catalyst_count",
+    "compute.accelerator_pool",
+    "compute.hbm_demand",
+    "compute.packaging_lead_weeks",
+    "compute.inference_cost_change",
+    "energy.announced_power_gw",
+    "energy.committed_power_gw",
+    "energy.interconnection_years",
+    "energy.liquid_cooling_share",
+    "models.production_agents",
+    "models.software_spend_growth",
+    "models.managed_tokens",
+    "models.api_deployment_share",
+    "sic.market_2030_usd_b",
+    "sic.wafer_frontier_mm",
+    "sic.packaging_watts",
+    "sic.ev_penetration"
+  ]
+}
