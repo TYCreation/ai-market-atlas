@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { DashboardConfig } from "../content";
-import { chineseDashboards } from "../content-zh";
+import type { SourceBundle } from "../sources";
 import { EquityMarketDeepDive } from "./EquityMarketDeepDive";
+import {
+  EditionStatus,
+  type LocalizedEditionMeta,
+  type LocalizedPageEdition,
+} from "./EditionStatus";
 import { SiCDeepDive } from "./SiCDeepDive";
 import { WeeklyMarketBrief } from "./WeeklyMarketBrief";
 import { MetricSources, SourcePanel } from "./SourcePanel";
-import { sourceBundles } from "../sources";
 
 type Locale = "zh" | "en";
 
@@ -26,12 +30,10 @@ const copy = {
     homeLabel: "AI Market Atlas 首頁",
     navLabel: "主要導覽",
     statusLabel: "簡報狀態",
-    status: "情報簡報 · 2026 年 7 月",
     languageButton: "中文 / EN",
     languageLabel: "切換為英文",
     signal: "市場信號",
     sourcesPublished: "資料來源已公開",
-    edition: "07.26 期 · 每週更新",
     headlineMetrics: "核心指標",
     sectionOneKicker: "01 · 高層摘要",
     sectionOneTitle: "決策層",
@@ -45,7 +47,7 @@ const copy = {
     sectionFourTitle: "會議室裡的三個問題",
     methodLabel: "方法說明。",
     method:
-      "本原型使用 2026 年 7 月的示意數據呈現報告架構。所有數字皆為方向性市場模型，並非經稽核財務資料或投資建議。",
+      "本頁使用已驗證並發布的市場快照。模型數字用於方向性比較，並非經稽核財務資料或投資建議。",
   },
   en: {
     brandTag: "Market intelligence",
@@ -60,12 +62,10 @@ const copy = {
     homeLabel: "AI Market Atlas home",
     navLabel: "Primary navigation",
     statusLabel: "Brief status",
-    status: "Intelligence brief · July 2026",
     languageButton: "中文",
     languageLabel: "切換為繁體中文",
     signal: "Signal",
     sourcesPublished: "Sources published",
-    edition: "Issue 07.26 · Updated weekly",
     headlineMetrics: "Headline metrics",
     sectionOneKicker: "01 · Executive synthesis",
     sectionOneTitle: "The decision layer",
@@ -79,25 +79,44 @@ const copy = {
     sectionFourTitle: "Three questions for the room",
     methodLabel: "Method note.",
     method:
-      "This prototype uses an illustrative July 2026 dataset to demonstrate the report structure. Figures are directional market models, not audited financial data or investment advice.",
+      "This page uses a validated, promoted market snapshot. Modeled figures are for directional comparison, not audited financial data or investment advice.",
   },
 } as const;
 
 const horizons = ["30D", "Q3", "2027"] as const;
+const localeEvent = "ai-atlas-locale-change";
 
-export function MarketDashboard({ config }: { config: DashboardConfig }) {
+function subscribeLocale(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener(localeEvent, listener);
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener(localeEvent, listener);
+  };
+}
+
+function getStoredLocale(): Locale {
+  const saved = window.localStorage.getItem("ai-atlas-locale");
+  return saved === "en" ? "en" : "zh";
+}
+
+export function MarketDashboard({
+  config,
+  chineseConfig,
+  sourceBundle,
+  edition,
+  pageEdition,
+}: {
+  config: DashboardConfig;
+  chineseConfig: DashboardConfig;
+  sourceBundle: SourceBundle;
+  edition: LocalizedEditionMeta;
+  pageEdition: LocalizedPageEdition;
+}) {
   const [horizon, setHorizon] = useState<(typeof horizons)[number]>("Q3");
-  const [locale, setLocale] = useState<Locale>("zh");
-  const activeConfig = locale === "zh" ? chineseDashboards[config.slug] : config;
+  const locale = useSyncExternalStore(subscribeLocale, getStoredLocale, () => "zh");
+  const activeConfig = locale === "zh" ? chineseConfig : config;
   const ui = copy[locale];
-  const sourceBundle = sourceBundles[config.slug];
-
-  useEffect(() => {
-    const savedLocale = window.localStorage.getItem("ai-atlas-locale");
-    if (savedLocale === "zh" || savedLocale === "en") {
-      setLocale(savedLocale);
-    }
-  }, []);
 
   useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-Hant" : "en";
@@ -105,8 +124,8 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
 
   function toggleLocale() {
     const nextLocale: Locale = locale === "zh" ? "en" : "zh";
-    setLocale(nextLocale);
     window.localStorage.setItem("ai-atlas-locale", nextLocale);
+    window.dispatchEvent(new Event(localeEvent));
   }
 
   return (
@@ -134,7 +153,7 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
         <div className="topbar-actions">
           <div className="status" aria-label={ui.statusLabel}>
             <span className="status-dot" aria-hidden="true" />
-            {ui.status}
+            {edition[locale].cadenceLabel} · {edition[locale].dataCutoff.slice(0, 10)}
           </div>
           <button
             className="language-switch"
@@ -156,11 +175,12 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
             <p className="masthead-summary">{activeConfig.summary}</p>
             <div className="masthead-meta">
               <span className="signal-badge">{ui.signal} · {activeConfig.signal}</span>
-              <span className="edition">{ui.edition}</span>
+              <span className="edition">{edition[locale].runId}</span>
               <a className="source-jump" href="#sources">
                 {ui.sourcesPublished} <span aria-hidden="true">↓</span>
               </a>
             </div>
+            <EditionStatus locale={locale} edition={edition} page={pageEdition} />
           </div>
 
           <div className="signal-orbit" aria-label={`${activeConfig.orbitLabel}: ${activeConfig.orbitValue}`}>
@@ -180,6 +200,7 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
             <article className="metric" key={kpi.label}>
               <span className="metric-label">{kpi.label}</span>
               <div className="metric-value">{kpi.value}</div>
+              <EditionStatus locale={locale} metricStatus={kpi.status} />
               <div className="metric-foot">
                 <span>{kpi.foot}</span>
                 <span className="metric-delta">{kpi.delta}</span>
@@ -188,10 +209,51 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
                 bundle={sourceBundle}
                 index={index}
                 locale={locale}
+                metricId={kpi.metricId}
               />
             </article>
           ))}
         </section>
+
+        {activeConfig.report &&
+        (activeConfig.report.supportingEvidence.length > 0 ||
+          activeConfig.report.opposingEvidence.length > 0 ||
+          activeConfig.report.catalysts.length > 0) ? (
+          <section className="section report-evidence">
+            <div className="section-head">
+              <div>
+                <p className="section-kicker">
+                  {locale === "zh" ? "本期證據" : "Edition evidence"}
+                </p>
+                <h2>{locale === "zh" ? "支持、反向與催化信號" : "Supporting, opposing, and catalyst signals"}</h2>
+              </div>
+            </div>
+            <div className="watch-grid">
+              {[
+                ...activeConfig.report.supportingEvidence.map((item) => ({
+                  kind: locale === "zh" ? "支持證據" : "Supporting evidence",
+                  text: item.text,
+                  key: item.metricIds.join("-"),
+                })),
+                ...activeConfig.report.opposingEvidence.map((item) => ({
+                  kind: locale === "zh" ? "反向證據" : "Opposing evidence",
+                  text: item.text,
+                  key: item.metricIds.join("-"),
+                })),
+                ...activeConfig.report.catalysts.map((text, index) => ({
+                  kind: locale === "zh" ? "催化劑" : "Catalyst",
+                  text,
+                  key: `catalyst-${index}`,
+                })),
+              ].map((item) => (
+                <article className="watch-card" key={`${item.kind}-${item.key}`}>
+                  <div className="watch-priority"><span>{item.kind}</span><span>↗</span></div>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {activeConfig.slug === "/" ? (
           <WeeklyMarketBrief locale={locale} />
@@ -352,7 +414,7 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
           <p>
             <strong>{ui.methodLabel}</strong> {ui.method}
           </p>
-          <span className="footer-edition">AI Market Atlas · 07.26</span>
+          <span className="footer-edition">AI Market Atlas · {edition[locale].runId}</span>
         </footer>
       </main>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EquityDeepDiveConfig } from "../content";
+import { EditionStatus } from "./EditionStatus";
 
 type Locale = "zh" | "en";
 type SectorKey = EquityDeepDiveConfig["sectors"][number]["key"];
@@ -188,9 +189,18 @@ export function EquityMarketDeepDive({
                         <span>{equity.company}</span>
                       </div>
                     </td>
-                    <td>{equity.price}</td>
-                    <td className={trendClass(equity.week)}>{equity.week}</td>
-                    <td className={trendClass(equity.month)}>{equity.month}</td>
+                    <td>
+                      {equity.price}
+                      <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.price} />
+                    </td>
+                    <td className={trendClass(equity.week)}>
+                      {equity.week}
+                      <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.weekReturn} />
+                    </td>
+                    <td className={trendClass(equity.month)}>
+                      {equity.month}
+                      <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.monthReturn} />
+                    </td>
                     <td>
                       <div className="strength-cell">
                         <span>{equity.strength}</span>

@@ -1,3 +1,8 @@
+import type { createMarketViewModel, LocalizedPageReport } from "../market-data/view-model";
+import type { Locale, MetricStatus, PageSlug } from "../market-data/types";
+
+type MarketViewModel = ReturnType<typeof createMarketViewModel>;
+
 export type DeepDiveConfig = {
   updated: string;
   stocks: Array<{
@@ -70,6 +75,16 @@ export type EquityDeepDiveConfig = {
     catalyst: string;
     risk: string;
     stance: string;
+    stockMetricIds?: {
+      price: string;
+      weekReturn: string;
+      monthReturn: string;
+    };
+    stockMetricStatuses?: {
+      price: MetricStatus;
+      weekReturn: MetricStatus;
+      monthReturn: MetricStatus;
+    };
   }>;
   catalysts: Array<{
     date: string;
@@ -93,7 +108,7 @@ export type EquityDeepDiveConfig = {
 };
 
 export type DashboardConfig = {
-  slug: string;
+  slug: PageSlug;
   eyebrow: string;
   title: string;
   summary: string;
@@ -105,6 +120,8 @@ export type DashboardConfig = {
     value: string;
     foot: string;
     delta: string;
+    metricId?: string;
+    status?: MetricStatus;
   }>;
   thesis: {
     title: string;
@@ -136,7 +153,72 @@ export type DashboardConfig = {
   }>;
   deepDive?: DeepDiveConfig;
   equityDive?: EquityDeepDiveConfig;
+  report?: LocalizedPageReport;
 };
+
+export function hydrateDashboard(
+  config: DashboardConfig,
+  locale: Locale,
+  viewModel: MarketViewModel,
+): DashboardConfig {
+  const report = viewModel.getPageReport(config.slug, locale);
+  const edition = viewModel.getEditionMeta(locale);
+  const equityDive = config.equityDive
+    ? {
+        ...config.equityDive,
+        updated: edition.dataCutoff,
+        equities: config.equityDive.equities.map((equity) => {
+          const price = viewModel.getStockMetric(equity.ticker, "price", locale);
+          const weekReturn = viewModel.getStockMetric(equity.ticker, "weekReturn", locale);
+          const monthReturn = viewModel.getStockMetric(equity.ticker, "monthReturn", locale);
+          return {
+            ...equity,
+            price: price.value,
+            week: weekReturn.value,
+            month: monthReturn.value,
+            stockMetricIds: {
+              price: price.metricId,
+              weekReturn: weekReturn.metricId,
+              monthReturn: monthReturn.metricId,
+            },
+            stockMetricStatuses: {
+              price: viewModel.getMetricStatus(price.metricId),
+              weekReturn: viewModel.getMetricStatus(weekReturn.metricId),
+              monthReturn: viewModel.getMetricStatus(monthReturn.metricId),
+            },
+          };
+        }),
+      }
+    : undefined;
+
+  return {
+    ...config,
+    eyebrow: report.eyebrow,
+    title: report.title,
+    summary: report.summary,
+    signal: report.signal,
+    thesis: report.thesis,
+    kpis: config.kpis.map((kpi, index) => {
+      const metric = viewModel.getKpi(config.slug, index, locale);
+      return {
+        ...kpi,
+        metricId: metric.metricId,
+        value: metric.value,
+        status: viewModel.getMetricStatus(metric.metricId),
+      };
+    }),
+    watchlist: config.watchlist.map((item, index) => ({
+      ...item,
+      body: report.risks[index] ?? item.body,
+      owner: report.nextObservations[index] ?? item.owner,
+    })),
+    report,
+    ...(config.deepDive
+      ? { deepDive: { ...config.deepDive, updated: edition.dataCutoff } }
+      : {}),
+    ...(equityDive ? { equityDive } : {}),
+  };
+}
 
 export const marketPulse: DashboardConfig = {
   slug: "/",
@@ -922,7 +1004,7 @@ export const stocks: DashboardConfig = {
     },
   ],
   equityDive: {
-    updated: "July 30, 2026 · illustrative weekly model",
+    updated: "Provided by the promoted market snapshot",
     sectors: [
       { key: "compute", name: "Compute leaders", week: "+3.8%", month: "+9.7%", breadth: 83, signal: "Momentum intact" },
       { key: "energy", name: "Power & cooling", week: "+4.4%", month: "+11.8%", breadth: 72, signal: "Breakout" },

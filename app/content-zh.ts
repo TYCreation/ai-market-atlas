@@ -1,4 +1,5 @@
 import type { DashboardConfig } from "./content";
+import type { PageSlug } from "../market-data/types";
 
 export const marketPulseZh: DashboardConfig = {
   slug: "/",
@@ -841,7 +842,7 @@ export const stocksZh: DashboardConfig = {
     },
   ],
   equityDive: {
-    updated: "2026 年 7 月 30 日 · 示意週報模型",
+    updated: "由已發布市場快照提供",
     sectors: [
       { key: "compute", name: "算力領導者", week: "+3.8%", month: "+9.7%", breadth: 83, signal: "動能完整" },
       { key: "energy", name: "電力與冷卻", week: "+4.4%", month: "+11.8%", breadth: 72, signal: "突破" },
@@ -1103,7 +1104,7 @@ export const stocksZh: DashboardConfig = {
   },
 };
 
-export const chineseDashboards: Record<string, DashboardConfig> = {
+export const chineseDashboards: Record<PageSlug, DashboardConfig> = {
   "/": marketPulseZh,
   "/compute": computeZh,
   "/energy": energyZh,

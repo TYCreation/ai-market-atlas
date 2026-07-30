@@ -2,7 +2,7 @@ export type Locale = "zh" | "en";
 
 export type SourceReference = {
   id: string;
-  kind: "atlas" | "official" | "company" | "research" | "pricing";
+  kind: "atlas" | "official" | "company" | "research" | "pricing" | "market";
   publisher: string;
   title: string;
   url?: string;

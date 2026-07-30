@@ -16,6 +16,7 @@ const copy = {
       company: "公司揭露",
       research: "研究報告",
       pricing: "官方定價",
+      market: "市場資料",
     },
     metricSources: "來源",
     method:
@@ -36,6 +37,7 @@ const copy = {
       company: "Company disclosure",
       research: "Research",
       pricing: "Official pricing",
+      market: "Market data",
     },
     metricSources: "Sources",
     method:
@@ -47,10 +49,12 @@ export function MetricSources({
   bundle,
   index,
   locale,
+  metricId,
 }: {
   bundle: SourceBundle;
   index: number;
   locale: Locale;
+  metricId?: string;
 }) {
   const ui = copy[locale];
   const sourceIds = bundle.kpiSources[index] ?? [];
@@ -62,7 +66,12 @@ export function MetricSources({
   );
 
   return (
-    <div className="metric-sources" aria-label={ui.metricSources}>
+    <div
+      className="metric-sources"
+      aria-label={ui.metricSources}
+      data-metric-id={metricId}
+      id={metricId ? `metric-source-${metricId}` : undefined}
+    >
       <span>{ui.metricSources}</span>
       {sourceIds.map((sourceId) => {
         const entry = sourceIndex.get(sourceId);

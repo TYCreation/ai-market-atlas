@@ -1,6 +1,7 @@
-import { MarketDashboard } from "../components/MarketDashboard";
+import { MarketDashboardPage } from "../components/MarketDashboardPage";
 import { models } from "../content";
+import { modelsZh } from "../content-zh";
 
 export default function ModelsPage() {
-  return <MarketDashboard config={models} />;
+  return <MarketDashboardPage config={models} chineseConfig={modelsZh} />;
 }

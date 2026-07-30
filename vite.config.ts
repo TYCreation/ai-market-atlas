@@ -2,6 +2,10 @@ import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
+import {
+  loadMarketSnapshot,
+  resolveMarketSnapshotPath,
+} from "./market-data/view-model";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -42,8 +46,17 @@ export default defineConfig(async () => {
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
+  const marketSnapshotPath = await resolveMarketSnapshotPath(
+    process.env.MARKET_SNAPSHOT_PATH,
+  );
+  await loadMarketSnapshot(marketSnapshotPath);
 
   return {
+    resolve: {
+      alias: {
+        "#market-snapshot": marketSnapshotPath,
+      },
+    },
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,

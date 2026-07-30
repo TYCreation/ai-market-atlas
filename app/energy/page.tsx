@@ -1,6 +1,7 @@
-import { MarketDashboard } from "../components/MarketDashboard";
+import { MarketDashboardPage } from "../components/MarketDashboardPage";
 import { energy } from "../content";
+import { energyZh } from "../content-zh";
 
 export default function EnergyPage() {
-  return <MarketDashboard config={energy} />;
+  return <MarketDashboardPage config={energy} chineseConfig={energyZh} />;
 }
