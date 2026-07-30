@@ -7,6 +7,8 @@ import { chineseDashboards } from "../content-zh";
 import { EquityMarketDeepDive } from "./EquityMarketDeepDive";
 import { SiCDeepDive } from "./SiCDeepDive";
 import { WeeklyMarketBrief } from "./WeeklyMarketBrief";
+import { MetricSources, SourcePanel } from "./SourcePanel";
+import { sourceBundles } from "../sources";
 
 type Locale = "zh" | "en";
 
@@ -28,6 +30,7 @@ const copy = {
     languageButton: "中文 / EN",
     languageLabel: "切換為英文",
     signal: "市場信號",
+    sourcesPublished: "資料來源已公開",
     edition: "07.26 期 · 每週更新",
     headlineMetrics: "核心指標",
     sectionOneKicker: "01 · 高層摘要",
@@ -61,6 +64,7 @@ const copy = {
     languageButton: "中文",
     languageLabel: "切換為繁體中文",
     signal: "Signal",
+    sourcesPublished: "Sources published",
     edition: "Issue 07.26 · Updated weekly",
     headlineMetrics: "Headline metrics",
     sectionOneKicker: "01 · Executive synthesis",
@@ -86,6 +90,7 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
   const [locale, setLocale] = useState<Locale>("zh");
   const activeConfig = locale === "zh" ? chineseDashboards[config.slug] : config;
   const ui = copy[locale];
+  const sourceBundle = sourceBundles[config.slug];
 
   useEffect(() => {
     const savedLocale = window.localStorage.getItem("ai-atlas-locale");
@@ -152,6 +157,9 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
             <div className="masthead-meta">
               <span className="signal-badge">{ui.signal} · {activeConfig.signal}</span>
               <span className="edition">{ui.edition}</span>
+              <a className="source-jump" href="#sources">
+                {ui.sourcesPublished} <span aria-hidden="true">↓</span>
+              </a>
             </div>
           </div>
 
@@ -168,7 +176,7 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
         </section>
 
         <section className="metric-strip" aria-label={ui.headlineMetrics}>
-          {activeConfig.kpis.map((kpi) => (
+          {activeConfig.kpis.map((kpi, index) => (
             <article className="metric" key={kpi.label}>
               <span className="metric-label">{kpi.label}</span>
               <div className="metric-value">{kpi.value}</div>
@@ -176,6 +184,11 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
                 <span>{kpi.foot}</span>
                 <span className="metric-delta">{kpi.delta}</span>
               </div>
+              <MetricSources
+                bundle={sourceBundle}
+                index={index}
+                locale={locale}
+              />
             </article>
           ))}
         </section>
@@ -332,6 +345,8 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
             ))}
           </div>
         </section>
+
+        <SourcePanel bundle={sourceBundle} locale={locale} />
 
         <footer className="footer">
           <p>

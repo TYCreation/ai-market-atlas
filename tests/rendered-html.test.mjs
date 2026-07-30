@@ -40,6 +40,9 @@ for (const [pathname, heading] of [
     assert.match(html, /AI Market Atlas/i);
     assert.match(html, /中文 \/ EN/);
     assert.match(html, /2026 年 7 月的示意數據/);
+    assert.match(html, /資料來源與方法/);
+    assert.match(html, /最後查閱/);
+    assert.match(html, /source-atlas-model/);
     if (pathname === "/") {
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);

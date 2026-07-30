@@ -1,0 +1,169 @@
+import type { Locale, SourceBundle, SourceReference } from "../sources";
+
+const copy = {
+  zh: {
+    kicker: "09 · 資料來源與方法",
+    title: "公開資料，可追溯假設",
+    intro:
+      "我們優先引用官方統計、監管申報、公司投資人資料與供應商定價。AI Atlas 的推估會明確標示，不會偽裝成原始公布數據。",
+    reviewed: "最後查閱",
+    primary: "原始來源優先",
+    model: "模型數字明確標示",
+    open: "開啟原始資料",
+    kinds: {
+      atlas: "ATLAS 模型",
+      official: "官方資料",
+      company: "公司揭露",
+      research: "研究報告",
+      pricing: "官方定價",
+    },
+    metricSources: "來源",
+    method:
+      "頁面上的市場溫度、綜合指數、追蹤籃子與部分預測為編輯模型；它們用來比較方向，不是即時行情、官方統計或投資建議。",
+  },
+  en: {
+    kicker: "09 · Sources & methodology",
+    title: "Public inputs, traceable assumptions",
+    intro:
+      "We prioritize official statistics, regulatory filings, investor materials, and provider pricing. AI Atlas estimates are explicitly labeled rather than presented as published facts.",
+    reviewed: "Last reviewed",
+    primary: "Primary sources first",
+    model: "Modeled figures labeled",
+    open: "Open original source",
+    kinds: {
+      atlas: "ATLAS model",
+      official: "Official data",
+      company: "Company disclosure",
+      research: "Research",
+      pricing: "Official pricing",
+    },
+    metricSources: "Sources",
+    method:
+      "Market heat, composite indices, tracking baskets, and selected forecasts are editorial models for directional comparison—not live prices, official statistics, or investment advice.",
+  },
+} as const;
+
+export function MetricSources({
+  bundle,
+  index,
+  locale,
+}: {
+  bundle: SourceBundle;
+  index: number;
+  locale: Locale;
+}) {
+  const ui = copy[locale];
+  const sourceIds = bundle.kpiSources[index] ?? [];
+  const sourceIndex = new Map(
+    bundle.sources.map((source, sourcePosition) => [
+      source.id,
+      { source, sourcePosition: sourcePosition + 1 },
+    ]),
+  );
+
+  return (
+    <div className="metric-sources" aria-label={ui.metricSources}>
+      <span>{ui.metricSources}</span>
+      {sourceIds.map((sourceId) => {
+        const entry = sourceIndex.get(sourceId);
+        if (!entry) return null;
+        return (
+          <a
+            href={`#source-${sourceId}`}
+            key={sourceId}
+            title={`${entry.source.publisher}: ${entry.source.title}`}
+          >
+            S{entry.sourcePosition}
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
+function SourceCard({
+  source,
+  index,
+  locale,
+}: {
+  source: SourceReference;
+  index: number;
+  locale: Locale;
+}) {
+  const ui = copy[locale];
+  const content = (
+    <>
+      <div className="source-card-top">
+        <span className={`source-kind ${source.kind}`}>{ui.kinds[source.kind]}</span>
+        <span className="source-index">S{index + 1}</span>
+      </div>
+      <p className="source-publisher">{source.publisher}</p>
+      <h3>{source.title}</h3>
+      <p className="source-scope">{source.scope[locale]}</p>
+      <div className="source-card-foot">
+        <span>{source.published}</span>
+        {source.url ? <span>{ui.open} ↗</span> : null}
+      </div>
+    </>
+  );
+
+  return (
+    <article className="source-card" id={`source-${source.id}`}>
+      {source.url ? (
+        <a href={source.url} target="_blank" rel="noreferrer">
+          {content}
+        </a>
+      ) : (
+        content
+      )}
+    </article>
+  );
+}
+
+export function SourcePanel({
+  bundle,
+  locale,
+}: {
+  bundle: SourceBundle;
+  locale: Locale;
+}) {
+  const ui = copy[locale];
+
+  return (
+    <section className="section source-section" id="sources">
+      <div className="section-head source-section-head">
+        <div>
+          <p className="section-kicker">{ui.kicker}</p>
+          <h2>{ui.title}</h2>
+        </div>
+        <span className="source-reviewed">
+          {ui.reviewed} · {bundle.reviewed}
+        </span>
+      </div>
+
+      <div className="source-principles">
+        <p>{ui.intro}</p>
+        <div>
+          <span>✓ {ui.primary}</span>
+          <span>✓ {ui.model}</span>
+        </div>
+      </div>
+
+      <div className="source-grid">
+        {bundle.sources.map((source, index) => (
+          <SourceCard
+            index={index}
+            key={source.id}
+            locale={locale}
+            source={source}
+          />
+        ))}
+      </div>
+
+      <p className="source-method">
+        <strong>{locale === "zh" ? "模型說明。" : "Model note."}</strong>{" "}
+        {ui.method}
+      </p>
+    </section>
+  );
+}
