@@ -2,6 +2,7 @@ import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { hashCandidate, type AutomatedReview } from "../../market-data/review.ts";
+import { normalizeCandidate } from "../../market-data/normalize.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
 export function pathsFor(root: string) {
@@ -26,11 +27,10 @@ export async function makeFixtureWorkspace() {
   ]);
   const candidateFixture = new URL("../fixtures/market/valid-candidate.json", import.meta.url);
   const previousFixture = new URL("../../data/market/current.json", import.meta.url);
-  await Promise.all([
-    cp(candidateFixture, paths.candidatePath),
-    cp(previousFixture, paths.currentPath),
-    writeFile(paths.monthlyIndexPath, "{}\n"),
-  ]);
+  await Promise.all([cp(candidateFixture, paths.candidatePath), cp(previousFixture, paths.currentPath), writeFile(paths.monthlyIndexPath, "{}\n")]);
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  const previous = JSON.parse(await readFile(paths.currentPath, "utf8")) as MarketSnapshot;
+  await writeFile(paths.candidatePath, `${JSON.stringify(normalizeCandidate(candidate, previous, new Date(candidate.generatedAt)))}\n`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
   return paths;
 }

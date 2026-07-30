@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { link, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { jsonCandidateAdapter } from "./adapters/json-candidate.ts";
 import type { SourceAdapter } from "./adapters/types.ts";
 import { normalizeCandidate } from "./normalize.ts";
-import { assertAutoPublishReview, isSafeMarketRunId, type AutomatedReview } from "./review.ts";
+import { assertAutoPublishReview, hashCandidate, isSafeMarketRunId, type AutomatedReview } from "./review.ts";
 import { assertMarketSnapshot } from "./schema.ts";
 import type { MarketSnapshot } from "./types.ts";
 
@@ -12,6 +12,8 @@ export type PromotionResult = {
   promoted: true;
   runId: string;
   archivedPath: string;
+  previousRunId: string;
+  archivedSha256: string;
   monthlyArchiveMonth?: string;
 };
 
@@ -21,6 +23,7 @@ export type StoragePaths = {
   currentPath: string;
   runsDir: string;
   monthlyIndexPath: string;
+  reviewsDir?: string;
   adapter?: SourceAdapter;
   sourceAdapter?: SourceAdapter;
   now?: Date;
@@ -78,10 +81,25 @@ function candidateNow(candidate: MarketSnapshot, paths: StoragePaths): Date {
   return paths.now ?? new Date(candidate.generatedAt);
 }
 
-async function readReview(path: string): Promise<AutomatedReview> {
+function isMissingFile(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+}
+
+async function readReview(paths: StoragePaths, candidate: MarketSnapshot): Promise<AutomatedReview> {
+  const reviewsDirectory = resolve(paths.reviewsDir ?? join(dirname(resolve(paths.runsDir)), "reviews"));
+  const filename = `${candidate.runId}.json`;
+  const expectedPath = resolve(reviewsDirectory, filename);
+  const reviewPath = resolve(paths.reviewPath);
+  if (reviewPath !== expectedPath || dirname(reviewPath) !== reviewsDirectory || basename(reviewPath) !== filename) {
+    throw new Error("review path must be the direct named child of the reviews directory");
+  }
   try {
-    return JSON.parse(await readFile(path, "utf8")) as AutomatedReview;
-  } catch {
+    const metadata = await lstat(reviewPath);
+    if (metadata.isSymbolicLink() || !metadata.isFile()) throw new Error("review file must be a regular file");
+    return JSON.parse(await readFile(reviewPath, "utf8")) as AutomatedReview;
+  } catch (error) {
+    if (error instanceof Error && error.message === "review file must be a regular file") throw error;
+    if (!isMissingFile(error)) throw new Error("matching auto_publish review required");
     throw new Error("matching auto_publish review required");
   }
 }
@@ -114,6 +132,38 @@ async function writeSnapshotAtomically(path: string, snapshot: MarketSnapshot, r
   } catch (error) {
     await rm(temporary, { force: true });
     throw error;
+  }
+}
+
+async function readRegularSnapshot(path: string, label: string): Promise<MarketSnapshot> {
+  const metadata = await lstat(path);
+  if (metadata.isSymbolicLink() || !metadata.isFile()) throw new Error(`${label} must be a regular file`);
+  return parseSnapshot(await readFile(path, "utf8"), label);
+}
+
+function sameArchiveIdentity(snapshot: MarketSnapshot, runId: string, sha256: string): boolean {
+  return snapshot.runId === runId && hashCandidate(snapshot) === sha256;
+}
+
+async function ensureArchive(path: string, previous: MarketSnapshot): Promise<boolean> {
+  const expectedSha256 = hashCandidate(previous);
+  try {
+    const existing = await readRegularSnapshot(path, "existing archive");
+    if (!sameArchiveIdentity(existing, previous.runId, expectedSha256)) {
+      throw new Error("existing archive does not match expected prior snapshot");
+    }
+    return false;
+  } catch (error) {
+    if (!isMissingFile(error)) throw error;
+  }
+  try {
+    await writeSnapshotAtomically(path, previous, false);
+    return true;
+  } catch (error) {
+    if (!isMissingFile(error) && !(typeof error === "object" && error !== null && "code" in error && error.code === "EEXIST")) {
+      throw error;
+    }
+    return ensureArchive(path, previous);
   }
 }
 
@@ -197,8 +247,8 @@ export async function promoteCandidate(paths: StoragePaths): Promise<PromotionRe
   const previous = await readCurrent(paths.currentPath);
   const candidate = await loadCandidate(paths, previous);
   const normalized = validateSnapshot(candidate, previous, paths);
-  const review = await readReview(paths.reviewPath);
-  assertAutoPublishReview(review, candidate);
+  const review = await readReview(paths, normalized);
+  assertAutoPublishReview(review, normalized);
 
   const archivedPath = safeRunPath(paths.runsDir, normalized.runId);
   const monthlyArchiveMonth = normalized.cadence === "month-end" ? monthFor(normalized) : undefined;
@@ -208,7 +258,7 @@ export async function promoteCandidate(paths: StoragePaths): Promise<PromotionRe
   }
 
   // Persist the old snapshot before switching current so a rename failure cannot discard the last good state.
-  await writeSnapshotAtomically(archivedPath, previous, false);
+  const archiveCreated = await ensureArchive(archivedPath, previous);
   try {
     await writeSnapshotAtomically(paths.currentPath, normalized);
     if (monthlyArchiveMonth !== undefined) {
@@ -219,11 +269,18 @@ export async function promoteCandidate(paths: StoragePaths): Promise<PromotionRe
     }
   } catch (error) {
     await writeSnapshotAtomically(paths.currentPath, previous);
-    await rm(archivedPath, { force: true });
+    if (archiveCreated) await rm(archivedPath, { force: true });
     throw error;
   }
 
-  return { promoted: true, runId: normalized.runId, archivedPath, ...(monthlyArchiveMonth === undefined ? {} : { monthlyArchiveMonth }) };
+  return {
+    promoted: true,
+    runId: normalized.runId,
+    archivedPath,
+    previousRunId: previous.runId,
+    archivedSha256: hashCandidate(previous),
+    ...(monthlyArchiveMonth === undefined ? {} : { monthlyArchiveMonth }),
+  };
 }
 
 /** Restores only the archived file recorded by a promotion result. */
@@ -234,10 +291,17 @@ export async function restoreCurrent(paths: StoragePaths, promotion: PromotionRe
   if (dirname(archivedPath) !== runsDir || !ARCHIVE_FILE.test(filename)) {
     throw new Error("promotion archive path is invalid");
   }
-  const archived = parseSnapshot(await readFile(archivedPath, "utf8"), "promotion archive");
+  let archived: MarketSnapshot;
+  try {
+    archived = await readRegularSnapshot(archivedPath, "promotion archive");
+  } catch (error) {
+    if (error instanceof Error && error.message === "promotion archive must be a regular file") throw error;
+    throw error;
+  }
   if (
     !isSafeMarketRunId(archived.runId, archived.cadence) ||
     `${promotion.runId}.json` !== filename
+    || !sameArchiveIdentity(archived, promotion.previousRunId, promotion.archivedSha256)
   ) {
     throw new Error("promotion archive identity does not match");
   }

@@ -54,9 +54,10 @@ export function isSafeMarketRunId(runId: string, cadence?: MarketSnapshot["caden
   }
   if (scheduledCadence === "wednesday") return date.getUTCDay() === 3;
   if (scheduledCadence === "saturday") return date.getUTCDay() === 6;
-  const nextDay = new Date(date);
-  nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-  return nextDay.getUTCMonth() !== date.getUTCMonth();
+  if (date.getUTCDay() !== 6) return false;
+  const nextWeek = new Date(date);
+  nextWeek.setUTCDate(nextWeek.getUTCDate() + 7);
+  return nextWeek.getUTCMonth() !== date.getUTCMonth();
 }
 
 type ReviewCheck = AutomatedReview["checks"][number];

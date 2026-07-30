@@ -7,6 +7,8 @@ import {
   reviewCandidate,
   type AutomatedReview,
 } from "../market-data/review.ts";
+import { normalizeCandidate } from "../market-data/normalize.ts";
+import { assertMarketSnapshot } from "../market-data/schema.ts";
 import {
   createPinnedSourceFetcher,
   resolveHostname,
@@ -50,13 +52,35 @@ async function writeReviewAtomically(path: string, review: AutomatedReview): Pro
   }
 }
 
+async function writeNormalizedCandidateAtomically(path: string, snapshot: MarketSnapshot): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  const temporary = `${path}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, `${JSON.stringify(snapshot, null, 2)}\n`, { flag: "wx" });
+    const written = JSON.parse(await readFile(temporary, "utf8")) as unknown;
+    assertMarketSnapshot(written);
+    await rename(temporary, path);
+  } catch (error) {
+    await rm(temporary, { force: true });
+    throw error;
+  }
+}
+
 export async function runMarketReview(options: MarketReviewOptions): Promise<{
   exitCode: 0 | 2 | 3;
   outputPath: string;
   review: AutomatedReview;
 }> {
-  const candidate = await parseCandidate(options.candidatePath);
+  const rawCandidate = await parseCandidate(options.candidatePath);
   const previous = JSON.parse(await readFile(options.previousPath, "utf8")) as MarketSnapshot;
+  let candidate = rawCandidate;
+  try {
+    assertMarketSnapshot(rawCandidate);
+    candidate = normalizeCandidate(rawCandidate, previous, new Date(rawCandidate.generatedAt));
+    await writeNormalizedCandidateAtomically(options.candidatePath, candidate);
+  } catch {
+    // reviewCandidate records the canonical rejection for malformed or unpublishable input.
+  }
   const review = await reviewCandidate(candidate, previous, options.fetcher, options.resolver);
   const reviewsDirectory = resolve(options.reviewsDirectory);
   const filename = isSafeMarketRunId(review.runId)

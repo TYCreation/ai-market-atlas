@@ -278,6 +278,7 @@ test("keeps review output inside the review directory for unsafe run IDs", async
     "2026-02-30-saturday",
     "2026-08-01-wednesday",
     "2026-08-15-month-end",
+    "2026-07-31-month-end",
     resolve(root, "escaped"),
   ];
 
@@ -308,7 +309,7 @@ test("accepts only scheduled safe run IDs", async () => {
   const runs = [
     ["2026-07-29-wednesday", "wednesday"],
     ["2026-08-01-saturday", "saturday"],
-    ["2026-07-31-month-end", "month-end"],
+    ["2026-07-25-month-end", "month-end"],
   ] as const;
 
   for (const [runId, cadence] of runs) {

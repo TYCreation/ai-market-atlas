@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import {
@@ -8,6 +8,8 @@ import {
   restoreCurrent,
   validateCandidate,
 } from "../../market-data/storage.ts";
+import { hashCandidate } from "../../market-data/review.ts";
+import { runMarketReview } from "../../scripts/market-review.ts";
 import {
   autoPublishReview,
   makeBlockedFixtureWorkspace,
@@ -40,15 +42,78 @@ test("does not change current.json when the gate blocks", async () => {
 
 test("refuses promotion when review is missing or bound to another hash", async () => {
   const paths = await makeFixtureWorkspace();
+  await rm(paths.reviewPath);
   await assert.rejects(
-    () => promoteCandidate({ ...paths, reviewPath: join(paths.root, "reviews", "missing.json") }),
+    () => promoteCandidate(paths),
     /matching auto_publish review required/,
   );
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
 
   const changed = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
   changed.metrics["stocks.nvda.price"].numericValue += 1;
   await writeFile(paths.candidatePath, JSON.stringify(changed));
   await assert.rejects(() => promoteCandidate(paths), /review candidate hash does not match/);
+});
+
+test("publishes only the normalized snapshot that its persisted review hashes", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  const previous = structuredClone(candidate);
+  previous.runId = "2026-07-25-saturday";
+  previous.cadence = "saturday";
+  await writeFile(paths.currentPath, JSON.stringify(previous));
+  candidate.metrics["pulse.infrastructure_spend"].unit = "trillion-usd";
+  candidate.metrics["pulse.infrastructure_spend"].numericValue = 2.8;
+  for (const observation of candidate.metrics["pulse.infrastructure_spend"].observations) observation.numericValue = 2.8;
+  candidate.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  candidate.metrics["stocks.wolf.weekReturn"].display = { en: "-19.9%", zh: "-19.9%" };
+  await writeFile(paths.candidatePath, JSON.stringify(candidate));
+
+  const review = await runMarketReview({
+    candidatePath: paths.candidatePath,
+    previousPath: paths.currentPath,
+    reviewsDirectory: join(paths.root, "reviews"),
+    fetcher: async () => new Response("", { status: 200 }),
+    resolver: async () => ["93.184.216.34"],
+  });
+  assert.equal(review.exitCode, 0);
+  const normalizedCandidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  assert.equal(review.review.candidateSha256, hashCandidate(normalizedCandidate));
+
+  await promoteCandidate(paths);
+  const published = JSON.parse(await readFile(paths.currentPath, "utf8")) as MarketSnapshot;
+  assert.equal(hashCandidate(published), review.review.candidateSha256);
+  assert.equal(published.metrics["pulse.infrastructure_spend"].numericValue, 2800);
+  assert.equal(published.metrics["stocks.nvda.price"].previousNumericValue, previous.metrics["stocks.nvda.price"].numericValue);
+});
+
+test("blocks a normalized candidate that changes after review", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  candidate.metrics["stocks.nvda.price"].numericValue += 1;
+  await writeFile(paths.candidatePath, JSON.stringify(candidate));
+
+  await assert.rejects(() => promoteCandidate(paths), /review candidate hash does not match/);
+});
+
+test("requires the direct, named regular review file", async () => {
+  const wrongName = await makeFixtureWorkspace();
+  const review = await readFile(wrongName.reviewPath, "utf8");
+  const renamed = join(wrongName.root, "reviews", "wrong-name.json");
+  await writeFile(renamed, review);
+  await assert.rejects(() => promoteCandidate({ ...wrongName, reviewPath: renamed }), /review path must be/);
+
+  const outside = await makeFixtureWorkspace();
+  const outsidePath = join(outside.root, "outside-review.json");
+  await writeFile(outsidePath, await readFile(outside.reviewPath, "utf8"));
+  await assert.rejects(() => promoteCandidate({ ...outside, reviewPath: outsidePath }), /review path must be/);
+
+  const linked = await makeFixtureWorkspace();
+  const target = join(linked.root, "review-target.json");
+  await writeFile(target, await readFile(linked.reviewPath, "utf8"));
+  await rm(linked.reviewPath);
+  await symlink(target, linked.reviewPath);
+  await assert.rejects(() => promoteCandidate(linked), /review file must be a regular file/);
 });
 
 test("validates through the candidate adapter without publishing it", async () => {
@@ -64,9 +129,10 @@ test("validates through the candidate adapter without publishing it", async () =
 test("archives month-end snapshots once and rollback removes only its record", async () => {
   const paths = await makeFixtureWorkspace();
   const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
-  candidate.runId = "2026-07-31-month-end";
+  candidate.runId = "2026-07-25-month-end";
   candidate.cadence = "month-end";
   await writeFile(paths.candidatePath, JSON.stringify(candidate));
+  paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
 
   const promotion = await promoteCandidate(paths);
@@ -86,6 +152,40 @@ test("refuses rollback unless current is the promotion that produced the archive
   await writeFile(paths.currentPath, unrelatedCurrent);
 
   await assert.rejects(() => restoreCurrent(paths, promotion), /current snapshot identity does not match/);
+});
+
+test("rejects substituted and symlinked rollback archives", async () => {
+  const substituted = await makeFixtureWorkspace();
+  const promotion = await promoteCandidate(substituted);
+  await writeFile(promotion.archivedPath, await readFile(substituted.currentPath, "utf8"));
+  await assert.rejects(() => restoreCurrent(substituted, promotion), /promotion archive identity does not match/);
+
+  const linked = await makeFixtureWorkspace();
+  const linkedPromotion = await promoteCandidate(linked);
+  const target = join(linked.root, "archive-target.json");
+  await writeFile(target, await readFile(linkedPromotion.archivedPath, "utf8"));
+  await rm(linkedPromotion.archivedPath);
+  await symlink(target, linkedPromotion.archivedPath);
+  await assert.rejects(() => restoreCurrent(linked, linkedPromotion), /promotion archive must be a regular file/);
+});
+
+test("reuses an authenticated rollback archive for a same-run retry", async () => {
+  const paths = await makeFixtureWorkspace();
+  const first = await promoteCandidate(paths);
+  await restoreCurrent(paths, first);
+
+  const retry = await promoteCandidate(paths);
+
+  assert.equal(retry.archivedPath, first.archivedPath);
+  assert.equal(JSON.parse(await readFile(paths.currentPath, "utf8")).runId, first.runId);
+});
+
+test("rejects a mismatched existing archive before promotion", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  await writeFile(join(paths.runsDir, `${candidate.runId}.json`), JSON.stringify(candidate));
+
+  await assert.rejects(() => promoteCandidate(paths), /existing archive does not match expected prior snapshot/);
 });
 
 test("prunes only old named weekly runs and reviews", async () => {
@@ -112,10 +212,11 @@ test("prunes only old named weekly runs and reviews", async () => {
 test("rejects duplicate month archive keys before changing current", async () => {
   const paths = await makeFixtureWorkspace();
   const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
-  candidate.runId = "2026-07-31-month-end";
+  candidate.runId = "2026-07-25-month-end";
   candidate.cadence = "month-end";
   await writeFile(paths.candidatePath, JSON.stringify(candidate));
   await writeFile(paths.monthlyIndexPath, JSON.stringify({ "2026-07": candidate }));
+  paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writeFile(paths.reviewPath, JSON.stringify(autoPublishReview(candidate)));
   const before = await readFile(paths.currentPath, "utf8");
 
