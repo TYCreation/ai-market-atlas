@@ -40,6 +40,10 @@ for (const [pathname, heading] of [
     assert.match(html, /AI Market Atlas/i);
     assert.match(html, /中文 \/ EN/);
     assert.match(html, /2026 年 7 月的示意數據/);
+    if (pathname === "/") {
+      assert.match(html, /market-brief\/index\.html\?lang=zh/);
+      assert.match(html, /30 秒掌握本週 AI 市場/);
+    }
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });
 }

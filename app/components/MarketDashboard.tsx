@@ -6,6 +6,7 @@ import type { DashboardConfig } from "../content";
 import { chineseDashboards } from "../content-zh";
 import { EquityMarketDeepDive } from "./EquityMarketDeepDive";
 import { SiCDeepDive } from "./SiCDeepDive";
+import { WeeklyMarketBrief } from "./WeeklyMarketBrief";
 
 type Locale = "zh" | "en";
 
@@ -178,6 +179,10 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
             </article>
           ))}
         </section>
+
+        {activeConfig.slug === "/" ? (
+          <WeeklyMarketBrief locale={locale} />
+        ) : null}
 
         <section className="section">
           <div className="section-head">

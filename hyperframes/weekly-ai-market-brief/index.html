@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>AI Market Atlas · Weekly Brief</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      @font-face {
+        font-family: "Geist";
+        font-style: normal;
+        font-weight: 100 900;
+        src: url("assets/geist-latin.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Geist Mono";
+        font-style: normal;
+        font-weight: 100 900;
+        src: url("assets/geist-mono-latin.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "PingFang TC";
+        font-style: normal;
+        font-weight: 100 900;
+        src: local("PingFang TC");
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        background: #07121d;
+        height: 1080px;
+        overflow: hidden;
+        width: 1920px;
+      }
+
+      body {
+        color: #f4efe4;
+        font-family: "Geist", "PingFang TC", sans-serif;
+        font-weight: 350;
+      }
+
+      #root {
+        background: #07121d;
+        height: 1080px;
+        overflow: hidden;
+        position: relative;
+        transform-origin: 0 0;
+        width: 1920px;
+      }
+
+      .scene {
+        background-color: #07121d;
+        height: 1080px;
+        inset: 0;
+        overflow: hidden;
+        position: absolute;
+        width: 1920px;
+      }
+
+      #scene-1 {
+        z-index: 1;
+      }
+
+      #scene-2,
+      #scene-3,
+      #scene-4,
+      #scene-5 {
+        opacity: 0;
+        z-index: 2;
+      }
+
+      .scene-content {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        height: 100%;
+        justify-content: center;
+        padding: 108px 132px;
+        position: relative;
+        width: 100%;
+        z-index: 3;
+      }
+
+      .scene-grid {
+        background-image:
+          linear-gradient(rgba(115, 225, 230, 0.055) 2px, rgba(7, 18, 29, 0) 2px),
+          linear-gradient(90deg, rgba(115, 225, 230, 0.055) 2px, rgba(7, 18, 29, 0) 2px);
+        background-size: 72px 72px;
+        inset: 0;
+        mask-image: radial-gradient(circle at 70% 45%, #000 0, rgba(0, 0, 0, 0) 72%);
+        position: absolute;
+        z-index: 0;
+      }
+
+      .glow {
+        background: radial-gradient(circle, rgba(115, 225, 230, 0.19), rgba(115, 225, 230, 0));
+        border-radius: 50%;
+        height: 920px;
+        position: absolute;
+        right: -240px;
+        top: -200px;
+        width: 920px;
+        z-index: 0;
+      }
+
+      .micro-label,
+      .edition,
+      .data-label,
+      .scene-number,
+      .signal-label,
+      .ticker,
+      .event-date,
+      .theme-chip,
+      .footer-url {
+        font-family: "Geist Mono", monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .micro-label {
+        align-items: center;
+        color: #73e1e6;
+        display: flex;
+        font-size: 19px;
+        font-weight: 600;
+        gap: 18px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .micro-label::before {
+        background: #ff8a5c;
+        content: "";
+        height: 4px;
+        width: 62px;
+      }
+
+      h1,
+      h2 {
+        font-weight: 900;
+        letter-spacing: -0.055em;
+        line-height: 0.93;
+      }
+
+      h1 {
+        font-size: 146px;
+        max-width: 1180px;
+      }
+
+      h2 {
+        font-size: 104px;
+        max-width: 1320px;
+      }
+
+      .scene-lede {
+        color: #c2d2d8;
+        font-size: 31px;
+        line-height: 1.5;
+        max-width: 1030px;
+      }
+
+      .edition {
+        color: #8fa7b4;
+        font-size: 18px;
+        letter-spacing: 0.12em;
+        margin-top: 18px;
+        text-transform: uppercase;
+      }
+
+      .opening-layout {
+        display: grid;
+        gap: 80px;
+        grid-template-columns: minmax(0, 1.3fr) 520px;
+        width: 100%;
+      }
+
+      .opening-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        justify-content: center;
+      }
+
+      .orbit-stage {
+        align-items: center;
+        display: flex;
+        height: 650px;
+        justify-content: center;
+        position: relative;
+      }
+
+      .orbit-ring {
+        border: 2px solid rgba(115, 225, 230, 0.2);
+        border-radius: 50%;
+        position: absolute;
+      }
+
+      .orbit-ring.outer {
+        height: 520px;
+        width: 520px;
+      }
+
+      .orbit-ring.middle {
+        border-color: rgba(255, 138, 92, 0.22);
+        height: 370px;
+        width: 370px;
+      }
+
+      .orbit-ring.inner {
+        height: 230px;
+        width: 230px;
+      }
+
+      .orbit-ring::after {
+        background: #73e1e6;
+        border: 9px solid #07121d;
+        border-radius: 50%;
+        box-shadow: 0 0 28px rgba(115, 225, 230, 0.8);
+        content: "";
+        height: 28px;
+        position: absolute;
+        right: 48px;
+        top: 74px;
+        width: 28px;
+      }
+
+      .middle::after {
+        background: #ff8a5c;
+        bottom: 28px;
+        right: auto;
+        top: auto;
+      }
+
+      .orbit-value {
+        align-items: center;
+        background: #0c1b29;
+        border: 2px solid rgba(115, 225, 230, 0.42);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        height: 170px;
+        justify-content: center;
+        position: relative;
+        width: 170px;
+        z-index: 2;
+      }
+
+      .orbit-value strong {
+        color: #73e1e6;
+        font-size: 68px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 900;
+      }
+
+      .orbit-value span {
+        color: #8fa7b4;
+        font-family: "Geist Mono", monospace;
+        font-size: 14px;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .scene-header {
+        align-items: end;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .scene-number {
+        color: #ff8a5c;
+        font-size: 22px;
+        letter-spacing: 0.14em;
+      }
+
+      .appetite-layout {
+        align-items: stretch;
+        display: grid;
+        gap: 54px;
+        grid-template-columns: 620px minmax(0, 1fr);
+        margin-top: 36px;
+        width: 100%;
+      }
+
+      .appetite-meter {
+        align-items: center;
+        background: #0c1b29;
+        border: 2px solid rgba(151, 185, 199, 0.18);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 520px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .appetite-meter::before,
+      .appetite-meter::after {
+        border: 3px solid rgba(115, 225, 230, 0.18);
+        border-radius: 50%;
+        content: "";
+        position: absolute;
+      }
+
+      .appetite-meter::before {
+        height: 410px;
+        width: 410px;
+      }
+
+      .appetite-meter::after {
+        border-color: rgba(255, 138, 92, 0.2);
+        height: 290px;
+        width: 290px;
+      }
+
+      .appetite-meter strong {
+        color: #73e1e6;
+        font-size: 180px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 900;
+        letter-spacing: -0.08em;
+        line-height: 0.8;
+        position: relative;
+        z-index: 2;
+      }
+
+      .appetite-meter span {
+        color: #b7c9cf;
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        margin-top: 30px;
+        position: relative;
+        text-transform: uppercase;
+        z-index: 2;
+      }
+
+      .metric-rail {
+        display: grid;
+        gap: 16px;
+        grid-template-rows: repeat(3, 1fr);
+      }
+
+      .metric-row {
+        align-items: center;
+        background: rgba(12, 27, 41, 0.92);
+        border: 2px solid rgba(151, 185, 199, 0.16);
+        display: grid;
+        gap: 28px;
+        grid-template-columns: 1fr auto;
+        min-height: 150px;
+        padding: 30px 38px;
+      }
+
+      .metric-row .data-label {
+        color: #8fa7b4;
+        font-size: 17px;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .metric-row strong {
+        font-size: 58px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 900;
+        letter-spacing: -0.045em;
+      }
+
+      .metric-row.hot strong {
+        color: #ff8a5c;
+      }
+
+      .rotation-layout {
+        display: grid;
+        gap: 64px;
+        grid-template-columns: minmax(0, 1.15fr) 500px;
+        margin-top: 44px;
+        width: 100%;
+      }
+
+      .sector-bars {
+        display: grid;
+        gap: 18px;
+      }
+
+      .sector-row {
+        align-items: center;
+        display: grid;
+        gap: 26px;
+        grid-template-columns: 180px minmax(0, 1fr) 80px;
+      }
+
+      .sector-name {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .sector-track {
+        background: rgba(115, 225, 230, 0.08);
+        height: 66px;
+        overflow: hidden;
+      }
+
+      .sector-fill {
+        align-items: center;
+        background: #73e1e6;
+        color: #07121d;
+        display: flex;
+        height: 100%;
+        justify-content: flex-end;
+        padding-right: 18px;
+        transform-origin: left center;
+      }
+
+      .sector-row.energy .sector-fill {
+        background: #ff8a5c;
+      }
+
+      .sector-row.software .sector-fill {
+        background: #a6eef0;
+      }
+
+      .sector-row.sic .sector-fill {
+        background: #8fa7b4;
+      }
+
+      .sector-fill span,
+      .sector-score {
+        font-family: "Geist Mono", monospace;
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+      }
+
+      .sector-score {
+        color: #c2d2d8;
+        text-align: right;
+      }
+
+      .rotation-callout {
+        align-items: start;
+        background: #0c1b29;
+        border: 2px solid rgba(255, 138, 92, 0.4);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        justify-content: center;
+        padding: 48px;
+      }
+
+      .rotation-callout .signal-label {
+        color: #ff8a5c;
+        font-size: 16px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .rotation-callout strong {
+        color: #f4efe4;
+        font-size: 76px;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.05em;
+      }
+
+      .rotation-callout p {
+        color: #b7c9cf;
+        font-size: 24px;
+        line-height: 1.5;
+      }
+
+      .equity-layout {
+        display: grid;
+        gap: 30px;
+        grid-template-columns: minmax(0, 1.15fr) minmax(500px, 0.85fr);
+        margin-top: 42px;
+        width: 100%;
+      }
+
+      .leader-board,
+      .event-board {
+        background: #0c1b29;
+        border: 2px solid rgba(151, 185, 199, 0.18);
+        min-height: 460px;
+        padding: 34px;
+      }
+
+      .leader-board {
+        display: grid;
+        gap: 14px;
+        grid-template-rows: repeat(3, 1fr);
+      }
+
+      .ticker-card {
+        align-items: center;
+        border-bottom: 2px solid rgba(151, 185, 199, 0.14);
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 130px 1fr 150px 110px;
+        padding: 12px 6px;
+      }
+
+      .ticker-card:last-child {
+        border-bottom: 0;
+      }
+
+      .ticker {
+        color: #73e1e6;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .ticker-name {
+        color: #c2d2d8;
+        font-size: 22px;
+      }
+
+      .strength {
+        color: #f4efe4;
+        font-family: "Geist Mono", monospace;
+        font-size: 20px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .ticker-move {
+        color: #8be0b0;
+        font-family: "Geist Mono", monospace;
+        font-size: 22px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        text-align: right;
+      }
+
+      .event-board {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .event-board h3 {
+        color: #8fa7b4;
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .event {
+        align-items: center;
+        border-top: 2px solid rgba(151, 185, 199, 0.14);
+        display: grid;
+        gap: 22px;
+        grid-template-columns: 90px 1fr;
+        padding-top: 24px;
+      }
+
+      .event-date {
+        color: #ff8a5c;
+        font-size: 18px;
+        letter-spacing: 0.08em;
+      }
+
+      .event strong {
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .closing-content {
+        align-items: flex-start;
+        justify-content: center;
+      }
+
+      .closing-title {
+        font-size: 132px;
+        max-width: 1500px;
+      }
+
+      .theme-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 28px;
+      }
+
+      .theme-chip {
+        border: 2px solid rgba(115, 225, 230, 0.32);
+        color: #a6eef0;
+        font-size: 18px;
+        letter-spacing: 0.08em;
+        padding: 16px 20px;
+        text-transform: uppercase;
+      }
+
+      .footer-url {
+        color: #ff8a5c;
+        font-size: 25px;
+        letter-spacing: 0.08em;
+        margin-top: 50px;
+      }
+
+      .closing-rule {
+        background: #73e1e6;
+        height: 4px;
+        margin-top: 18px;
+        transform-origin: left center;
+        width: 720px;
+      }
+
+      .closing-orbit {
+        border: 2px solid rgba(115, 225, 230, 0.18);
+        border-radius: 50%;
+        height: 760px;
+        position: absolute;
+        right: -110px;
+        top: 160px;
+        width: 760px;
+      }
+
+      .closing-orbit::before,
+      .closing-orbit::after {
+        border: 2px solid rgba(255, 138, 92, 0.2);
+        border-radius: 50%;
+        content: "";
+        inset: 18%;
+        position: absolute;
+      }
+
+      .closing-orbit::after {
+        border-color: rgba(115, 225, 230, 0.16);
+        inset: 36%;
+      }
+
+      body.embedded {
+        height: 100vh;
+        width: 100vw;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="weekly-ai-market-brief"
+      data-start="0"
+      data-duration="30"
+      data-width="1920"
+      data-height="1080"
+    >
+      <section id="scene-1" class="scene" data-layout-allow-overflow>
+        <div class="scene-grid"></div>
+        <div class="glow" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="opening-layout">
+            <div class="opening-copy">
+              <p class="micro-label" data-en="AI / ATLAS · WEEKLY BRIEF">
+                AI / ATLAS · 每週快報
+              </p>
+              <h1 data-en="The AI market in 30 seconds">30 秒掌握 AI 市場</h1>
+              <p
+                class="scene-lede"
+                data-en="Compute still leads. Power is taking the baton. SiC remains volatile. The next proof point is earnings breadth."
+              >
+                算力仍領漲，電力正在接棒，SiC 維持高波動。下一個驗證點是獲利擴散。
+              </p>
+              <p class="edition">ISSUE 07.26 · JULY 30, 2026</p>
+            </div>
+            <div class="orbit-stage">
+              <span class="orbit-ring outer" data-layout-ignore></span>
+              <span class="orbit-ring middle" data-layout-ignore></span>
+              <span class="orbit-ring inner"></span>
+              <div class="orbit-value">
+                <strong>79</strong>
+                <span data-en="market appetite">市場風險偏好</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-2" class="scene" data-layout-allow-overflow>
+        <div class="scene-grid"></div>
+        <div class="glow" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="scene-header">
+            <p class="micro-label" data-en="MARKET TEMPERATURE">市場溫度</p>
+            <span class="scene-number">01 / 04</span>
+          </div>
+          <h2 data-en="Risk appetite remains elevated">市場風險偏好維持高檔</h2>
+          <div class="appetite-layout">
+            <div class="appetite-meter">
+              <strong>79</strong>
+              <span data-en="constructive">偏多</span>
+            </div>
+            <div class="metric-rail">
+              <div class="metric-row">
+                <span class="data-label" data-en="AI equity basket · 30D">
+                  AI 股票籃子 · 30 日
+                </span>
+                <strong>+6.4%</strong>
+              </div>
+              <div class="metric-row">
+                <span class="data-label" data-en="positive market breadth">
+                  正向市場廣度
+                </span>
+                <strong>68%</strong>
+              </div>
+              <div class="metric-row hot">
+                <span class="data-label" data-en="median forward P/E">
+                  預估本益比中位數
+                </span>
+                <strong>31.8×</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-3" class="scene" data-layout-allow-overflow>
+        <div class="scene-grid"></div>
+        <div class="scene-content">
+          <div class="scene-header">
+            <p class="micro-label" data-en="SECTOR ROTATION">產業輪動</p>
+            <span class="scene-number">02 / 04</span>
+          </div>
+          <h2 data-en="Leadership is spreading from compute into power">
+            領漲正從算力向電力擴散
+          </h2>
+          <div class="rotation-layout">
+            <div class="sector-bars">
+              <div class="sector-row compute">
+                <span class="sector-name" data-en="Compute">算力</span>
+                <span class="sector-track">
+                  <span class="sector-fill" style="width: 91%">
+                    <span data-en="LEADER">領漲</span>
+                  </span>
+                </span>
+                <span class="sector-score">91</span>
+              </div>
+              <div class="sector-row energy">
+                <span class="sector-name" data-en="Energy">能源</span>
+                <span class="sector-track">
+                  <span class="sector-fill" style="width: 76%">
+                    <span data-en="BREAKOUT">突破</span>
+                  </span>
+                </span>
+                <span class="sector-score">76</span>
+              </div>
+              <div class="sector-row software">
+                <span class="sector-name" data-en="Software">軟體</span>
+                <span class="sector-track">
+                  <span class="sector-fill" style="width: 67%">
+                    <span data-en="SELECTIVE">選擇性</span>
+                  </span>
+                </span>
+                <span class="sector-score">67</span>
+              </div>
+              <div class="sector-row sic">
+                <span class="sector-name">SiC</span>
+                <span class="sector-track">
+                  <span class="sector-fill" style="width: 58%">
+                    <span data-en="VOLATILE">高波動</span>
+                  </span>
+                </span>
+                <span class="sector-score">58</span>
+              </div>
+            </div>
+            <aside class="rotation-callout">
+              <span class="signal-label" data-en="30-DAY LEADER">
+                30 日領漲主題
+              </span>
+              <strong>+11.8%</strong>
+              <p data-en="Power and cooling are turning infrastructure bottlenecks into earnings momentum.">
+                電力與冷卻正把基礎設施瓶頸，轉化成獲利動能。
+              </p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-4" class="scene" data-layout-allow-overflow>
+        <div class="scene-grid"></div>
+        <div class="glow" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="scene-header">
+            <p class="micro-label" data-en="EQUITIES & CATALYSTS">
+              股票與催化劑
+            </p>
+            <span class="scene-number">03 / 04</span>
+          </div>
+          <h2 data-en="The next market proof point is earnings">
+            市場下一個驗證點：獲利
+          </h2>
+          <div class="equity-layout">
+            <div class="leader-board">
+              <div class="ticker-card">
+                <span class="ticker">NVDA</span>
+                <span class="ticker-name">NVIDIA</span>
+                <span class="strength" data-en="RS 96">強度 96</span>
+                <span class="ticker-move">+5.8%</span>
+              </div>
+              <div class="ticker-card">
+                <span class="ticker">VRT</span>
+                <span class="ticker-name">Vertiv</span>
+                <span class="strength" data-en="RS 94">強度 94</span>
+                <span class="ticker-move">+6.7%</span>
+              </div>
+              <div class="ticker-card">
+                <span class="ticker">PLTR</span>
+                <span class="ticker-name">Palantir</span>
+                <span class="strength" data-en="RS 91">強度 91</span>
+                <span class="ticker-move">+4.2%</span>
+              </div>
+            </div>
+            <aside class="event-board">
+              <h3 data-en="NEXT FOUR WEEKS">未來四週</h3>
+              <div class="event">
+                <span class="event-date">07.31</span>
+                <strong data-en="Cloud capex read-through">雲端資本支出讀數</strong>
+              </div>
+              <div class="event">
+                <span class="event-date">08.06</span>
+                <strong data-en="Power & cooling earnings">電力與冷卻財報</strong>
+              </div>
+              <div class="event">
+                <span class="event-date">08.12</span>
+                <strong data-en="AI software cohort">AI 軟體財報群組</strong>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-5" class="scene" data-layout-allow-overflow>
+        <div class="scene-grid"></div>
+        <div class="glow" data-layout-ignore></div>
+        <div class="closing-orbit" data-layout-allow-overflow></div>
+        <div class="scene-content closing-content">
+          <p class="micro-label" data-en="THIS WEEK'S TAKEAWAY">本週結論</p>
+          <h2
+            class="closing-title"
+            data-en="Watch earnings, not only the story."
+          >
+            下一步看獲利，不只看故事。
+          </h2>
+          <div class="theme-row">
+            <span class="theme-chip" data-en="COMPUTE">算力</span>
+            <span class="theme-chip" data-en="EQUITIES">股票</span>
+            <span class="theme-chip" data-en="ENERGY">能源</span>
+            <span class="theme-chip" data-en="MODELS">模型</span>
+            <span class="theme-chip">SiC</span>
+          </div>
+          <span class="closing-rule"></span>
+          <p class="footer-url">aimarket.tycreation.online</p>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const language = params.get("lang") === "en" ? "en" : "zh";
+
+      if (language === "en") {
+        document.documentElement.lang = "en";
+        document.querySelectorAll("[data-en]").forEach((element) => {
+          element.textContent = element.dataset.en;
+        });
+      }
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.from("#scene-1 .scene-grid", { opacity: 0, duration: 0.8, ease: "sine.out" }, 0.15);
+      tl.from("#scene-1 .glow", { scale: 0.7, opacity: 0, duration: 1.1, ease: "power1.out" }, 0.2);
+      tl.from("#scene-1 .micro-label", { x: -70, opacity: 0, duration: 0.52, ease: "power4.out" }, 0.35);
+      tl.from("#scene-1 h1", { y: 80, opacity: 0, duration: 0.78, ease: "power3.out" }, 0.48);
+      tl.from("#scene-1 .scene-lede", { y: 34, opacity: 0, duration: 0.55, ease: "back.out(1.15)" }, 0.72);
+      tl.from("#scene-1 .edition", { x: -28, opacity: 0, duration: 0.42, ease: "sine.out" }, 0.9);
+      tl.from("#scene-1 .orbit-stage", { x: 90, scale: 0.82, opacity: 0, duration: 0.85, ease: "expo.out" }, 0.5);
+      tl.to("#scene-1 .orbit-ring.outer", { rotation: 28, duration: 4.3, ease: "none" }, 1.0);
+      tl.to("#scene-1 .orbit-ring.middle", { rotation: -38, duration: 4.0, ease: "none" }, 1.05);
+
+      tl.to("#scene-1", { x: -1920, duration: 0.55, ease: "power3.inOut" }, 5.4);
+      tl.fromTo("#scene-2", { x: 1920, opacity: 1 }, { x: 0, duration: 0.55, ease: "power3.inOut" }, 5.4);
+
+      tl.from("#scene-2 .scene-grid", { opacity: 0, duration: 0.72, ease: "sine.out" }, 5.55);
+      tl.from("#scene-2 .glow", { scale: 1.25, opacity: 0, duration: 0.9, ease: "power1.out" }, 5.58);
+      tl.from("#scene-2 .scene-header", { y: -42, opacity: 0, duration: 0.38, ease: "power4.out" }, 5.65);
+      tl.from("#scene-2 h2", { x: -74, opacity: 0, duration: 0.62, ease: "expo.out" }, 5.78);
+      tl.from("#scene-2 .appetite-meter", { scale: 0.84, opacity: 0, duration: 0.7, ease: "back.out(1.2)" }, 5.96);
+      tl.from("#scene-2 .metric-row:nth-child(1)", { x: 90, opacity: 0, duration: 0.45, ease: "power3.out" }, 6.1);
+      tl.from("#scene-2 .metric-row:nth-child(2)", { y: 46, opacity: 0, duration: 0.38, ease: "circ.out" }, 6.22);
+      tl.from("#scene-2 .metric-row:nth-child(3)", { scale: 0.92, opacity: 0, duration: 0.5, ease: "expo.out" }, 6.33);
+      tl.to("#scene-2", { y: -1080, duration: 0.52, ease: "power3.inOut" }, 10.8);
+      tl.fromTo("#scene-3", { y: 1080, opacity: 1 }, { y: 0, duration: 0.52, ease: "power3.inOut" }, 10.8);
+
+      tl.from("#scene-3 .scene-grid", { opacity: 0, duration: 0.65, ease: "sine.out" }, 10.96);
+      tl.from("#scene-3 .scene-header", { x: -62, opacity: 0, duration: 0.4, ease: "power4.out" }, 11.06);
+      tl.from("#scene-3 h2", { y: 68, opacity: 0, duration: 0.63, ease: "back.out(1.1)" }, 11.2);
+      tl.from("#scene-3 .sector-row.compute", { x: -90, opacity: 0, duration: 0.5, ease: "expo.out" }, 11.48);
+      tl.from("#scene-3 .sector-row.energy", { x: 82, opacity: 0, duration: 0.43, ease: "power3.out" }, 11.58);
+      tl.from("#scene-3 .sector-row.software", { y: 40, opacity: 0, duration: 0.36, ease: "circ.out" }, 11.68);
+      tl.from("#scene-3 .sector-row.sic", { scale: 0.93, opacity: 0, duration: 0.48, ease: "back.out(1.15)" }, 11.78);
+      tl.from("#scene-3 .sector-fill", { scaleX: 0, duration: 0.86, stagger: 0.08, ease: "power3.out" }, 11.9);
+      tl.from("#scene-3 .rotation-callout", { x: 110, scale: 0.94, opacity: 0, duration: 0.68, ease: "expo.out" }, 12.12);
+
+      tl.set("#scene-4", { opacity: 1, zIndex: 1 }, 16.5);
+      tl.set("#scene-3", { zIndex: 10, clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }, 16.5);
+      tl.to("#scene-3", { clipPath: "polygon(60% 0%, 100% 0%, 100% 40%, 60% 0%)", duration: 0.5, ease: "power3.inOut" }, 16.5);
+      tl.set("#scene-3", { opacity: 0, zIndex: "auto", clipPath: "none" }, 17.0);
+      tl.set("#scene-4", { zIndex: "auto" }, 17.0);
+
+      tl.from("#scene-4 .scene-grid", { opacity: 0, duration: 0.66, ease: "sine.out" }, 16.62);
+      tl.from("#scene-4 .glow", { x: 140, opacity: 0, duration: 0.82, ease: "power1.out" }, 16.66);
+      tl.from("#scene-4 .scene-header", { y: -44, opacity: 0, duration: 0.38, ease: "power4.out" }, 16.72);
+      tl.from("#scene-4 h2", { x: -76, opacity: 0, duration: 0.62, ease: "expo.out" }, 16.84);
+      tl.from("#scene-4 .leader-board", { y: 80, opacity: 0, duration: 0.65, ease: "back.out(1.1)" }, 17.02);
+      tl.from("#scene-4 .ticker-card:nth-child(1)", { x: -60, opacity: 0, duration: 0.42, ease: "power3.out" }, 17.2);
+      tl.from("#scene-4 .ticker-card:nth-child(2)", { scale: 0.94, opacity: 0, duration: 0.38, ease: "circ.out" }, 17.3);
+      tl.from("#scene-4 .ticker-card:nth-child(3)", { x: 54, opacity: 0, duration: 0.44, ease: "expo.out" }, 17.4);
+      tl.from("#scene-4 .event-board", { x: 100, opacity: 0, duration: 0.62, ease: "power4.out" }, 17.12);
+      tl.from("#scene-4 .event", { y: 34, opacity: 0, duration: 0.46, stagger: 0.11, ease: "back.out(1.15)" }, 17.48);
+
+      tl.to("#scene-4", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.5, ease: "power2.inOut" }, 23.0);
+      tl.fromTo("#scene-5", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.5, ease: "power2.inOut" }, 23.1);
+
+      tl.from("#scene-5 .scene-grid", { opacity: 0, duration: 0.78, ease: "sine.out" }, 23.18);
+      tl.from("#scene-5 .glow", { scale: 0.72, opacity: 0, duration: 1.0, ease: "power1.out" }, 23.2);
+      tl.from("#scene-5 .closing-orbit", { rotation: -24, scale: 0.78, opacity: 0, duration: 0.92, ease: "expo.out" }, 23.28);
+      tl.from("#scene-5 .micro-label", { x: -68, opacity: 0, duration: 0.46, ease: "power4.out" }, 23.36);
+      tl.from("#scene-5 .closing-title", { y: 82, opacity: 0, duration: 0.76, ease: "back.out(1.08)" }, 23.48);
+      tl.from("#scene-5 .theme-chip", { scale: 0.78, opacity: 0, duration: 0.42, stagger: 0.07, ease: "expo.out" }, 23.82);
+      tl.from("#scene-5 .closing-rule", { scaleX: 0, duration: 0.72, ease: "power3.out" }, 24.22);
+      tl.from("#scene-5 .footer-url", { x: 36, opacity: 0, duration: 0.5, ease: "sine.out" }, 24.36);
+      tl.to("#scene-5 .closing-orbit", { rotation: 14, duration: 4.4, ease: "none" }, 24.5);
+
+      tl.to("#scene-5 .closing-content", { opacity: 0, y: -30, duration: 0.7, ease: "power2.in" }, 29.05);
+      tl.to("#scene-5 .closing-orbit", { opacity: 0, scale: 1.08, duration: 0.62, ease: "power3.in" }, 29.12);
+      tl.to("#scene-5 .scene-grid", { opacity: 0, duration: 0.55, ease: "sine.in" }, 29.2);
+
+      window.__timelines["weekly-ai-market-brief"] = tl;
+
+      if (params.get("embed") === "1") {
+        document.body.classList.add("embedded");
+
+        const fitComposition = () => {
+          const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+          const offsetX = (window.innerWidth - 1920 * scale) / 2;
+          const offsetY = (window.innerHeight - 1080 * scale) / 2;
+          document.querySelector("#root").style.transform =
+            `translate(${offsetX / scale}px, ${offsetY / scale}px) scale(${scale})`;
+        };
+
+        fitComposition();
+        window.addEventListener("resize", fitComposition);
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          tl.seek(27).pause();
+        } else {
+          tl.play(0);
+        }
+      }
+    </script>
+  </body>
+</html>
