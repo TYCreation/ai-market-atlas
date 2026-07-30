@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { DashboardConfig } from "../content";
 import { chineseDashboards } from "../content-zh";
+import { SiCDeepDive } from "./SiCDeepDive";
 
 type Locale = "zh" | "en";
 
@@ -15,6 +16,7 @@ const copy = {
       { href: "/compute", label: "算力與晶片" },
       { href: "/energy", label: "資料中心與能源" },
       { href: "/models", label: "模型與代理" },
+      { href: "/sic", label: "SiC 與功率半導體" },
     ],
     homeLabel: "AI Market Atlas 首頁",
     navLabel: "主要導覽",
@@ -46,6 +48,7 @@ const copy = {
       { href: "/compute", label: "Compute & Chips" },
       { href: "/energy", label: "Data Centers & Energy" },
       { href: "/models", label: "Models & Agents" },
+      { href: "/sic", label: "SiC & Power" },
     ],
     homeLabel: "AI Market Atlas home",
     navLabel: "Primary navigation",
@@ -285,10 +288,20 @@ export function MarketDashboard({ config }: { config: DashboardConfig }) {
           </div>
         </section>
 
+        {activeConfig.deepDive ? (
+          <SiCDeepDive data={activeConfig.deepDive} locale={locale} />
+        ) : null}
+
         <section className="section">
           <div className="section-head">
             <div>
-              <p className="section-kicker">{ui.sectionFourKicker}</p>
+              <p className="section-kicker">
+                {activeConfig.deepDive
+                  ? locale === "zh"
+                    ? "08 · 領導者觀察清單"
+                    : "08 · Leadership watchlist"
+                  : ui.sectionFourKicker}
+              </p>
               <h2>{ui.sectionFourTitle}</h2>
             </div>
           </div>

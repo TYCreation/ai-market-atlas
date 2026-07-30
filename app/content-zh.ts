@@ -452,9 +452,287 @@ export const modelsZh: DashboardConfig = {
   ],
 };
 
+export const sicZh: DashboardConfig = {
+  slug: "/sic",
+  eyebrow: "材料層 · SiC 與功率半導體",
+  title: "AI 的電力堆疊，離不開 SiC。",
+  summary:
+    "每週追蹤碳化矽在 AI 晶片封裝、800V 資料中心電力、電動車逆變器、晶圓擴徑與供應鏈競局中的最新變化。",
+  signal: "跨入 AI 封裝",
+  orbitValue: "86",
+  orbitLabel: "戰略熱度",
+  kpis: [
+    {
+      label: "SiC 市場規模",
+      value: "$23B",
+      foot: "2030 年估計",
+      delta: "年複合成長約 30%",
+    },
+    {
+      label: "12 吋晶圓進展",
+      value: "300mm",
+      foot: "Wolfspeed 進入生產",
+      delta: "中國展示 14 吋",
+    },
+    {
+      label: "AI 封裝熱負載",
+      value: "1000W+",
+      foot: "單晶片功耗需求",
+      delta: "B300／Ruby 級",
+    },
+    {
+      label: "電動車 SiC 滲透率",
+      value: "35%+",
+      foot: "2026 年模型化採用率",
+      delta: "牽引逆變器",
+    },
+  ],
+  thesis: {
+    title: "SiC 正從電動車紅海，移向 AI 基礎設施。",
+    body:
+      "12 吋 SiC 已不只是電動車的降本題材。它的高導熱、高電壓性能，以及與 800V 資料中心架構的相容性，正於 AI 封裝與電力傳輸形成第二條需求曲線。機會能否落地，取決於晶圓品質、客戶認證，以及先進封裝從驗證走向量產的速度。",
+    tags: ["300mm 晶圓", "AI 封裝", "800V 電力"],
+  },
+  chart: {
+    label: "SiC 市場擴張指數",
+    values: [9, 15, 25, 37, 50, 65, 80, 100],
+    caption: {
+      "30D": "專利動態、200mm 擴產與 AI 電力設計導入，讓產業的戰略溢價維持高檔。",
+      Q3: "客戶認證里程碑與高階產能擴張，仍是最清楚的商業轉化信號。",
+      "2027": "AI 資料中心電力與封裝，將與電動車採用並列為第二成長引擎。",
+    },
+  },
+  clusters: [
+    {
+      name: "AI 封裝",
+      score: 91,
+      state: "藍海",
+      note: "熱密度與大型中介層，開出新的 SiC 認證路徑。",
+      critical: true,
+    },
+    {
+      name: "晶圓擴徑",
+      score: 87,
+      state: "推進中",
+      note: "200mm 走向量產，300mm 建立策略前沿。",
+    },
+    {
+      name: "800V 電力",
+      score: 84,
+      state: "建置中",
+      note: "資料中心架構把 SiC 帶入更高電壓的轉換級。",
+    },
+    {
+      name: "中國產能",
+      score: 78,
+      state: "價格壓力",
+      note: "補貼擴產壓低基板價格，也提高出口管制風險。",
+    },
+  ],
+  table: {
+    title: "SiC 價值鏈追蹤板",
+    columns: ["公司", "市場定位", "最新信號", "AI 曝險", "下一步觀察"],
+    rows: [
+      ["Wolfspeed", "300mm SiC 領導者", "三項 AI 封裝認證", "中介層／高電壓", "客戶轉單"],
+      ["Infineon", "車用 SiC 領導者", "200mm 產能目標 +40%", "AI 電力／充電", "Villach 產出"],
+      ["onsemi", "規模化車用供應商", "轉向實體 AI 產品組合", "電力／邊緣系統", "Synaptics 整合"],
+      ["STMicro", "晶圓與元件平台", "800V 架構合作", "資料中心電力", "200mm 量產"],
+      ["Coherent", "基板／磊晶", "200mm 與 10kV 平台", "光學＋電力", "認證組合"],
+    ],
+  },
+  watchlist: [
+    {
+      priority: "01 · 最高",
+      title: "300mm 客戶認證",
+      body:
+        "追蹤具名客戶認證與量產訂單，而不是晶圓展示。這才是從技術證明跨向營收的橋梁。",
+      owner: "下一讀 · 封裝客戶",
+    },
+    {
+      priority: "02 · 最高",
+      title: "專利訴訟",
+      body:
+        "Wolfspeed 與 Navitas 的爭議，可能重塑 SiC 與 GaN 功率元件的設計自由與智慧財產價值。",
+      owner: "下一讀 · 禁制令進度",
+    },
+    {
+      priority: "03 · 高",
+      title: "800V 部署",
+      body:
+        "觀察參考設計能否變成已簽署的資料中心訂單。電力架構採用，是 AI 營收實質化的最快路徑。",
+      owner: "下一讀 · 設計導入",
+    },
+  ],
+  deepDive: {
+    updated: "2026 年 7 月 27 日",
+    stocks: [
+      { ticker: "WOLF", market: "NYSE", price: "$23.09", day: "▼ 11.06%", week: "▼ 21.41%", range: "$8.05–$80.82" },
+      { ticker: "ON", market: "NASDAQ", price: "$86.81", day: "▼ 3.68%", week: "▲ 0.13%", range: "$44.56–$134.92" },
+      { ticker: "STM", market: "NYSE", price: "$51.54", day: "▼ 3.65%", week: "▼ 16.57%", range: "$21.11–$81.42" },
+      { ticker: "MRVL", market: "NASDAQ", price: "$194.23", day: "▼ 7.21%", week: "▼ 0.36%", range: "$61.44–$329.88" },
+    ],
+    forecast: [
+      { year: "2023", value: 2.1 },
+      { year: "2024", value: 3.5 },
+      { year: "2025", value: 5.8 },
+      { year: "2026E", value: 8.5 },
+      { year: "2027E", value: 11.5 },
+      { year: "2028E", value: 15 },
+      { year: "2029E", value: 18.5 },
+      { year: "2030E", value: 23 },
+    ],
+    news: [
+      {
+        date: "2026-07-23",
+        title: "Navitas 與 Magnachip 建立高電壓 SiC 合作",
+        source: "FinancialContent",
+        summary: "合作鎖定高壓與超高壓功率系統，希望加快市場採用。",
+        tags: ["合作", "功率"],
+      },
+      {
+        date: "2026-07-16",
+        title: "Wolfspeed 專利訴訟持續施壓 Navitas",
+        source: "Semiconductor Digest",
+        summary: "美國銷售禁制令若成立，可能改寫 SiC 與 GaN 元件的智慧財產版圖。",
+        tags: ["專利", "風險"],
+      },
+      {
+        date: "2026-07-15",
+        title: "Infineon 推進 200mm SiC 擴產",
+        source: "Compound Semiconductor",
+        summary: "Villach 產能進度超前，第三季擴產目標約 40%。",
+        tags: ["產能", "AI 電力"],
+      },
+      {
+        date: "2026-07-14",
+        title: "Bosch 加州 SiC 廠取得政策支持",
+        source: "electrive.com",
+        summary: "最高 2.25 億美元支持車用與功率市場的 SiC 晶片在地製造。",
+        tags: ["產業", "美國"],
+      },
+      {
+        date: "2026-07-13",
+        title: "L&T 與 Azuremoto 鎖定 AI 資料中心 SiC",
+        source: "ET CIO",
+        summary: "印度加入 SiC 供應競賽，開發面向 AI 資料中心基礎設施的功率元件。",
+        tags: ["AI 資料中心", "印度"],
+      },
+      {
+        date: "2026-07-11",
+        title: "Wolfspeed 發表更低導通電阻的 SiC MOSFET",
+        source: "Wolfspeed",
+        summary: "新平台鎖定電動車牽引逆變器與高密度 AI 資料中心電力。",
+        tags: ["產品", "電動車"],
+      },
+    ],
+    roadmap: [
+      {
+        route: "150mm SiC → 電動車功率",
+        market: "紅海競爭",
+        state: "成熟",
+        opportunity: "舊產能退出，既有供應商防守市占。",
+      },
+      {
+        route: "200mm SiC → 電動車／工業",
+        market: "過渡市場",
+        state: "放量",
+        opportunity: "單顆晶粒成本下降，但認證與良率仍構成門檻。",
+      },
+      {
+        route: "300mm SiC → AI 封裝／資料中心",
+        market: "藍海機會",
+        state: "認證中",
+        opportunity: "CoWoS 相容性、800V 電力與熱密度創造新市場。",
+      },
+    ],
+    properties: [
+      { property: "熱導率", sic: "490 W/mK", silicon: "150 W/mK", advantage: "3.3×" },
+      { property: "崩潰電場", sic: "3.3 MV/cm", silicon: "0.3 MV/cm", advantage: "10×" },
+      { property: "能隙", sic: "3.26 eV", silicon: "1.12 eV", advantage: "2.9×" },
+      { property: "最高工作溫度", sic: "600°C", silicon: "150°C", advantage: "4×" },
+      { property: "電壓級距", sic: "800V–10kV+", silicon: "約 600V", advantage: "新應用域" },
+    ],
+    players: [
+      {
+        company: "Wolfspeed",
+        position: "300mm 領導者",
+        development: "AI 封裝認證、第五代 MOSFET、航太合作",
+        signal: "反彈中",
+      },
+      {
+        company: "Infineon",
+        position: "車用領導者",
+        development: "200mm 擴產、百萬瓦充電、205°C 逆變器模組",
+        signal: "穩定",
+      },
+      {
+        company: "onsemi",
+        position: "車用第二大",
+        development: "實體 AI 路線圖與更多車廠採用",
+        signal: "轉型中",
+      },
+      {
+        company: "STMicro",
+        position: "晶圓＋元件",
+        development: "提高資料中心目標；與 NVIDIA 合作 800V",
+        signal: "偏多",
+      },
+      {
+        company: "Coherent",
+        position: "基板／磊晶",
+        development: "200mm 出貨與完成認證的 10kV 厚磊晶平台",
+        signal: "擴張中",
+      },
+      {
+        company: "ROHM",
+        position: "功率模組",
+        development: "為 AI 資料中心推出頂部冷卻 1200V／600A 模組",
+        signal: "新產品",
+      },
+    ],
+    bull: [
+      {
+        title: "AI 封裝成為結構性需求",
+        body: "300mm 認證與熱密度，創造車用功率以外的新市場。",
+      },
+      {
+        title: "800V 資料中心升級週期",
+        body: "參考架構把 SiC 帶入高效率電力轉換與保護。",
+      },
+      {
+        title: "電動車滲透率持續擴大",
+        body: "主流車款提供耐久需求底座，支撐新興 AI 機會。",
+      },
+      {
+        title: "政策支持在地供應",
+        body: "美國製造獎勵與國防計畫，提高本土 SiC 的策略價值。",
+      },
+    ],
+    bear: [
+      {
+        title: "估值與融資風險",
+        body: "高波動與資本密集度，可能蓋過原本強勁的技術信號。",
+      },
+      {
+        title: "中國產能與價格壓力",
+        body: "受補貼的基板擴產，威脅中低階市場的利潤率。",
+      },
+      {
+        title: "AI 封裝時程仍不確定",
+        body: "中介層商業化可能要到 2028–2030 年才具實質規模。",
+      },
+      {
+        title: "出口管制具有雙面效果",
+        body: "限制可能干擾西方設備供應，同時加速中國本土替代。",
+      },
+    ],
+  },
+};
+
 export const chineseDashboards: Record<string, DashboardConfig> = {
   "/": marketPulseZh,
   "/compute": computeZh,
   "/energy": energyZh,
   "/models": modelsZh,
+  "/sic": sicZh,
 };

@@ -27,6 +27,7 @@ for (const [pathname, heading] of [
   ["/compute", "算力看似充足，直到它突然不足。"],
   ["/energy", "AI 競賽已進入電網。"],
   ["/models", "模型更便宜，成果並沒有。"],
+  ["/sic", "AI 的電力堆疊，離不開 SiC。"],
 ]) {
   test(`server-renders ${pathname}`, async () => {
     const response = await render(pathname);

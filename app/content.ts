@@ -1,3 +1,52 @@
+export type DeepDiveConfig = {
+  updated: string;
+  stocks: Array<{
+    ticker: string;
+    market: string;
+    price: string;
+    day: string;
+    week: string;
+    range: string;
+  }>;
+  forecast: Array<{
+    year: string;
+    value: number;
+  }>;
+  news: Array<{
+    date: string;
+    title: string;
+    source: string;
+    summary: string;
+    tags: string[];
+  }>;
+  roadmap: Array<{
+    route: string;
+    market: string;
+    state: string;
+    opportunity: string;
+  }>;
+  properties: Array<{
+    property: string;
+    sic: string;
+    silicon: string;
+    advantage: string;
+  }>;
+  players: Array<{
+    company: string;
+    position: string;
+    development: string;
+    signal: string;
+  }>;
+  bull: Array<{
+    title: string;
+    body: string;
+  }>;
+  bear: Array<{
+    title: string;
+    body: string;
+  }>;
+};
+
 export type DashboardConfig = {
   slug: string;
   eyebrow: string;
@@ -40,6 +89,7 @@ export type DashboardConfig = {
     body: string;
     owner: string;
   }>;
+  deepDive?: DeepDiveConfig;
 };
 
 export const marketPulse: DashboardConfig = {
@@ -500,4 +550,214 @@ export const models: DashboardConfig = {
       owner: "Next read · gross margin",
     },
   ],
+};
+
+export const sic: DashboardConfig = {
+  slug: "/sic",
+  eyebrow: "Materials layer · SiC & power electronics",
+  title: "AI’s power stack runs through SiC.",
+  summary:
+    "A weekly view of silicon carbide across AI chip packaging, 800V data-center power, EV inverters, wafer scaling, and the supply-chain contest shaping the next infrastructure cycle.",
+  signal: "AI packaging crossover",
+  orbitValue: "86",
+  orbitLabel: "strategic heat",
+  kpis: [
+    {
+      label: "SiC market size",
+      value: "$23B",
+      foot: "2030 estimate",
+      delta: "~30% CAGR",
+    },
+    {
+      label: "12-inch wafer progress",
+      value: "300mm",
+      foot: "Wolfspeed in production",
+      delta: "China 14-inch demo",
+    },
+    {
+      label: "AI packaging thermal load",
+      value: "1000W+",
+      foot: "per-chip power demand",
+      delta: "B300 / Ruby class",
+    },
+    {
+      label: "EV SiC penetration",
+      value: "35%+",
+      foot: "modeled 2026 adoption",
+      delta: "Traction inverters",
+    },
+  ],
+  thesis: {
+    title: "SiC is moving from the EV red ocean into AI infrastructure.",
+    body:
+      "Twelve-inch SiC is no longer only an EV cost story. Its thermal conductivity, high-voltage performance, and compatibility with 800V data-center architectures create a second demand curve in AI packaging and power delivery. The opportunity depends on wafer quality, customer qualification, and how quickly advanced packaging moves from evaluation to production.",
+    tags: ["300mm wafers", "AI packaging", "800V power"],
+  },
+  chart: {
+    label: "SiC market scale-up index",
+    values: [9, 15, 25, 37, 50, 65, 80, 100],
+    caption: {
+      "30D":
+        "Patent activity, 200mm expansion, and AI power-design wins kept the sector’s strategic premium elevated.",
+      Q3: "Qualification milestones and high-end capacity additions remain the clearest conversion signals.",
+      "2027":
+        "AI data-center power and packaging become a material second growth engine alongside EV adoption.",
+    },
+  },
+  clusters: [
+    {
+      name: "AI packaging",
+      score: 91,
+      state: "Blue ocean",
+      note: "Thermal density and larger interposers create a new SiC qualification path.",
+      critical: true,
+    },
+    {
+      name: "Wafer scaling",
+      score: 87,
+      state: "Advancing",
+      note: "200mm moves into volume while 300mm establishes the strategic frontier.",
+    },
+    {
+      name: "800V power",
+      score: 84,
+      state: "Building",
+      note: "Data-center architectures pull SiC into higher-voltage conversion stages.",
+    },
+    {
+      name: "China capacity",
+      score: 78,
+      state: "Price pressure",
+      note: "Subsidized expansion lowers substrate prices and raises export-control risk.",
+    },
+  ],
+  table: {
+    title: "SiC value-chain tracker",
+    columns: ["Company", "Position", "Latest signal", "AI exposure", "Watch next"],
+    rows: [
+      ["Wolfspeed", "300mm SiC leader", "Three AI packaging qualifications", "Interposer / high voltage", "Customer conversion"],
+      ["Infineon", "Automotive SiC leader", "200mm capacity +40% target", "AI power / charging", "Villach output"],
+      ["onsemi", "Scaled automotive supplier", "Physical AI portfolio shift", "Power / edge systems", "Synaptics integration"],
+      ["STMicro", "Wafer + device platform", "800V architecture collaboration", "Data-center power", "200mm production"],
+      ["Coherent", "Substrate / epitaxy", "200mm and 10kV platforms", "Optics + power", "Qualification mix"],
+    ],
+  },
+  watchlist: [
+    {
+      priority: "01 · Highest",
+      title: "300mm qualification",
+      body:
+        "Track named customer qualification and production orders, not wafer demonstrations. That is the bridge from technical proof to revenue.",
+      owner: "Next read · packaging customers",
+    },
+    {
+      priority: "02 · Highest",
+      title: "Patent litigation",
+      body:
+        "The Wolfspeed–Navitas dispute could reshape design freedom and IP value across SiC and GaN power devices.",
+      owner: "Next read · injunction status",
+    },
+    {
+      priority: "03 · High",
+      title: "800V deployment",
+      body:
+        "Watch reference designs become signed data-center orders. Power architecture adoption is the fastest path to material AI revenue.",
+      owner: "Next read · design wins",
+    },
+  ],
+  deepDive: {
+    updated: "July 27, 2026",
+    stocks: [
+      { ticker: "WOLF", market: "NYSE", price: "$23.09", day: "▼ 11.06%", week: "▼ 21.41%", range: "$8.05–$80.82" },
+      { ticker: "ON", market: "NASDAQ", price: "$86.81", day: "▼ 3.68%", week: "▲ 0.13%", range: "$44.56–$134.92" },
+      { ticker: "STM", market: "NYSE", price: "$51.54", day: "▼ 3.65%", week: "▼ 16.57%", range: "$21.11–$81.42" },
+      { ticker: "MRVL", market: "NASDAQ", price: "$194.23", day: "▼ 7.21%", week: "▼ 0.36%", range: "$61.44–$329.88" },
+    ],
+    forecast: [
+      { year: "2023", value: 2.1 },
+      { year: "2024", value: 3.5 },
+      { year: "2025", value: 5.8 },
+      { year: "2026E", value: 8.5 },
+      { year: "2027E", value: 11.5 },
+      { year: "2028E", value: 15 },
+      { year: "2029E", value: 18.5 },
+      { year: "2030E", value: 23 },
+    ],
+    news: [
+      {
+        date: "2026-07-23",
+        title: "Navitas and Magnachip form a high-voltage SiC partnership",
+        source: "FinancialContent",
+        summary: "The partnership targets faster adoption across high- and ultra-high-voltage power systems.",
+        tags: ["Partnership", "Power"],
+      },
+      {
+        date: "2026-07-16",
+        title: "Wolfspeed patent litigation keeps pressure on Navitas",
+        source: "Semiconductor Digest",
+        summary: "The requested US sales injunction could redraw the IP landscape for SiC and GaN devices.",
+        tags: ["Patent", "Risk"],
+      },
+      {
+        date: "2026-07-15",
+        title: "Infineon advances its 200mm SiC expansion",
+        source: "Compound Semiconductor",
+        summary: "Villach capacity is running ahead of plan with a Q3 expansion target of roughly 40%.",
+        tags: ["Capacity", "AI power"],
+      },
+      {
+        date: "2026-07-14",
+        title: "Bosch secures support for a California SiC facility",
+        source: "electrive.com",
+        summary: "Up to $225 million supports localized SiC chip manufacturing for automotive and power markets.",
+        tags: ["Industry", "US"],
+      },
+      {
+        date: "2026-07-13",
+        title: "L&T and Azuremoto target AI data-center SiC",
+        source: "ET CIO",
+        summary: "India joins the SiC supply race with power devices designed for AI data-center infrastructure.",
+        tags: ["AI DC", "India"],
+      },
+      {
+        date: "2026-07-11",
+        title: "Wolfspeed launches a lower-resistance SiC MOSFET generation",
+        source: "Wolfspeed",
+        summary: "The new platform targets EV traction inverters and high-density AI data-center power.",
+        tags: ["Product", "EV"],
+      },
+    ],
+    roadmap: [
+      { route: "150mm SiC → EV power", market: "Red-ocean competition", state: "Mature", opportunity: "Legacy capacity exits while established suppliers defend share." },
+      { route: "200mm SiC → EV / industrial", market: "Transition", state: "Scaling", opportunity: "Lower cost per die with qualification and yield still creating barriers." },
+      { route: "300mm SiC → AI packaging / DC", market: "Blue-ocean opportunity", state: "Qualification", opportunity: "CoWoS compatibility, 800V power, and thermal density create a new market." },
+    ],
+    properties: [
+      { property: "Thermal conductivity", sic: "490 W/mK", silicon: "150 W/mK", advantage: "3.3×" },
+      { property: "Breakdown field", sic: "3.3 MV/cm", silicon: "0.3 MV/cm", advantage: "10×" },
+      { property: "Bandgap", sic: "3.26 eV", silicon: "1.12 eV", advantage: "2.9×" },
+      { property: "Maximum temperature", sic: "600°C", silicon: "150°C", advantage: "4×" },
+      { property: "Voltage class", sic: "800V–10kV+", silicon: "~600V", advantage: "New domain" },
+    ],
+    players: [
+      { company: "Wolfspeed", position: "300mm leader", development: "AI packaging qualifications, Gen-5 MOSFET, aerospace partnership", signal: "Rebounding" },
+      { company: "Infineon", position: "Automotive leader", development: "200mm expansion, megawatt charging, 205°C inverter module", signal: "Stable" },
+      { company: "onsemi", position: "Automotive #2", development: "Physical AI roadmap and wider OEM adoption", signal: "Transforming" },
+      { company: "STMicro", position: "Wafer + device", development: "Data-center target raised; NVIDIA 800V collaboration", signal: "Bullish" },
+      { company: "Coherent", position: "Substrate / epitaxy", development: "200mm shipments and qualified 10kV thick-epitaxy platform", signal: "Expanding" },
+      { company: "ROHM", position: "Power modules", development: "Top-side cooled 1200V / 600A modules for AI DC", signal: "New product" },
+    ],
+    bull: [
+      { title: "AI packaging becomes structural demand", body: "300mm qualification and thermal density create a market beyond automotive power." },
+      { title: "The 800V data-center upgrade cycle", body: "Reference architectures pull SiC into high-efficiency conversion and protection." },
+      { title: "EV penetration keeps broadening", body: "Mainstream vehicle programs add a durable base beneath the emerging AI opportunity." },
+      { title: "Policy supports local supply", body: "US manufacturing incentives and defense programs raise the strategic value of domestic SiC." },
+    ],
+    bear: [
+      { title: "Valuation and financing risk", body: "High volatility and capital intensity can overwhelm otherwise strong technology signals." },
+      { title: "China capacity and price pressure", body: "Subsidized substrate expansion threatens margins across lower-end segments." },
+      { title: "AI packaging timing remains uncertain", body: "Interposer commercialization may not become material until 2028–2030." },
+      { title: "Export controls cut both ways", body: "Restrictions may disrupt Western equipment supply while accelerating domestic substitution in China." },
+    ],
+  },
 };
