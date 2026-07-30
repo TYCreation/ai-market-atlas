@@ -4,6 +4,8 @@
 
 Complete. The 30-second HyperFrames brief now derives its bilingual story, featured values, sources, methodology, cutoff, cadence, and run identity from the validated promoted snapshot. Canonical and public HTML/JSON are byte-identical, and the HTML retains a validated embedded fallback when relative `data.json` cannot be loaded safely.
 
+Implementation commit: `11101b9 Generate HyperFrames brief from market snapshots`.
+
 ## Files
 
 - Created `scripts/generate-market-brief.ts`.
