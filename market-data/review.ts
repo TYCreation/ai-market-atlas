@@ -87,14 +87,17 @@ const GATE_ISSUE_CODES = new Set<GateIssue["code"]>([
   "SOURCE_UNREACHABLE",
 ]);
 
-const CHECK_CODES: Record<Exclude<CheckId, "schema" | "completed-session" | "narrative-evidence">, GateIssue["code"][]> = {
+export const REVIEW_CHECK_CODES = {
+  schema: [],
+  "completed-session": [],
   "required-data": ["MISSING_REQUIRED", "LOW_CONFIDENCE"],
   "source-health": ["SOURCE_UNREACHABLE"],
   "source-conflict": ["SOURCE_CONFLICT"],
   anomaly: ["UNEXPLAINED_PRICE_MOVE", "FINANCIAL_DELTA", "FORECAST_DELTA", "THESIS_REVERSAL"],
   bilingual: ["BILINGUAL_MISMATCH"],
+  "narrative-evidence": [],
   "no-change-integrity": ["MATERIAL_CHANGE_MISMATCH"],
-};
+} as const satisfies Record<CheckId, readonly GateIssue["code"][]>;
 
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -244,7 +247,7 @@ function checkFor(
   id: Exclude<CheckId, "schema" | "completed-session" | "narrative-evidence">,
   issues: GateIssue[],
 ): ReviewCheck {
-  const matching = issues.filter((candidate) => CHECK_CODES[id].includes(candidate.code));
+  const matching = issues.filter((candidate) => REVIEW_CHECK_CODES[id].includes(candidate.code));
   return {
     id,
     status: matching.some((candidate) => candidate.severity === "block")
@@ -407,6 +410,11 @@ export function assertArchivedAutoPublishReview(
       (check.status === "pass" && check.issueCodes.length !== 0) ||
       (check.status === "warn" && check.issueCodes.length === 0)) {
       throw new Error("archived automated review checks are invalid");
+    }
+    const allowedCodes = REVIEW_CHECK_CODES[check.id as CheckId];
+    if (check.issueCodes.some((code) => !allowedCodes.includes(code as GateIssue["code"])) ||
+      check.issueCodes.some((code) => checkIssueCodes.has(code))) {
+      throw new Error("archived automated review issue codes are reassigned");
     }
     checkIds.add(check.id);
     for (const code of check.issueCodes) checkIssueCodes.add(code);

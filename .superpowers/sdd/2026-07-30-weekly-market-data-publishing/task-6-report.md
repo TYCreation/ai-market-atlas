@@ -100,3 +100,30 @@ Complete. Archived source records now use the same complete validation exported 
 ### Concerns
 
 - The existing repository-wide `npx tsc --noEmit` configuration/type failures remain outside the requested verification surface; all required checks pass.
+
+---
+
+## Review Fix Round 3
+
+### Status
+
+Complete. `market-data/review.ts` now exports one complete canonical `REVIEW_CHECK_CODES` map, used both to generate review checks and to validate archived review provenance. Archived warning codes must stay with their designated check family.
+
+### RED / GREEN evidence
+
+- RED: `npm run test:market -- --test-name-pattern='canonical review check|forged automated review'` failed with `Missing expected exception.` because a warning code could be reassigned while preserving the global union.
+- GREEN: the same focused command passed after per-check family enforcement. The added coverage accepts a valid `SOURCE_UNREACHABLE` source-health warning and rejects it when moved to `anomaly`; it also rejects `BILINGUAL_MISMATCH` when moved to `no-change-integrity`.
+
+### Verification outputs
+
+- Focused review/monthly tests — exit 0; `tests 92`, `pass 92`, `fail 0`.
+- `npm run test:market` — exit 0; `tests 92`, `pass 92`, `fail 0`.
+
+### Self-review
+
+- Checks with no associated gate-code family (`schema`, `completed-session`, and `narrative-evidence`) may not carry warning codes.
+- Each warning code is sorted, unique within its check, permitted by that check’s canonical family, and cannot appear under another check. The existing deterministic issue-to-check consistency validation remains in place.
+
+### Concerns
+
+- The existing repository-wide `npx tsc --noEmit` configuration/type failures remain outside the requested verification surface; requested review/monthly checks pass.

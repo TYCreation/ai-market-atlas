@@ -97,3 +97,52 @@ test("rejects incomplete sources and forged automated review provenance", async 
     assert.throws(() => parseMonthlyArchiveIndex({ "2026-07": invalid }), /monthly archive record is invalid/);
   }
 });
+
+test("requires every archived warning code to remain with its canonical review check", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  candidate.runId = "2026-07-25-month-end";
+  candidate.cadence = "month-end";
+  await writeFile(paths.candidatePath, JSON.stringify(candidate));
+  paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
+  await promoteCandidate(paths);
+
+  const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8"));
+  const record = index["2026-07"];
+  const sourceHealthWarning = {
+    code: "SOURCE_UNREACHABLE",
+    severity: "warn",
+    message: "backup source used",
+    sourceIds: [],
+  };
+  const validWarning = structuredClone(record);
+  validWarning.review.issues = [sourceHealthWarning];
+  const sourceHealth = validWarning.review.checks.find((check: { id: string }) => check.id === "source-health");
+  sourceHealth.status = "warn";
+  sourceHealth.issueCodes = ["SOURCE_UNREACHABLE"];
+  assert.doesNotThrow(() => parseMonthlyArchiveIndex({ "2026-07": validWarning }));
+
+  const movedSourceWarning = structuredClone(validWarning);
+  const movedSourceHealth = movedSourceWarning.review.checks.find((check: { id: string }) => check.id === "source-health");
+  movedSourceHealth.status = "pass";
+  movedSourceHealth.issueCodes = [];
+  const anomaly = movedSourceWarning.review.checks.find((check: { id: string }) => check.id === "anomaly");
+  anomaly.status = "warn";
+  anomaly.issueCodes = ["SOURCE_UNREACHABLE"];
+
+  const movedBilingualWarning = structuredClone(record);
+  movedBilingualWarning.review.issues = [{
+    code: "BILINGUAL_MISMATCH",
+    severity: "warn",
+    message: "localized copy needs review",
+    sourceIds: [],
+  }];
+  const integrity = movedBilingualWarning.review.checks.find((check: { id: string }) => check.id === "no-change-integrity");
+  integrity.status = "warn";
+  integrity.issueCodes = ["BILINGUAL_MISMATCH"];
+
+  for (const invalid of [movedSourceWarning, movedBilingualWarning]) {
+    assert.throws(() => parseMonthlyArchiveIndex({ "2026-07": invalid }), /monthly archive record is invalid/);
+  }
+});
