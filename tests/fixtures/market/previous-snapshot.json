@@ -1,5 +1,9 @@
 {
   "metrics": {
-    "stocks.nvda.price": { "numericValue": 181.25 }
+    "stocks.nvda.price": {
+      "numericValue": 181.25,
+      "asOf": "2026-07-31T20:00:00.000Z",
+      "status": "verified"
+    }
   }
 }
