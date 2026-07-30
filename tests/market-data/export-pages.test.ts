@@ -14,6 +14,7 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { projectMonthlyArchive } from "../../market-data/storage.ts";
+import { hashCandidate } from "../../market-data/review.ts";
 import { exportPages } from "../../scripts/export-pages.ts";
 import { generateMarketBriefAssets } from "../../scripts/generate-market-brief.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
@@ -125,8 +126,22 @@ test("exports every current/archive route and public asset without localhost met
         sourceIds: result.sourceIds,
         archiveSourceIds: result.archiveSourceIds,
         candidateSha256: result.candidateSha256,
+        artifactTreeSha256: result.artifactTreeSha256,
         routeIdentities: result.routeIdentities,
       },
+    );
+    assert.match(result.artifactTreeSha256, /^[a-f0-9]{64}$/);
+    assert.match(result.manifestSha256, /^[a-f0-9]{64}$/);
+    assert.equal(
+      result.manifestSha256,
+      hashCandidate(
+        JSON.parse(
+          await readFile(
+            join(outputDirectory, ".market-deployment.json"),
+            "utf8",
+          ),
+        ),
+      ),
     );
     assert.deepEqual(result.routeIdentities["/compute"], {
       kind: "current",
@@ -269,6 +284,146 @@ test("rejects stale copied market-brief JSON and embedded identities", async (t)
         await writeFile(htmlPath, originalHtml);
       }
     });
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
+});
+
+test("rejects disagreement between canonical and public market-brief data and embedded JSON", async (t) => {
+  const isolatedRoot = await isolatedExportProject(false);
+  const isolatedSnapshotPath = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "current.json",
+  );
+  const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
+  const publicData = join(isolatedRoot, "public", "market-brief", "data.json");
+  const canonicalHtml = join(
+    isolatedRoot,
+    "hyperframes",
+    "weekly-ai-market-brief",
+    "index.html",
+  );
+  const originalPublicData = await readFile(publicData, "utf8");
+  const originalCanonicalHtml = await readFile(canonicalHtml, "utf8");
+
+  try {
+    await t.test("public data.json", async () => {
+      const value = JSON.parse(originalPublicData) as Record<string, unknown>;
+      value.runId = "2026-07-18-saturday";
+      await writeFile(publicData, `${JSON.stringify(value)}\n`);
+      try {
+        await assert.rejects(
+          () =>
+            exportPages({
+              projectRoot: isolatedRoot,
+              snapshotPath: isolatedSnapshotPath,
+              outputDirectory: isolatedOutput,
+              build: false,
+            }),
+          /canonical and public.*do not match/i,
+        );
+      } finally {
+        await writeFile(publicData, originalPublicData);
+      }
+    });
+
+    await t.test("canonical embedded JSON", async () => {
+      const staleHtml = originalCanonicalHtml.replace(
+        '"runId":"2026-07-25-saturday"',
+        '"runId":"2026-07-18-saturday"',
+      );
+      await writeFile(canonicalHtml, staleHtml);
+      try {
+        await assert.rejects(
+          () =>
+            exportPages({
+              projectRoot: isolatedRoot,
+              snapshotPath: isolatedSnapshotPath,
+              outputDirectory: isolatedOutput,
+              build: false,
+            }),
+          /canonical and public.*do not match/i,
+        );
+      } finally {
+        await writeFile(canonicalHtml, originalCanonicalHtml);
+      }
+    });
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
+});
+
+test("exports the canonical changed-sic Wednesday brief without reconstructing a different feature subset", async () => {
+  const isolatedRoot = await isolatedExportProject(true);
+  const isolatedSnapshotPath = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "current.json",
+  );
+  const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
+  const canonicalData = join(
+    isolatedRoot,
+    "hyperframes",
+    "weekly-ai-market-brief",
+    "data.json",
+  );
+  const canonicalHtml = join(
+    isolatedRoot,
+    "hyperframes",
+    "weekly-ai-market-brief",
+    "index.html",
+  );
+  const publicData = join(isolatedRoot, "public", "market-brief", "data.json");
+  const publicHtml = join(isolatedRoot, "public", "market-brief", "index.html");
+  const snapshot = JSON.parse(
+    await readFile(isolatedSnapshotPath, "utf8"),
+  ) as MarketSnapshot;
+  snapshot.runId = "2026-07-29-wednesday";
+  snapshot.cadence = "wednesday";
+  snapshot.generatedAt = "2026-07-29T01:00:00.000Z";
+  snapshot.dataCutoff = "2026-07-29T01:00:00.000Z";
+  snapshot.metrics["sic.market_2030_usd_b"].display = {
+    en: "$24B",
+    zh: "240 億美元",
+  };
+  await writeFile(
+    isolatedSnapshotPath,
+    `${JSON.stringify(snapshot, null, 2)}\n`,
+  );
+
+  try {
+    await generateMarketBriefAssets({
+      snapshotPath: isolatedSnapshotPath,
+      canonicalData,
+      canonicalHtml,
+      publicData,
+      publicHtml,
+    });
+    const brief = JSON.parse(await readFile(canonicalData, "utf8")) as {
+      featuredSignalIds: string[];
+    };
+    assert.deepEqual(brief.featuredSignalIds, [
+      "sic.market_2030_usd_b",
+      "sic.wafer_frontier_mm",
+      "sic.packaging_watts",
+      "sic.ev_penetration",
+      "pulse.infrastructure_spend",
+    ]);
+
+    const result = await exportPages({
+      projectRoot: isolatedRoot,
+      snapshotPath: isolatedSnapshotPath,
+      outputDirectory: isolatedOutput,
+    });
+
+    assert.equal(result.runId, "2026-07-29-wednesday");
+    assert.match(
+      await readFile(join(isolatedOutput, "market-brief", "data.json"), "utf8"),
+      /sic\.market_2030_usd_b/,
+    );
   } finally {
     await rm(isolatedRoot, { recursive: true, force: true });
   }

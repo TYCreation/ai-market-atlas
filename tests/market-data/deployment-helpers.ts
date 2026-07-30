@@ -81,15 +81,19 @@ export function fakeDependencies(options: FakeOptions = {}): FakeDependencies {
       const result = options.verificationResults?.[verificationIndex++];
       if (result instanceof Error) throw result;
     },
+    async revalidate() {},
     async copyDirectory(from, to) {
       copies.push({ from, to });
       actions.push(`copy:${from}:${to}`);
     },
-    async promote() {
+    async promote(expectedCandidateSha256) {
       this.promoteCount += 1;
       actions.push("promote");
       if (options.promoteError) throw options.promoteError;
-      return promotion;
+      return {
+        ...promotion,
+        promotedSha256: expectedCandidateSha256,
+      };
     },
     async restoreSnapshot() {
       actions.push("restore-snapshot");

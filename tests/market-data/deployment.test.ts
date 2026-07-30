@@ -6,6 +6,7 @@ import {
   publishWithRestore,
   verifyDeployment,
 } from "../../market-data/deployment.ts";
+import { hashCandidate } from "../../market-data/review.ts";
 import {
   fakeDependencies,
   publishOptions,
@@ -13,14 +14,21 @@ import {
 import {
   makeBlockedFixtureWorkspace,
   makeFixtureWorkspace,
+  writePublishableReview,
 } from "./helpers.ts";
 
 async function authorizedOptions() {
   const paths = await makeFixtureWorkspace();
+  const review = JSON.parse(
+    await readFile(paths.reviewPath, "utf8"),
+  ) as { candidateSha256: string };
   return {
     ...publishOptions,
     candidatePath: paths.candidatePath,
     reviewPath: paths.reviewPath,
+    expectedCandidateSha256: review.candidateSha256,
+    expectedArtifactTreeSha256: "c".repeat(64),
+    expectedManifestSha256: "d".repeat(64),
   };
 }
 
@@ -151,6 +159,155 @@ test("preview failure never promotes or touches production and last-good", async
     },
   ]);
   assert.deepEqual(deps.copies, []);
+});
+
+test("candidate and replacement review mutation after preview verification cannot promote or touch main", async () => {
+  const options = await authorizedOptions();
+  const deps = fakeDependencies();
+  let validationCount = 0;
+  deps.revalidate = async () => {
+    validationCount += 1;
+    const authorization = await import("../../market-data/deployment.ts");
+    const current = await authorization.authorizeCandidatePublication(options);
+    assert.equal(
+      current.candidateSha256,
+      options.expectedCandidateSha256,
+      "publication candidate changed",
+    );
+  };
+  const originalVerify = deps.verify.bind(deps);
+  deps.verify = async (baseUrl, directory) => {
+    await originalVerify(baseUrl, directory);
+    const candidate = JSON.parse(
+      await readFile(options.candidatePath, "utf8"),
+    ) as Record<string, unknown>;
+    (candidate.pages as Record<string, { report: { title: { en: string } } }>)[
+      "/"
+    ].report.title.en = "Replacement candidate after preview";
+    await writeFile(options.candidatePath, `${JSON.stringify(candidate)}\n`);
+    await writePublishableReview(options.candidatePath, options.reviewPath);
+  };
+
+  await assert.rejects(
+    () => publishWithRestore(deps, options),
+    /publication candidate changed/i,
+  );
+
+  assert.ok(validationCount >= 2);
+  assert.equal(deps.promoteCount, 0);
+  assert.deepEqual(deps.deployments, [
+    {
+      directory: "work/pages-candidate",
+      branch: "market-update-2026-08-01-saturday",
+    },
+  ]);
+  assert.deepEqual(deps.copies, []);
+});
+
+test("promotion receives the authorized hash and a mismatched result cannot reach main", async () => {
+  const options = await authorizedOptions();
+  const deps = fakeDependencies();
+  let receivedHash: string | undefined;
+  deps.promote = async (expectedCandidateSha256: string) => {
+    receivedHash = expectedCandidateSha256;
+    deps.promoteCount += 1;
+    return {
+      promoted: true,
+      runId: options.runId,
+      archivedPath: `data/market/runs/${options.runId}.json`,
+      previousRunId: "2026-07-25-saturday",
+      archivedSha256: "a".repeat(64),
+      promotedSha256: "f".repeat(64),
+    };
+  };
+
+  await assert.rejects(
+    () => publishWithRestore(deps, options),
+    /promotion result.*authorized candidate hash.*snapshot restoration succeeded/is,
+  );
+
+  assert.equal(receivedHash, options.expectedCandidateSha256);
+  assert.equal(deps.promoteCount, 1);
+  assert.equal(deps.snapshotRestored, true);
+  assert.deepEqual(deps.deployments, [
+    {
+      directory: "work/pages-candidate",
+      branch: "market-update-2026-08-01-saturday",
+    },
+  ]);
+  assert.deepEqual(deps.copies, []);
+});
+
+test("publication revalidates candidate, artifact, and manifest at every irreversible phase", async (t) => {
+  const cases = [
+    { name: "before preview", failAt: 1, deployBranches: [], promoted: 0 },
+    {
+      name: "after preview verification",
+      failAt: 2,
+      deployBranches: ["market-update-2026-08-01-saturday"],
+      promoted: 0,
+    },
+    {
+      name: "before main",
+      failAt: 3,
+      deployBranches: ["market-update-2026-08-01-saturday"],
+      promoted: 1,
+    },
+    {
+      name: "after main verification",
+      failAt: 4,
+      deployBranches: [
+        "market-update-2026-08-01-saturday",
+        "main",
+        "main",
+      ],
+      promoted: 1,
+    },
+    {
+      name: "before last-good copy",
+      failAt: 5,
+      deployBranches: [
+        "market-update-2026-08-01-saturday",
+        "main",
+        "main",
+      ],
+      promoted: 1,
+    },
+  ];
+
+  for (const candidateCase of cases) {
+    await t.test(candidateCase.name, async () => {
+      const options = {
+        ...(await authorizedOptions()),
+        expectedArtifactTreeSha256: "c".repeat(64),
+      };
+      const deps = fakeDependencies();
+      let validations = 0;
+      deps.revalidate = async () => {
+        validations += 1;
+        if (validations === candidateCase.failAt) {
+          throw new Error(`artifact mutation at ${candidateCase.name}`);
+        }
+      };
+
+      await assert.rejects(
+        () => publishWithRestore(deps, options),
+        new RegExp(`artifact mutation at ${candidateCase.name}`, "i"),
+      );
+
+      assert.equal(validations, candidateCase.failAt);
+      assert.equal(deps.promoteCount, candidateCase.promoted);
+      assert.deepEqual(
+        deps.deployments.map(({ branch }) => branch),
+        candidateCase.deployBranches,
+      );
+      assert.deepEqual(deps.copies, []);
+      assert.equal(
+        deps.snapshotRestored,
+        candidateCase.promoted === 1,
+      );
+    });
+  }
 });
 
 test("rejects an unapproved candidate before the first dependency call", async (t) => {
@@ -292,6 +449,19 @@ test("immediate pre-deploy revalidation rejects a candidate that differs from th
   assert.deepEqual(deps.actions, []);
 });
 
+test("publication requires the exported artifact-tree hash before any dependency call", async () => {
+  const options = await authorizedOptions();
+  delete (options as { expectedArtifactTreeSha256?: string })
+    .expectedArtifactTreeSha256;
+  const deps = fakeDependencies();
+
+  await assert.rejects(
+    () => publishWithRestore(deps, options),
+    /artifact tree hash is required/i,
+  );
+  assert.deepEqual(deps.actions, []);
+});
+
 test("aggregates snapshot and site restoration failures without claiming recovery", async () => {
   const options = await authorizedOptions();
   const deps = fakeDependencies({
@@ -366,6 +536,11 @@ const verificationExpectation = {
       runId: "2026-08-01-saturday",
       dataCutoff: "2026-08-01T01:00:00.000Z",
       sourceIds: ["atlas-model"],
+      payloadSha256: hashCandidate({
+        runId: "2026-08-01-saturday",
+        dataCutoff: "2026-08-01T01:00:00.000Z",
+        sourceIds: ["atlas-model"],
+      }),
     },
   },
 };
@@ -380,8 +555,110 @@ function marketBriefHtml(
   )}</script>`;
 }
 
+test("market brief verification fetches both HTML and canonical data.json", async () => {
+  const payload = {
+    runId: "2026-08-01-saturday",
+    dataCutoff: "2026-08-01T01:00:00.000Z",
+    sourceIds: ["atlas-model"],
+  };
+  const expectation = {
+    ...verificationExpectation,
+    routeIdentities: {
+      ...verificationExpectation.routeIdentities,
+      "/market-brief/": {
+        ...verificationExpectation.routeIdentities["/market-brief/"],
+        payloadSha256: hashCandidate(payload),
+      },
+    },
+  };
+  const paths: string[] = [];
+
+  await verifyDeployment(
+    "https://preview.pages.dev",
+    ["/market-brief/"],
+    expectation,
+    async (input) => {
+      const path = new URL(input.toString()).pathname;
+      paths.push(path);
+      return path.endsWith("/data.json")
+        ? Response.json(payload)
+        : new Response(marketBriefHtml(), { status: 200 });
+    },
+  );
+
+  assert.deepEqual(paths, ["/market-brief/", "/market-brief/data.json"]);
+});
+
+test("market brief verification rejects missing, stale, and corrupt data.json without content retries", async (t) => {
+  const payload = {
+    runId: "2026-08-01-saturday",
+    dataCutoff: "2026-08-01T01:00:00.000Z",
+    sourceIds: ["atlas-model"],
+  };
+  const expectation = {
+    ...verificationExpectation,
+    routeIdentities: {
+      ...verificationExpectation.routeIdentities,
+      "/market-brief/": {
+        ...verificationExpectation.routeIdentities["/market-brief/"],
+        payloadSha256: hashCandidate(payload),
+      },
+    },
+  };
+  const cases: Array<{
+    name: string;
+    response: Response;
+    error: RegExp;
+  }> = [
+    {
+      name: "missing",
+      response: new Response("missing", { status: 404 }),
+      error: /data\.json.*HTTP 404/i,
+    },
+    {
+      name: "stale",
+      response: Response.json({
+        ...payload,
+        runId: "2026-07-25-saturday",
+      }),
+      error: /data\.json payload hash.*does not match/i,
+    },
+    {
+      name: "corrupt",
+      response: new Response("{not-json", { status: 200 }),
+      error: /data\.json is not valid JSON/i,
+    },
+  ];
+
+  for (const candidateCase of cases) {
+    await t.test(candidateCase.name, async () => {
+      let dataAttempts = 0;
+      await assert.rejects(
+        () =>
+          verifyDeployment(
+            "https://preview.pages.dev",
+            ["/market-brief/"],
+            expectation,
+            async (input) => {
+              const path = new URL(input.toString()).pathname;
+              if (path.endsWith("/data.json")) {
+                dataAttempts += 1;
+                return candidateCase.response.clone();
+              }
+              return new Response(marketBriefHtml(), { status: 200 });
+            },
+          ),
+        candidateCase.error,
+      );
+      assert.equal(dataAttempts, 1);
+    });
+  }
+});
+
 test("verification follows redirects and checks route-specific publication markers", async () => {
+  const requests: string[] = [];
   const server = createServer((request, response) => {
+    requests.push(request.url ?? "");
     if (request.url === "/") {
       response.statusCode = 302;
       response.setHeader("location", "/landing");
@@ -406,6 +683,17 @@ test("verification follows redirects and checks route-specific publication marke
       response.end(marketBriefHtml());
       return;
     }
+    if (request.url === "/market-brief/data.json") {
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          runId: "2026-08-01-saturday",
+          dataCutoff: "2026-08-01T01:00:00.000Z",
+          sourceIds: ["atlas-model"],
+        }),
+      );
+      return;
+    }
     response.statusCode = 404;
     response.end("missing");
   });
@@ -419,6 +707,8 @@ test("verification follows redirects and checks route-specific publication marke
       ["/", "/archive/2026-07", "/market-brief/"],
       verificationExpectation,
     );
+    assert.ok(requests.includes("/market-brief/"));
+    assert.ok(requests.includes("/market-brief/data.json"));
   } finally {
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),

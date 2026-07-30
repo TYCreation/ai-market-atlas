@@ -13,6 +13,7 @@ import {
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
+import { hashArtifactTree } from "../market-data/artifact-tree.ts";
 import type { RouteVerificationIdentity } from "../market-data/deployment.ts";
 import { parseMonthlyArchiveIndex } from "../market-data/monthly.ts";
 import {
@@ -21,10 +22,12 @@ import {
 } from "../market-data/monthly-record.ts";
 import { hashCandidate } from "../market-data/review.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
+import type { MarketSnapshot } from "../market-data/types.ts";
 import { buildSourceBundles } from "../market-data/view-model.ts";
 import {
-  buildMarketBrief,
+  assertMarketBriefMatchesSnapshot,
   isMarketBriefPayload,
+  type MarketBriefPayload,
 } from "./generate-market-brief.ts";
 
 type WorkerModule = {
@@ -58,10 +61,15 @@ export type ExportPagesResult = {
   sourceIds: string[];
   archiveSourceIds: Record<string, string[]>;
   candidateSha256: string;
+  artifactTreeSha256: string;
+  manifestSha256: string;
   routeIdentities: Record<string, RouteVerificationIdentity>;
 };
 
-export type DeploymentManifest = Omit<ExportPagesResult, "outputDirectory">;
+export type DeploymentManifest = Omit<
+  ExportPagesResult,
+  "outputDirectory" | "manifestSha256"
+>;
 
 const CURRENT_ROUTES = [
   "/",
@@ -242,7 +250,7 @@ function parseEmbeddedMarketBrief(html: string): unknown {
 
 function assertMarketBriefIdentity(
   value: unknown,
-  expected: ReturnType<typeof buildMarketBrief>,
+  expected: MarketBriefPayload,
   label: string,
 ): void {
   if (
@@ -255,6 +263,60 @@ function assertMarketBriefIdentity(
   ) {
     throw new Error(`${label} market brief identity does not match snapshot`);
   }
+}
+
+async function loadBoundMarketBrief(
+  projectRoot: string,
+  snapshot: MarketSnapshot,
+): Promise<MarketBriefPayload> {
+  const canonicalDataPath = join(
+    projectRoot,
+    "hyperframes/weekly-ai-market-brief/data.json",
+  );
+  const [
+    canonicalDataText,
+    publicDataText,
+    canonicalHtml,
+    publicHtml,
+  ] = await Promise.all([
+    readFile(canonicalDataPath, "utf8"),
+    readFile(join(projectRoot, "public/market-brief/data.json"), "utf8"),
+    readFile(
+      join(projectRoot, "hyperframes/weekly-ai-market-brief/index.html"),
+      "utf8",
+    ),
+    readFile(join(projectRoot, "public/market-brief/index.html"), "utf8"),
+  ]);
+  if (canonicalDataText !== publicDataText) {
+    throw new Error("canonical and public market brief data do not match");
+  }
+  let canonicalData: unknown;
+  let publicData: unknown;
+  try {
+    canonicalData = JSON.parse(canonicalDataText) as unknown;
+    publicData = JSON.parse(publicDataText) as unknown;
+  } catch {
+    throw new Error("canonical market brief data.json is invalid");
+  }
+  assertMarketBriefMatchesSnapshot(
+    canonicalData,
+    snapshot,
+    "canonical market brief",
+  );
+  const expectedSha256 = hashCandidate(canonicalData);
+  if (
+    [publicData, parseEmbeddedMarketBrief(canonicalHtml), parseEmbeddedMarketBrief(publicHtml)]
+      .some(
+        (payload) =>
+          !isMarketBriefPayload(payload) ||
+          hashCandidate(payload) !== expectedSha256,
+      )
+  ) {
+    throw new Error(
+      "canonical and public market brief data and embedded JSON do not match",
+    );
+  }
+  return canonicalData;
 }
 
 export async function exportPages(
@@ -282,6 +344,7 @@ export async function exportPages(
   await assertRegularFile(snapshotPath, "market snapshot");
   const snapshot: unknown = JSON.parse(await readFile(snapshotPath, "utf8"));
   assertMarketSnapshot(snapshot);
+  const canonicalBrief = await loadBoundMarketBrief(projectRoot, snapshot);
   const candidateSha256 = hashCandidate(snapshot);
   if (
     options.authorizedCandidateSha256 !== undefined &&
@@ -375,7 +438,6 @@ export async function exportPages(
     ]),
   );
   const sourceBundles = buildSourceBundles(snapshot);
-  const expectedBrief = buildMarketBrief(snapshot);
   const routeIdentities: Record<string, RouteVerificationIdentity> = {
     ...Object.fromEntries(
       CURRENT_ROUTES.map((route) => [
@@ -408,10 +470,10 @@ export async function exportPages(
     ),
     "/market-brief/": {
       kind: "market-brief",
-      runId: expectedBrief.runId,
-      dataCutoff: expectedBrief.dataCutoff,
-      sourceIds: [...expectedBrief.sourceIds].sort(),
-      payloadSha256: hashCandidate(expectedBrief),
+      runId: canonicalBrief.runId,
+      dataCutoff: canonicalBrief.dataCutoff,
+      sourceIds: [...canonicalBrief.sourceIds].sort(),
+      payloadSha256: hashCandidate(canonicalBrief),
     },
   };
   const renderedRoutes = [
@@ -427,6 +489,8 @@ export async function exportPages(
     workDirectory,
     `.${basename(outputDirectory)}.${process.pid}.${randomUUID()}.tmp`,
   );
+  let artifactTreeSha256: string;
+  let manifestSha256: string;
   try {
     await cp(clientDirectory, temporary, {
       recursive: true,
@@ -443,12 +507,12 @@ export async function exportPages(
     );
     assertMarketBriefIdentity(
       copiedBriefData,
-      expectedBrief,
+      canonicalBrief,
       "copied data.json",
     );
     assertMarketBriefIdentity(
       parseEmbeddedMarketBrief(copiedBriefHtml),
-      expectedBrief,
+      canonicalBrief,
       "copied embedded JSON",
     );
     const workerUrl = pathToFileURL(serverPath);
@@ -509,6 +573,7 @@ export async function exportPages(
         throw new Error(`export contains localhost metadata: ${htmlPath}`);
       }
     }
+    artifactTreeSha256 = await hashArtifactTree(temporary);
     const manifest: DeploymentManifest = {
       routes,
       runId: snapshot.runId,
@@ -517,8 +582,10 @@ export async function exportPages(
       sourceIds,
       archiveSourceIds,
       candidateSha256,
+      artifactTreeSha256,
       routeIdentities,
     };
+    manifestSha256 = hashCandidate(manifest);
     await writeFile(
       join(temporary, ".market-deployment.json"),
       `${JSON.stringify(manifest, null, 2)}\n`,
@@ -539,6 +606,8 @@ export async function exportPages(
     sourceIds,
     archiveSourceIds,
     candidateSha256,
+    artifactTreeSha256,
+    manifestSha256,
     routeIdentities,
   };
 }

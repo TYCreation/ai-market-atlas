@@ -18,11 +18,31 @@ import {
 } from "./helpers.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
+type FixturePaths = Awaited<ReturnType<typeof makeFixtureWorkspace>>;
+
+async function candidateSha(paths: FixturePaths): Promise<string> {
+  return hashCandidate(
+    JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot,
+  );
+}
+
+async function reviewedSha(paths: FixturePaths): Promise<string> {
+  return (
+    JSON.parse(await readFile(paths.reviewPath, "utf8")) as {
+      candidateSha256: string;
+    }
+  ).candidateSha256;
+}
+
+async function promoteReviewed(paths: FixturePaths) {
+  return promoteCandidate(paths, await reviewedSha(paths));
+}
+
 test("promotes only a publishable candidate and archives the previous snapshot", async () => {
   const paths = await makeFixtureWorkspace();
   const previous = await readFile(paths.currentPath, "utf8");
 
-  const result = await promoteCandidate(paths);
+  const result = await promoteReviewed(paths);
 
   assert.equal(result.promoted, true);
   assert.equal(JSON.parse(await readFile(paths.currentPath, "utf8")).runId, "2026-08-01-saturday");
@@ -34,7 +54,10 @@ test("does not change current.json when the gate blocks", async () => {
   const paths = await makeBlockedFixtureWorkspace();
   const before = await readFile(paths.currentPath, "utf8");
 
-  await assert.rejects(() => promoteCandidate(paths), /automated review decision is manual_review/);
+  await assert.rejects(
+    async () => promoteCandidate(paths, await reviewedSha(paths)),
+    /automated review decision is manual_review/,
+  );
 
   assert.equal(await readFile(paths.currentPath, "utf8"), before);
   assert.deepEqual(await readdir(paths.runsDir), []);
@@ -44,7 +67,7 @@ test("refuses promotion when review is missing or bound to another hash", async 
   const paths = await makeFixtureWorkspace();
   await rm(paths.reviewPath);
   await assert.rejects(
-    () => promoteCandidate(paths),
+    async () => promoteCandidate(paths, await candidateSha(paths)),
     /matching auto_publish review required/,
   );
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
@@ -52,7 +75,10 @@ test("refuses promotion when review is missing or bound to another hash", async 
   const changed = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
   changed.metrics["stocks.nvda.price"].numericValue += 1;
   await writeFile(paths.candidatePath, JSON.stringify(changed));
-  await assert.rejects(() => promoteCandidate(paths), /review candidate hash does not match/);
+  await assert.rejects(
+    async () => promoteCandidate(paths, await candidateSha(paths)),
+    /review candidate hash does not match/,
+  );
 });
 
 test("publishes only the normalized snapshot that its persisted review hashes", async () => {
@@ -80,7 +106,7 @@ test("publishes only the normalized snapshot that its persisted review hashes", 
   const normalizedCandidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
   assert.equal(review.review.candidateSha256, hashCandidate(normalizedCandidate));
 
-  await promoteCandidate(paths);
+  await promoteReviewed(paths);
   const published = JSON.parse(await readFile(paths.currentPath, "utf8")) as MarketSnapshot;
   assert.equal(hashCandidate(published), review.review.candidateSha256);
   assert.equal(published.metrics["pulse.infrastructure_spend"].numericValue, 2800);
@@ -93,7 +119,45 @@ test("blocks a normalized candidate that changes after review", async () => {
   candidate.metrics["stocks.nvda.price"].numericValue += 1;
   await writeFile(paths.candidatePath, JSON.stringify(candidate));
 
-  await assert.rejects(() => promoteCandidate(paths), /review candidate hash does not match/);
+  await assert.rejects(
+    async () => promoteCandidate(paths, await candidateSha(paths)),
+    /review candidate hash does not match/,
+  );
+});
+
+test("promotion rejects a changed candidate and replacement valid review when the authorized hash is older", async () => {
+  const paths = await makeFixtureWorkspace();
+  const originalReview = JSON.parse(
+    await readFile(paths.reviewPath, "utf8"),
+  ) as { candidateSha256: string };
+  const before = await readFile(paths.currentPath, "utf8");
+  const changed = JSON.parse(
+    await readFile(paths.candidatePath, "utf8"),
+  ) as MarketSnapshot;
+  changed.pages["/"].report.title.en = "Replacement candidate";
+  await writeFile(paths.candidatePath, `${JSON.stringify(changed)}\n`);
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
+
+  await assert.rejects(
+    () => promoteCandidate(paths, originalReview.candidateSha256),
+    /authorized candidate hash/i,
+  );
+
+  assert.equal(await readFile(paths.currentPath, "utf8"), before);
+  assert.deepEqual(await readdir(paths.runsDir), []);
+});
+
+test("promotion requires an authorized candidate hash", async () => {
+  const paths = await makeFixtureWorkspace();
+  const before = await readFile(paths.currentPath, "utf8");
+
+  await assert.rejects(
+    () => promoteCandidate(paths),
+    /authorized candidate hash.*required/i,
+  );
+
+  assert.equal(await readFile(paths.currentPath, "utf8"), before);
+  assert.deepEqual(await readdir(paths.runsDir), []);
 });
 
 test("requires the direct, named regular review file", async () => {
@@ -101,19 +165,36 @@ test("requires the direct, named regular review file", async () => {
   const review = await readFile(wrongName.reviewPath, "utf8");
   const renamed = join(wrongName.root, "reviews", "wrong-name.json");
   await writeFile(renamed, review);
-  await assert.rejects(() => promoteCandidate({ ...wrongName, reviewPath: renamed }), /review path must be/);
+  await assert.rejects(
+    async () =>
+      promoteCandidate(
+        { ...wrongName, reviewPath: renamed },
+        await candidateSha(wrongName),
+      ),
+    /review path must be/,
+  );
 
   const outside = await makeFixtureWorkspace();
   const outsidePath = join(outside.root, "outside-review.json");
   await writeFile(outsidePath, await readFile(outside.reviewPath, "utf8"));
-  await assert.rejects(() => promoteCandidate({ ...outside, reviewPath: outsidePath }), /review path must be/);
+  await assert.rejects(
+    async () =>
+      promoteCandidate(
+        { ...outside, reviewPath: outsidePath },
+        await candidateSha(outside),
+      ),
+    /review path must be/,
+  );
 
   const linked = await makeFixtureWorkspace();
   const target = join(linked.root, "review-target.json");
   await writeFile(target, await readFile(linked.reviewPath, "utf8"));
   await rm(linked.reviewPath);
   await symlink(target, linked.reviewPath);
-  await assert.rejects(() => promoteCandidate(linked), /review file must be a regular file/);
+  await assert.rejects(
+    async () => promoteCandidate(linked, await candidateSha(linked)),
+    /review file must be a regular file/,
+  );
 });
 
 test("validates through the candidate adapter without publishing it", async () => {
@@ -135,7 +216,7 @@ test("archives month-end snapshots once and rollback removes only its record", a
   paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
 
-  const promotion = await promoteCandidate(paths);
+  const promotion = await promoteReviewed(paths);
   const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8")) as Record<string, MarketSnapshot>;
   assert.equal(promotion.monthlyArchiveMonth, "2026-07");
   assert.equal(index["2026-07"].runId, promotion.runId);
@@ -160,7 +241,7 @@ test("month-end promotion persists exactly the pure prospective archive projecti
 
   assert.equal(typeof storage.projectMonthlyArchive, "function");
   const projected = storage.projectMonthlyArchive(candidate, review);
-  await promoteCandidate(paths);
+  await promoteReviewed(paths);
   const index = JSON.parse(
     await readFile(paths.monthlyIndexPath, "utf8"),
   ) as Record<string, unknown>;
@@ -170,7 +251,7 @@ test("month-end promotion persists exactly the pure prospective archive projecti
 
 test("refuses rollback unless current is the promotion that produced the archive", async () => {
   const paths = await makeFixtureWorkspace();
-  const promotion = await promoteCandidate(paths);
+  const promotion = await promoteReviewed(paths);
   const unrelatedCurrent = await readFile(promotion.archivedPath, "utf8");
   await writeFile(paths.currentPath, unrelatedCurrent);
 
@@ -179,12 +260,12 @@ test("refuses rollback unless current is the promotion that produced the archive
 
 test("rejects substituted and symlinked rollback archives", async () => {
   const substituted = await makeFixtureWorkspace();
-  const promotion = await promoteCandidate(substituted);
+  const promotion = await promoteReviewed(substituted);
   await writeFile(promotion.archivedPath, await readFile(substituted.currentPath, "utf8"));
   await assert.rejects(() => restoreCurrent(substituted, promotion), /promotion archive identity does not match/);
 
   const linked = await makeFixtureWorkspace();
-  const linkedPromotion = await promoteCandidate(linked);
+  const linkedPromotion = await promoteReviewed(linked);
   const target = join(linked.root, "archive-target.json");
   await writeFile(target, await readFile(linkedPromotion.archivedPath, "utf8"));
   await rm(linkedPromotion.archivedPath);
@@ -194,10 +275,10 @@ test("rejects substituted and symlinked rollback archives", async () => {
 
 test("reuses an authenticated rollback archive for a same-run retry", async () => {
   const paths = await makeFixtureWorkspace();
-  const first = await promoteCandidate(paths);
+  const first = await promoteReviewed(paths);
   await restoreCurrent(paths, first);
 
-  const retry = await promoteCandidate(paths);
+  const retry = await promoteReviewed(paths);
 
   assert.equal(retry.archivedPath, first.archivedPath);
   assert.equal(JSON.parse(await readFile(paths.currentPath, "utf8")).runId, first.runId);
@@ -205,14 +286,14 @@ test("reuses an authenticated rollback archive for a same-run retry", async () =
 
 test("rejects a stale same-run rollback result but accepts the newest result", async () => {
   const paths = await makeFixtureWorkspace();
-  const first = await promoteCandidate(paths);
+  const first = await promoteReviewed(paths);
   await restoreCurrent(paths, first);
 
   const retryCandidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
   retryCandidate.metrics["stocks.nvda.price"].numericValue += 1;
   await writeFile(paths.candidatePath, JSON.stringify(retryCandidate));
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
-  const newest = await promoteCandidate(paths);
+  const newest = await promoteReviewed(paths);
   const beforeCurrent = await readFile(paths.currentPath, "utf8");
   const beforeIndex = await readFile(paths.monthlyIndexPath, "utf8");
 
@@ -229,7 +310,10 @@ test("rejects a mismatched existing archive before promotion", async () => {
   const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
   await writeFile(join(paths.runsDir, `${candidate.runId}.json`), JSON.stringify(candidate));
 
-  await assert.rejects(() => promoteCandidate(paths), /existing archive does not match expected prior snapshot/);
+  await assert.rejects(
+    async () => promoteCandidate(paths, await reviewedSha(paths)),
+    /existing archive does not match expected prior snapshot/,
+  );
 });
 
 test("prunes only old named weekly runs and reviews", async () => {
@@ -264,7 +348,10 @@ test("rejects duplicate month archive keys before changing current", async () =>
   await writeFile(paths.reviewPath, JSON.stringify(autoPublishReview(candidate)));
   const before = await readFile(paths.currentPath, "utf8");
 
-  await assert.rejects(() => promoteCandidate(paths), /monthly archive already exists/);
+  await assert.rejects(
+    async () => promoteCandidate(paths, await reviewedSha(paths)),
+    /monthly archive already exists/,
+  );
 
   assert.equal(await readFile(paths.currentPath, "utf8"), before);
 });

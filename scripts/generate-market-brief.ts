@@ -298,6 +298,69 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
   }
 }
 
+export function assertMarketBriefMatchesSnapshot(
+  value: unknown,
+  snapshot: MarketSnapshot,
+  label = "Market brief",
+): asserts value is MarketBriefPayload {
+  if (!isMarketBriefPayload(value)) {
+    throw new Error(`${label} is not a valid market brief payload`);
+  }
+  if (
+    value.runId !== snapshot.runId ||
+    value.cadence !== snapshot.cadence ||
+    value.dataCutoff !== snapshot.dataCutoff
+  ) {
+    throw new Error(`${label} envelope does not match snapshot`);
+  }
+  const snapshotSignalIds = new Set(snapshot.keySignalIds);
+  if (
+    value.signals.length !== snapshotSignalIds.size ||
+    value.signals.some((signal) => !snapshotSignalIds.has(signal.id))
+  ) {
+    throw new Error(`${label} signals do not match snapshot`);
+  }
+  for (const signal of value.signals) {
+    const metric = snapshot.metrics[signal.id];
+    const reportSignal = metric
+      ? snapshot.pages[metric.page].report.signal
+      : undefined;
+    if (
+      !metric ||
+      metric.page !== signal.page ||
+      metric.kind !== signal.kind ||
+      metric.display.zh !== signal.zh.value ||
+      metric.display.en !== signal.en.value ||
+      reportSignal?.zh !== signal.zh.label ||
+      reportSignal?.en !== signal.en.label ||
+      !sameStringSet(metric.sourceIds, signal.sourceIds)
+    ) {
+      throw new Error(
+        `${label} signal ${signal.id} does not match snapshot identity`,
+      );
+    }
+  }
+  const boundSourceIds = [
+    ...new Set(
+      snapshot.keySignalIds.flatMap(
+        (signalId) => snapshot.metrics[signalId]?.sourceIds ?? [],
+      ),
+    ),
+  ];
+  if (
+    !sameStringSet(value.sourceIds, boundSourceIds) ||
+    value.sourceIds.some((sourceId) => snapshot.sources[sourceId] === undefined)
+  ) {
+    throw new Error(`${label} sources do not match snapshot`);
+  }
+  if (
+    JSON.stringify(value.nextWeekObservations) !==
+    JSON.stringify(nextWeekObservations(snapshot))
+  ) {
+    throw new Error(`${label} observation policy does not match snapshot`);
+  }
+}
+
 function isCompleteBrief(brief: MarketBriefPayload): boolean {
   return (
     (brief.cadence === "saturday" || brief.cadence === "month-end") &&

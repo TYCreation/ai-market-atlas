@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { authorizeCandidatePublication } from "../market-data/deployment.ts";
 import { promoteCandidate, pruneRuns, validateCandidate, type StoragePaths } from "../market-data/storage.ts";
 
 function option(args: string[], name: string, fallback: string): string {
@@ -51,7 +52,16 @@ async function main(args: string[]): Promise<void> {
     console.log(JSON.stringify({ valid: true, runId: snapshot.runId, schemaVersion: snapshot.schemaVersion, sessions: "completed" }));
     return;
   }
-  const promotion = await promoteCandidate(paths);
+  const runId = await candidateRunId(paths.candidatePath);
+  const authorization = await authorizeCandidatePublication({
+    runId,
+    candidatePath: paths.candidatePath,
+    reviewPath: paths.reviewPath,
+  });
+  const promotion = await promoteCandidate(
+    paths,
+    authorization.candidateSha256,
+  );
   console.log(JSON.stringify({ promoted: true, runId: promotion.runId, archivedPath: promotion.archivedPath }));
 }
 

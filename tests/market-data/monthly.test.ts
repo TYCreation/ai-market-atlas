@@ -11,6 +11,15 @@ import { promoteCandidate } from "../../market-data/storage.ts";
 import { makeFixtureWorkspace, writePublishableReview } from "./helpers.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
+async function promoteReviewed(
+  paths: Awaited<ReturnType<typeof makeFixtureWorkspace>>,
+) {
+  const review = JSON.parse(await readFile(paths.reviewPath, "utf8")) as {
+    candidateSha256: string;
+  };
+  return promoteCandidate(paths, review.candidateSha256);
+}
+
 test("returns a permanent YYYY-MM archive", () => {
   const archive = getMonthlyArchive("2026-07");
 
@@ -36,7 +45,7 @@ test("parses a real month-end promotion with immutable sources and review proven
   paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
 
-  await promoteCandidate(paths);
+  await promoteReviewed(paths);
   const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8"));
   const entry = parseMonthlyArchiveIndex(index).find(({ archive }) => archive.month === "2026-07");
 
@@ -55,7 +64,7 @@ test("rejects incomplete sources and forged automated review provenance", async 
   await writeFile(paths.candidatePath, JSON.stringify(candidate));
   paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
-  await promoteCandidate(paths);
+  await promoteReviewed(paths);
 
   const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8"));
   const record = index["2026-07"];
@@ -106,7 +115,7 @@ test("requires every archived warning code to remain with its canonical review c
   await writeFile(paths.candidatePath, JSON.stringify(candidate));
   paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
-  await promoteCandidate(paths);
+  await promoteReviewed(paths);
 
   const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8"));
   const record = index["2026-07"];

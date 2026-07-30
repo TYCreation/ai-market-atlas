@@ -236,10 +236,19 @@ function validateSnapshot(candidate: MarketSnapshot, previous: MarketSnapshot, p
 }
 
 /** Promotes only a candidate whose persisted automated review is bound to its exact content. */
-export async function promoteCandidate(paths: StoragePaths): Promise<PromotionResult> {
+export async function promoteCandidate(
+  paths: StoragePaths,
+  expectedCandidateSha256: string,
+): Promise<PromotionResult> {
+  if (!/^[a-f0-9]{64}$/.test(expectedCandidateSha256)) {
+    throw new Error("authorized candidate hash is required");
+  }
   const previous = await readCurrent(paths.currentPath);
   const candidate = await loadCandidate(paths, previous);
   const normalized = validateSnapshot(candidate, previous, paths);
+  if (hashCandidate(normalized) !== expectedCandidateSha256) {
+    throw new Error("candidate no longer matches the authorized candidate hash");
+  }
   const review = await readReview(paths, normalized);
   assertAutoPublishReview(review, normalized);
 

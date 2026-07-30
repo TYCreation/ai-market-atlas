@@ -13,8 +13,14 @@ import type { MarketSnapshot } from "./types.ts";
 export type PublishDependencies = {
   deploy(directory: string, branch: string): Promise<string>;
   verify(baseUrl: string, directory: string): Promise<void>;
-  copyDirectory(from: string, to: string): Promise<void>;
-  promote(): Promise<PromotionResult>;
+  revalidate(): Promise<void>;
+  copyDirectory(
+    from: string,
+    to: string,
+    expectedArtifactTreeSha256: string,
+    expectedManifestSha256: string,
+  ): Promise<void>;
+  promote(expectedCandidateSha256: string): Promise<PromotionResult>;
   restoreSnapshot(promotion: PromotionResult): Promise<void>;
 };
 
@@ -27,6 +33,8 @@ export type PublishOptions = {
   productionBaseUrl: string;
   routes: string[];
   expectedCandidateSha256?: string;
+  expectedArtifactTreeSha256?: string;
+  expectedManifestSha256?: string;
 };
 
 export type VerificationExpectation = {
@@ -272,7 +280,7 @@ function assertVerificationContent(
   route: string,
   body: string,
   expectation: VerificationExpectation,
-): void {
+): string | undefined {
   const identity = expectation.routeIdentities[route];
   if (!identity) {
     throw new Error(`${route} verification identity is missing`);
@@ -301,7 +309,7 @@ function assertVerificationContent(
     ) {
       throw new Error(`${route} market brief payload hash does not match`);
     }
-    return;
+    return hashCandidate(brief);
   }
   if (identity.kind === "archive-detail") {
     const escapedMonth = identity.archiveMonth.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -317,7 +325,7 @@ function assertVerificationContent(
       identity.sourceIds,
       `${route} archive sources`,
     );
-    return;
+    return undefined;
   }
   if (identity.kind === "archive-index") {
     const archiveMonths = [
@@ -328,7 +336,7 @@ function assertVerificationContent(
       identity.archiveMonths,
       `${route} archive months`,
     );
-    return;
+    return undefined;
   }
   if (!body.includes(identity.runId)) {
     throw new Error(`${route} runId marker is missing`);
@@ -344,6 +352,7 @@ function assertVerificationContent(
     identity.sourceIds,
     `${route} current sources`,
   );
+  return undefined;
 }
 
 function assertVerificationBaseUrl(value: string): URL {
@@ -378,13 +387,17 @@ export async function verifyDeployment(
     throw new Error("deployment route identity is missing");
   }
 
-  for (const route of routes) {
+  const fetchVerifiedResponse = async (
+    url: URL,
+    label: string,
+    accept: string,
+  ): Promise<Response> => {
     let response: Response | undefined;
     let networkError: unknown;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        response = await fetcher(new URL(route, base), {
-          headers: { accept: "text/html" },
+        response = await fetcher(url, {
+          headers: { accept },
           redirect: "follow",
           signal: AbortSignal.timeout(10_000),
         });
@@ -394,20 +407,59 @@ export async function verifyDeployment(
         networkError = error;
         if (!isRetryableNetworkError(error)) {
           throw new Error(
-            `${route} verification failed: ${errorMessage(error)}`,
+            `${label} verification failed: ${errorMessage(error)}`,
           );
         }
       }
     }
     if (!response) {
       throw new Error(
-        `${route} network verification failed after three attempts: ${errorMessage(networkError)}`,
+        `${label} network verification failed after three attempts: ${errorMessage(networkError)}`,
       );
     }
     if (response.status !== 200) {
-      throw new Error(`${route} verification returned HTTP ${response.status}`);
+      throw new Error(`${label} verification returned HTTP ${response.status}`);
     }
-    assertVerificationContent(route, await response.text(), expectation);
+    return response;
+  };
+
+  for (const route of routes) {
+    const response = await fetchVerifiedResponse(
+      new URL(route, base),
+      route,
+      "text/html",
+    );
+    const embeddedPayloadSha256 = assertVerificationContent(
+      route,
+      await response.text(),
+      expectation,
+    );
+    const identity = expectation.routeIdentities[route];
+    if (identity.kind === "market-brief") {
+      if (identity.payloadSha256 === undefined) {
+        throw new Error(`${route} market brief payload hash is missing`);
+      }
+      const dataResponse = await fetchVerifiedResponse(
+        new URL("data.json", new URL(route, base)),
+        `${route}data.json`,
+        "application/json",
+      );
+      let payload: unknown;
+      try {
+        payload = JSON.parse(await dataResponse.text()) as unknown;
+      } catch {
+        throw new Error(`${route}data.json is not valid JSON`);
+      }
+      const dataPayloadSha256 = hashCandidate(payload);
+      if (
+        dataPayloadSha256 !== identity.payloadSha256 ||
+        dataPayloadSha256 !== embeddedPayloadSha256
+      ) {
+        throw new Error(
+          `${route}data.json payload hash does not match manifest and embedded JSON`,
+        );
+      }
+    }
   }
 }
 
@@ -492,50 +544,89 @@ export async function publishWithRestore(
   options: PublishOptions,
 ): Promise<PromotionResult> {
   await authorize(options);
+  if (options.expectedCandidateSha256 === undefined) {
+    throw new Error("authorized candidate hash is required");
+  }
+  if (
+    options.expectedArtifactTreeSha256 === undefined ||
+    !/^[a-f0-9]{64}$/.test(options.expectedArtifactTreeSha256)
+  ) {
+    throw new Error("artifact tree hash is required");
+  }
+  if (
+    options.expectedManifestSha256 === undefined ||
+    !/^[a-f0-9]{64}$/.test(options.expectedManifestSha256)
+  ) {
+    throw new Error("deployment manifest hash is required");
+  }
   const branch = `market-update-${options.runId}`;
 
   try {
+    await dependencies.revalidate();
     const previewUrl = await dependencies.deploy(
       options.candidateDirectory,
       branch,
     );
     await dependencies.verify(previewUrl, options.candidateDirectory);
+    await dependencies.revalidate();
   } catch (error) {
     throw new Error(`Preview publication failed: ${errorMessage(error)}`);
   }
 
-  const promotion = await dependencies.promote();
-  try {
-    await dependencies.deploy(options.candidateDirectory, "main");
-    await dependencies.verify(
-      options.productionBaseUrl,
-      options.candidateDirectory,
-    );
-  } catch (candidateError) {
+  const promotion = await dependencies.promote(options.expectedCandidateSha256);
+  if (promotion.promotedSha256 !== options.expectedCandidateSha256) {
     let snapshotOutcome = "snapshot restoration succeeded";
-    let siteOutcome = "site restoration succeeded";
     try {
       await dependencies.restoreSnapshot(promotion);
     } catch (restoreError) {
       snapshotOutcome = `snapshot restoration failed: ${errorMessage(restoreError)}`;
     }
+    throw new Error(
+      `Promotion result does not match the authorized candidate hash; ${snapshotOutcome}`,
+    );
+  }
+  let mainTouched = false;
+  try {
+    await dependencies.revalidate();
+    mainTouched = true;
+    await dependencies.deploy(options.candidateDirectory, "main");
+    await dependencies.verify(
+      options.productionBaseUrl,
+      options.candidateDirectory,
+    );
+    await dependencies.revalidate();
+    await dependencies.revalidate();
+    await dependencies.copyDirectory(
+      options.candidateDirectory,
+      options.lastGoodDirectory,
+      options.expectedArtifactTreeSha256,
+      options.expectedManifestSha256,
+    );
+  } catch (candidateError) {
+    let snapshotOutcome = "snapshot restoration succeeded";
+    let siteOutcome = mainTouched
+      ? "site restoration succeeded"
+      : "site restoration not required";
     try {
-      await dependencies.deploy(options.lastGoodDirectory, "main");
-      await dependencies.verify(
-        options.productionBaseUrl,
-        options.lastGoodDirectory,
-      );
+      await dependencies.restoreSnapshot(promotion);
     } catch (restoreError) {
-      siteOutcome = `site restoration failed: ${errorMessage(restoreError)}`;
+      snapshotOutcome = `snapshot restoration failed: ${errorMessage(restoreError)}`;
+    }
+    if (mainTouched) {
+      try {
+        await dependencies.deploy(options.lastGoodDirectory, "main");
+        await dependencies.verify(
+          options.productionBaseUrl,
+          options.lastGoodDirectory,
+        );
+      } catch (restoreError) {
+        siteOutcome = `site restoration failed: ${errorMessage(restoreError)}`;
+      }
     }
     throw new Error(
       `Candidate production failed: ${errorMessage(candidateError)}; ${snapshotOutcome}; ${siteOutcome}`,
     );
   }
 
-  await dependencies.copyDirectory(
-    options.candidateDirectory,
-    options.lastGoodDirectory,
-  );
   return promotion;
 }
