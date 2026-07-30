@@ -92,6 +92,108 @@ actions tied to the current ChatGPT user. Leave public content anonymous.
 - `npm test`: build the starter and verify its rendered loading skeleton
 - `npm run db:generate`: generate Drizzle migrations after schema changes
 
+## Weekly AI Market Publishing
+
+The scheduled workflow is defined in
+[`docs/automation/weekly-market-update-prompt.md`](docs/automation/weekly-market-update-prompt.md).
+It runs Wednesday and Saturday at 09:00 Asia/Taipei. The final Saturday of a
+month uses the `month-end` cadence.
+
+### Candidate and source policy
+
+Research first, then write only `data/market/candidate.json`. A candidate must
+contain one normalized bilingual record for every page and metric:
+
+- English and Chinese report fields share the same numeric metric records.
+- Every metric lists its source IDs and one observation per supporting source.
+- Public figures use first-party or free public sources whenever available.
+- Atlas-modeled values identify `atlas-model` and explain their method.
+- An unavailable free source carries forward the last verified value and its
+  status; missing data is never guessed.
+- Wednesday marks only materially changed pages and supplies 3–5 key signals.
+  Saturday checks all six pages and supplies 5–8 signals plus next-week
+  observations.
+
+Paid data can be added later by implementing the existing source-adapter
+boundary in `market-data/adapters/`. A paid adapter may collect candidate data,
+but it must produce the same snapshot/source/observation contract and pass the
+same validation and review gates. Credentials and private response details must
+never enter snapshots, reviews, logs, or reports.
+
+### Validate and review locally
+
+```bash
+npm run market:validate -- --candidate data/market/candidate.json
+npm run market:review -- \
+  --candidate data/market/candidate.json \
+  --previous data/market/current.json \
+  --reviews-directory data/market/reviews
+```
+
+Review normalizes the candidate and persists
+`data/market/reviews/<runId>.json`. Only a complete `auto_publish` review whose
+SHA-256 matches the exact normalized candidate can proceed. `manual_review`
+means an operator must resolve the listed conflicts or evidence questions;
+`reject` means a required integrity, source, session, or schema rule failed.
+Both outcomes stop automatically—do not promote or bypass a failed check.
+
+For a fully isolated no-deployment rehearsal, use
+`runFixturePipeline()` from `market-data/pipeline.ts`. It copies the application
+into a temporary workspace, reviews and promotes there, generates the brief,
+builds, and exports, always returning `deploymentAttempted: false`.
+
+### Brief, preview, and static export
+
+After automated approval:
+
+```bash
+npm run market:brief -- --snapshot data/market/candidate.json
+npm run test:market
+npm test
+npm run check:hyperframes
+npm run market:export -- --snapshot data/market/candidate.json
+```
+
+The export in `work/pages-candidate` contains `/`, all five topic routes,
+`/archive`, every retained `/archive/YYYY-MM`, and `/market-brief/` with its
+canonical `data.json`. The export manifest binds the candidate, artifact tree,
+route identities, sources, and brief payload. Preview and production must use
+these exact bytes.
+
+### Promotion, archives, and retention
+
+Promotion is allowed only through the reviewed storage gate. It first archives
+the prior snapshot, then atomically switches `current.json`. Weekly run
+snapshots and their review reports are retained for 90 days; pruning is run
+only after production verification:
+
+```bash
+npm run market:prune
+```
+
+A final-Saturday `month-end` candidate creates exactly one permanent
+`/archive/YYYY-MM` record. Monthly records retain their complete public source
+cards and automated review and are not removed by weekly retention.
+
+### Production deployment and restoration
+
+```bash
+npm run market:deploy
+```
+
+This is the only production entry point. It authorizes the persisted review,
+exports the candidate, deploys and verifies an isolated preview, promotes the
+snapshot, deploys the same artifact to production, and verifies every route and
+the canonical market-brief JSON. A publication lock prevents concurrent runs.
+
+If any post-promotion step fails, the command restores the authenticated prior
+snapshot and redeploys the independently anchored last-known-good directory.
+Both restoration results are reported separately. Never delete the lock,
+last-good anchor, transition record, backup, or run archive while a command is
+active. On restart, an interrupted last-good transition either restores the
+directory matching the old anchor or retains the current directory matching the
+new anchor; ambiguous state fails closed for operator investigation.
+
 ## Learn More
 
 - [vinext Documentation](https://github.com/cloudflare/vinext)

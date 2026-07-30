@@ -111,3 +111,30 @@ test("server-renders a permanent monthly archive with public sources", async () 
   );
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
 });
+
+test("rendered publication exposes route, source, brief, and archive markers", async () => {
+  const [home, stocks, archiveIndex, archiveDetail] = await Promise.all(
+    ["/", "/stocks", "/archive", "/archive/2026-07"].map(async (pathname) => {
+      const response = await render(pathname);
+      assert.equal(response.status, 200, pathname);
+      return response.text();
+    }),
+  );
+
+  assert.match(home, /href="\/stocks"/);
+  assert.match(home, /href="\/compute"/);
+  assert.match(home, /href="\/energy"/);
+  assert.match(home, /href="\/models"/);
+  assert.match(home, /href="\/sic"/);
+  assert.match(home, /market-brief\/index\.html\?lang=zh&amp;embed=1/);
+  assert.match(home, /source-atlas-model/);
+
+  assert.match(stocks, /metric-source-stocks\.basket_30d/);
+  assert.match(stocks, /NVIDIA Investor Relations/);
+  assert.match(stocks, /href="\/archive"/);
+
+  assert.match(archiveIndex, /href="\/archive\/2026-07"/);
+  assert.match(archiveDetail, /2026-07-25-saturday/);
+  assert.match(archiveDetail, /source-nvidia-q1-fy27/);
+  assert.match(archiveDetail, /完整公開來源/);
+});
