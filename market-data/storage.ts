@@ -4,9 +4,12 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { jsonCandidateAdapter } from "./adapters/json-candidate.ts";
 import type { SourceAdapter } from "./adapters/types.ts";
 import { normalizeCandidate } from "./normalize.ts";
+import { assertMonthlyArchiveRecord, type MonthlyArchiveRecord } from "./monthly-record.ts";
 import { assertAutoPublishReview, hashCandidate, isSafeMarketRunId, type AutomatedReview } from "./review.ts";
 import { assertMarketSnapshot } from "./schema.ts";
-import type { MarketSnapshot } from "./types.ts";
+import type { MarketSnapshot, SourceRecord } from "./types.ts";
+
+export type { MonthlyArchiveRecord } from "./monthly-record.ts";
 
 export type PromotionResult = {
   promoted: true;
@@ -28,26 +31,6 @@ export type StoragePaths = {
   adapter?: SourceAdapter;
   sourceAdapter?: SourceAdapter;
   now?: Date;
-};
-
-type MonthlyArchiveRecord = {
-  month: string;
-  runId: string;
-  dataCutoff: string;
-  summary: MarketSnapshot["pages"]["/"]["report"]["summary"];
-  basketChange: MarketSnapshot["metrics"][string];
-  equityChanges: MarketSnapshot["metrics"][string][];
-  thesisChanges: Array<{
-    page: keyof MarketSnapshot["pages"];
-    from: MarketSnapshot["pages"]["/"]["previousThesisStance"];
-    to: MarketSnapshot["pages"]["/"]["thesisStance"];
-    explanation: MarketSnapshot["pages"]["/"]["report"]["thesis"]["body"];
-    metricIds: string[];
-  }>;
-  catalysts: MarketSnapshot["pages"]["/"]["report"]["catalysts"];
-  risks: MarketSnapshot["pages"]["/"]["report"]["risks"];
-  sourceIds: string[];
-  review: AutomatedReview;
 };
 
 const WEEKLY_FILE = /^(\d{4}-\d{2}-\d{2}-(wednesday|saturday))\.json$/;
@@ -187,7 +170,10 @@ function monthFor(snapshot: MarketSnapshot): string {
 
 function monthlyRecord(snapshot: MarketSnapshot, review: AutomatedReview): MonthlyArchiveRecord {
   const root = snapshot.pages["/"];
-  return {
+  const sources: SourceRecord[] = Object.values(snapshot.sources)
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((source) => structuredClone(source));
+  const record: MonthlyArchiveRecord = {
     month: monthFor(snapshot),
     runId: snapshot.runId,
     dataCutoff: snapshot.dataCutoff,
@@ -207,9 +193,12 @@ function monthlyRecord(snapshot: MarketSnapshot, review: AutomatedReview): Month
       })),
     catalysts: root.report.catalysts,
     risks: root.report.risks,
-    sourceIds: Object.keys(snapshot.sources).sort(),
+    sourceIds: sources.map((source) => source.id),
+    sources,
     review,
   };
+  assertMonthlyArchiveRecord(record);
+  return record;
 }
 
 async function readMonthlyIndex(path: string): Promise<Record<string, MonthlyArchiveRecord>> {

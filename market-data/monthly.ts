@@ -1,13 +1,11 @@
 import archiveIndexJson from "../data/market/monthly/index.json" with { type: "json" };
-import { assertMarketSnapshot } from "./schema.ts";
-import type {
-  BilingualText,
-  MarketSnapshot,
-  MetricRecord,
-  PageSlug,
-  SourceRecord,
-  ThesisStance,
-} from "./types.ts";
+import {
+  assertMonthlyArchiveRecord,
+  isLegacyMonthlyArchiveProvenance,
+  type MonthlyArchiveRecord,
+} from "./monthly-record.ts";
+import type { AutomatedReview } from "./review.ts";
+import type { BilingualText, MetricRecord, PageSlug, SourceRecord, ThesisStance } from "./types.ts";
 
 export type MonthlyArchive = {
   month: string;
@@ -28,62 +26,68 @@ export type MonthlyArchive = {
   sourceIds: string[];
 };
 
-type ArchiveIndex = Record<string, MarketSnapshot>;
+export type MonthlyArchiveEntry = {
+  archive: MonthlyArchive;
+  sources: SourceRecord[];
+  review:
+    | { kind: "automated-review"; review: AutomatedReview }
+    | { kind: "legacy-migration"; originalRunId: string; recordedAt: string };
+};
 
 function isArchiveMonth(month: string) {
   return /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
 }
 
-function archiveFromSnapshot(month: string, snapshot: MarketSnapshot): MonthlyArchive {
-  const basketChange = snapshot.metrics["stocks.basket_30d"];
-  if (!basketChange) throw new Error(`Archive ${month} is missing stocks.basket_30d`);
-
+function entryFromRecord(month: string, record: MonthlyArchiveRecord): MonthlyArchiveEntry {
+  if (!isArchiveMonth(month) || record.month !== month) throw new Error(`Invalid archive month: ${month}`);
   return {
-    month,
-    runId: snapshot.runId,
-    dataCutoff: snapshot.dataCutoff,
-    summary: snapshot.pages["/"].report.summary,
-    basketChange,
-    equityChanges: Object.values(snapshot.metrics).filter((metric) =>
-      /^stocks\.[^.]+\.monthReturn$/.test(metric.id),
-    ),
-    thesisChanges: (Object.entries(snapshot.pages) as Array<[PageSlug, MarketSnapshot["pages"][PageSlug]]>)
-      .filter(([, page]) => page.thesisStance !== page.previousThesisStance)
-      .map(([page, state]) => ({
-        page,
-        from: state.previousThesisStance,
-        to: state.thesisStance,
-        explanation: state.report.thesis.body,
-        metricIds: state.thesisMetricIds,
-      })),
-    catalysts: Object.values(snapshot.pages).flatMap((page) => page.report.catalysts),
-    risks: Object.values(snapshot.pages).flatMap((page) => page.report.risks),
-    sourceIds: Object.keys(snapshot.sources).sort(),
+    archive: {
+      month: record.month,
+      runId: record.runId,
+      dataCutoff: record.dataCutoff,
+      summary: record.summary,
+      basketChange: record.basketChange,
+      equityChanges: record.equityChanges,
+      thesisChanges: record.thesisChanges,
+      catalysts: record.catalysts,
+      risks: record.risks,
+      sourceIds: record.sourceIds,
+    },
+    sources: record.sources,
+    review: isLegacyMonthlyArchiveProvenance(record.review)
+      ? {
+          kind: "legacy-migration",
+          originalRunId: record.review.originalRunId,
+          recordedAt: record.review.recordedAt,
+        }
+      : { kind: "automated-review", review: record.review },
   };
 }
 
-const snapshots = archiveIndexJson as ArchiveIndex;
-for (const snapshot of Object.values(snapshots)) assertMarketSnapshot(snapshot);
+export function parseMonthlyArchiveIndex(value: unknown): MonthlyArchiveEntry[] {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("monthly archive index must be an object");
+  }
+  return Object.entries(value)
+    .map(([month, record]) => {
+      assertMonthlyArchiveRecord(record);
+      return entryFromRecord(month, record);
+    })
+    .sort((left, right) => right.archive.month.localeCompare(left.archive.month));
+}
 
-const archiveIndex = Object.entries(snapshots)
-  .map(([month, snapshot]) => {
-    if (!isArchiveMonth(month)) throw new Error(`Invalid archive month: ${month}`);
-    return archiveFromSnapshot(month, snapshot);
-  })
-  .sort((a, b) => b.month.localeCompare(a.month));
+const archiveIndex = parseMonthlyArchiveIndex(archiveIndexJson);
 
 export function listMonthlyArchives(): MonthlyArchive[] {
-  return [...archiveIndex];
+  return archiveIndex.map(({ archive }) => archive);
 }
 
 export function getMonthlyArchive(month: string): MonthlyArchive | undefined {
   if (!isArchiveMonth(month)) throw new Error(`Invalid archive month: ${month}`);
-  return archiveIndex.find((archive) => archive.month === month);
+  return archiveIndex.find(({ archive }) => archive.month === month)?.archive;
 }
 
 export function getMonthlyArchiveSources(month: string): SourceRecord[] | undefined {
-  const archive = getMonthlyArchive(month);
-  if (!archive) return undefined;
-  const snapshot = snapshots[month];
-  return archive.sourceIds.map((sourceId) => snapshot.sources[sourceId]).filter(Boolean);
+  if (!isArchiveMonth(month)) throw new Error(`Invalid archive month: ${month}`);
+  return archiveIndex.find(({ archive }) => archive.month === month)?.sources;
 }

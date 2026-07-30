@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import test from "node:test";
-import { getMonthlyArchive, listMonthlyArchives } from "../../market-data/monthly.ts";
+import {
+  getMonthlyArchive,
+  listMonthlyArchives,
+  parseMonthlyArchiveIndex,
+} from "../../market-data/monthly.ts";
+import { promoteCandidate } from "../../market-data/storage.ts";
+import { makeFixtureWorkspace, writePublishableReview } from "./helpers.ts";
+import type { MarketSnapshot } from "../../market-data/types.ts";
 
 test("returns a permanent YYYY-MM archive", () => {
   const archive = getMonthlyArchive("2026-07");
@@ -16,4 +25,24 @@ test("rejects an invalid archive month path before lookup", () => {
 
 test("lists the permanent archive month for static route generation", () => {
   assert.deepEqual(listMonthlyArchives().map(({ month }) => month), ["2026-07"]);
+});
+
+test("parses a real month-end promotion with immutable sources and review provenance", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  candidate.runId = "2026-07-25-month-end";
+  candidate.cadence = "month-end";
+  await writeFile(paths.candidatePath, JSON.stringify(candidate));
+  paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
+
+  await promoteCandidate(paths);
+  const index = JSON.parse(await readFile(paths.monthlyIndexPath, "utf8"));
+  const entry = parseMonthlyArchiveIndex(index).find(({ archive }) => archive.month === "2026-07");
+
+  assert.ok(entry);
+  assert.equal(entry.archive.runId, "2026-07-25-month-end");
+  assert.equal(entry.sources.find((source) => source.id === "nvidia-q1-fy27")?.publisher, "NVIDIA Investor Relations");
+  assert.equal(entry.review.kind, "automated-review");
+  assert.equal(entry.review.review.runId, "2026-07-25-month-end");
 });

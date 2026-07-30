@@ -40,3 +40,33 @@ Complete. The public archive index and permanent July 2026 detail route render f
 ## Concerns
 
 - `npx tsc --noEmit` is not a project verification command and currently fails on existing repository-wide configuration/type issues (notably `.ts` extension imports without `allowImportingTsExtensions`, Cloudflare worker globals, and existing `MarketDashboard` locale typing). Build, market tests, rendered tests, and lint all pass.
+
+---
+
+## Review Fix Round 1
+
+### Status
+
+Complete. The archive reader and writer now share `MonthlyArchiveRecord` from `market-data/monthly-record.ts`, re-exported by `market-data/storage.ts`. The record includes immutable complete source records and either the approved `AutomatedReview` for new month-end promotions or an explicit typed legacy migration provenance.
+
+### RED / GREEN evidence
+
+- RED: `npm run test:market -- --test-name-pattern='month-end promotion|archive'` failed because `parseMonthlyArchiveIndex` was not exported by `market-data/monthly.ts`.
+- GREEN: after the record-contract refactor, the same command passed: `tests 90`, `pass 90`, `fail 0`. The new compatibility test promotes a month-end candidate into a temporary index, parses that actual record shape, and verifies NVIDIA’s immutable source record plus the approved automated review provenance.
+
+### Verification outputs
+
+- `npm run test:market` — exit 0; `tests 90`, `pass 90`, `fail 0`.
+- `npm test` — exit 0; build completed and rendered-route tests reported `tests 8`, `pass 8`, `fail 0`.
+- `npm run lint` — exit 0; no lint findings.
+
+### Self-review
+
+- The public reader no longer dereferences `pages`, `metrics`, or `sources` from a snapshot. It parses only persisted `MonthlyArchiveRecord` fields.
+- Future promotions retain the exact auto-publish review already validated before publication and write a sorted, cloned source-record list alongside `sourceIds`.
+- The `2026-07` seed keeps its market facts exactly derived from `current.json`, but declares `legacy-migration` / `approved-current-snapshot` provenance instead of inventing an automated review.
+- Archive routes retain their existing domain validation and route-layer `notFound()` behavior.
+
+### Concerns
+
+- The existing repository-wide `npx tsc --noEmit` configuration/type failures remain outside the requested verification surface; required market tests, rendered tests/build, and lint pass.
