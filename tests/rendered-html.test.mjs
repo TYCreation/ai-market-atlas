@@ -86,3 +86,28 @@ for (const [pathname, heading, metricIds] of [
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });
 }
+
+test("server-renders the monthly archive index", async () => {
+  const response = await render("/archive");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /月度市場封存/);
+  assert.match(html, /Monthly market archives/);
+  assert.match(html, /href="\/archive\/2026-07"/);
+});
+
+test("server-renders a permanent monthly archive with public sources", async () => {
+  const response = await render("/archive/2026-07");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /2026 年 7 月市場封存/);
+  assert.match(html, /完整公開來源/);
+  assert.match(html, /NVIDIA Investor Relations/);
+  assert.match(
+    html,
+    /https:\/\/investor\.nvidia\.com\/news\/press-release-details\/2026\/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2027\/default\.aspx/,
+  );
+  assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
+});

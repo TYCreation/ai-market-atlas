@@ -46,6 +46,7 @@ const copy = {
     sectionFourKicker: "04 · 領導者觀察清單",
     sectionFourTitle: "會議室裡的三個問題",
     methodLabel: "方法說明。",
+    archiveLink: "月度封存",
     method:
       "本頁使用已驗證並發布的市場快照。模型數字用於方向性比較，並非經稽核財務資料或投資建議。",
   },
@@ -78,6 +79,7 @@ const copy = {
     sectionFourKicker: "04 · Leadership watchlist",
     sectionFourTitle: "Three questions for the room",
     methodLabel: "Method note.",
+    archiveLink: "Monthly archive",
     method:
       "This page uses a validated, promoted market snapshot. Modeled figures are for directional comparison, not audited financial data or investment advice.",
   },
@@ -414,6 +416,7 @@ export function MarketDashboard({
           <p>
             <strong>{ui.methodLabel}</strong> {ui.method}
           </p>
+          <Link className="footer-archive" href="/archive">{ui.archiveLink} ↗</Link>
           <span className="footer-edition">AI Market Atlas · {edition[locale].runId}</span>
         </footer>
       </main>

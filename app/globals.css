@@ -1807,7 +1807,7 @@ h2 {
   border-top: 1px solid var(--line);
   display: grid;
   gap: 40px;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   margin-top: 88px;
   padding: 27px 0 10px;
 }
@@ -1830,6 +1830,299 @@ h2 {
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.footer-archive,
+.archive-back {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.footer-archive:hover,
+.archive-back:hover,
+.archive-index-card:hover {
+  color: var(--cyan-soft);
+}
+
+.archive-main {
+  margin: 0 auto;
+  max-width: 1180px;
+  min-height: 100vh;
+  padding: 58px 42px 80px;
+}
+
+.archive-back span,
+.archive-meta span,
+.archive-empty span,
+.archive-list span,
+.archive-source a span {
+  color: var(--muted);
+  display: block;
+  margin-top: 5px;
+}
+
+.archive-header {
+  border-bottom: 1px solid var(--line);
+  margin: 44px 0 48px;
+  max-width: 880px;
+  padding-bottom: 42px;
+}
+
+.archive-header h1 {
+  margin: 13px 0 7px;
+}
+
+.archive-title-en,
+.archive-summary-en {
+  color: var(--muted);
+}
+
+.archive-title-en {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.archive-summary {
+  font-size: 18px;
+  line-height: 1.7;
+  margin: 33px 0 0;
+}
+
+.archive-summary-en {
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 9px 0 0;
+}
+
+.archive-meta {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin: 28px 0 0;
+  text-transform: uppercase;
+}
+
+.archive-meta span {
+  display: inline;
+  margin-left: 12px;
+}
+
+.archive-section {
+  margin-top: 58px;
+}
+
+.archive-section-head h2 {
+  margin-bottom: 5px;
+}
+
+.archive-section-head p:not(.section-kicker) {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.archive-basket {
+  align-items: end;
+  background: linear-gradient(120deg, rgba(115, 225, 230, 0.12), rgba(16, 37, 54, 0.72));
+  border: 1px solid var(--line-strong);
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr auto auto;
+  margin-top: 24px;
+  padding: 24px;
+}
+
+.archive-basket span,
+.archive-equity span,
+.archive-source > span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.archive-basket strong {
+  color: var(--cyan);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 35px;
+  font-weight: 400;
+}
+
+.archive-basket small,
+.archive-equity small {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.archive-equities {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 1px;
+}
+
+.archive-equity {
+  background: rgba(16, 37, 54, 0.5);
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.archive-equity strong {
+  color: var(--ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 400;
+}
+
+.archive-empty {
+  background: rgba(16, 37, 54, 0.48);
+  border-left: 2px solid var(--line-strong);
+  color: var(--ivory);
+  line-height: 1.6;
+  margin: 22px 0 0;
+  padding: 18px;
+}
+
+.archive-change-list,
+.archive-list {
+  margin: 22px 0 0;
+}
+
+.archive-change {
+  border-top: 1px solid var(--line);
+  padding: 18px 0;
+}
+
+.archive-change p,
+.archive-change span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin: 0 0 8px;
+}
+
+.archive-change strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.archive-signal-grid {
+  display: grid;
+  gap: 36px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.archive-list {
+  display: grid;
+  gap: 0;
+  list-style: none;
+  padding: 0;
+}
+
+.archive-list li {
+  border-top: 1px solid var(--line);
+  line-height: 1.6;
+  padding: 16px 0;
+}
+
+.archive-sources {
+  border-top: 1px solid var(--line);
+  padding-top: 42px;
+}
+
+.archive-source-list {
+  display: grid;
+  margin-top: 24px;
+}
+
+.archive-source {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 22px;
+  grid-template-columns: 110px 1fr auto;
+  padding: 20px 0;
+}
+
+.archive-source strong,
+.archive-source p,
+.archive-source small {
+  display: block;
+  line-height: 1.55;
+}
+
+.archive-source strong {
+  color: var(--ivory);
+  font-size: 14px;
+}
+
+.archive-source p,
+.archive-source small {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 5px 0 0;
+}
+
+.archive-source a,
+.archive-source em {
+  align-self: start;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: normal;
+  text-decoration: none;
+}
+
+.archive-index-list {
+  display: grid;
+  gap: 12px;
+}
+
+.archive-index-card {
+  background: linear-gradient(125deg, rgba(16, 37, 54, 0.84), rgba(9, 24, 36, 0.84));
+  border: 1px solid var(--line);
+  color: var(--ivory);
+  display: grid;
+  gap: 12px;
+  padding: 28px;
+  text-decoration: none;
+}
+
+.archive-index-card > span,
+.archive-index-card em {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.archive-index-card strong {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.archive-index-card small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.archive-index-card b {
+  color: var(--ivory);
+  float: right;
+  font-weight: 400;
 }
 
 @media (max-width: 1100px) {
@@ -1938,6 +2231,19 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .archive-equities {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .archive-source {
+    grid-template-columns: 90px 1fr;
+  }
+
+  .archive-source a,
+  .archive-source em {
+    grid-column: 2;
+  }
+
   .source-principles {
     align-items: start;
     grid-template-columns: 1fr;
@@ -1960,6 +2266,29 @@ h2 {
   .metric-strip,
   .signal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .archive-main {
+    padding: 38px 22px 60px;
+  }
+
+  .archive-basket,
+  .archive-signal-grid,
+  .archive-equities {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-basket {
+    align-items: start;
+  }
+
+  .archive-source {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-source a,
+  .archive-source em {
+    grid-column: auto;
   }
 
   .metric + .metric,
