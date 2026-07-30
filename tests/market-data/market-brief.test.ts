@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   buildMarketBrief,
   generateMarketBriefAssets,
+  isMarketBriefPayload,
   type MarketBriefAssetPaths,
   type MarketBriefPayload,
 } from "../../scripts/generate-market-brief.ts";
@@ -216,6 +217,32 @@ test("prioritizes a changed /sic key signal before Wednesday page balancing", as
   assert.equal(brief.nextWeekObservations.length, 0);
 });
 
+test("prioritizes a genuinely added /sic signal when a Wednesday ID is replaced", async () => {
+  const saturday = await currentSnapshot();
+  const { paths } = await generatePriorBrief(saturday);
+  const wednesday = makeWednesday(saturday);
+  const replacementId = "sic.new_packaging_signal";
+  const replacement = structuredClone(wednesday.metrics["sic.ev_penetration"]);
+  replacement.id = replacementId;
+  replacement.display = { en: "$24B replacement", zh: "$24B 新增" };
+  wednesday.metrics[replacementId] = replacement;
+  wednesday.keySignalIds[wednesday.keySignalIds.length - 1] = replacementId;
+  await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
+
+  await generateMarketBriefAssets(paths);
+
+  const brief = JSON.parse(
+    await readFile(paths.canonicalData, "utf8"),
+  ) as MarketBriefPayload;
+  assert.equal(brief.runId, wednesday.runId);
+  assert.ok(
+    brief.featuredSignalIds.includes(replacementId),
+    `expected ${replacementId} in ${brief.featuredSignalIds.join(", ")}`,
+  );
+  assert.ok(brief.featuredSignalIds.length >= 3);
+  assert.ok(brief.featuredSignalIds.length <= 5);
+});
+
 test("detects key-signal changes from IDs, values, kinds, and source bindings", async (t) => {
   const mutations: Array<[string, (snapshot: MarketSnapshot) => void]> = [
     [
@@ -336,6 +363,58 @@ test("rejects lower- and upper-bound violations in a prior complete brief", asyn
       assert.equal(brief.labels.title.en, "Fresh content");
       assert.ok(brief.featuredSignalIds.length >= 3);
       assert.ok(brief.featuredSignalIds.length <= 5);
+    });
+  }
+});
+
+test("payload validation returns false instead of throwing for malformed nested fields", async () => {
+  const malformed = buildMarketBrief(await currentSnapshot()) as unknown as {
+    labels: null;
+  };
+  malformed.labels = null;
+
+  assert.doesNotThrow(() => isMarketBriefPayload(malformed));
+  assert.equal(isMarketBriefPayload(malformed), false);
+});
+
+test("rejects invalid generated payloads before changing any output", async (t) => {
+  const cases: Array<[string, (snapshot: MarketSnapshot) => void]> = [
+    [
+      "Saturday without evidence-backed observations",
+      (snapshot) => {
+        for (const page of Object.values(snapshot.pages)) {
+          page.report.nextObservations = [];
+        }
+      },
+    ],
+    [
+      "fewer tags than the three rendered slots",
+      (snapshot) => {
+        snapshot.pages["/"].report.thesis.tags.en = ["Compute", "Power"];
+        snapshot.pages["/"].report.thesis.tags.zh = ["算力", "電力"];
+      },
+    ],
+  ];
+
+  for (const [name, mutate] of cases) {
+    await t.test(name, async () => {
+      const snapshot = await currentSnapshot();
+      mutate(snapshot);
+      const paths = await makeAssetWorkspace(snapshot);
+      const originalCanonicalHtml = await readFile(paths.canonicalHtml, "utf8");
+      const originalPublicHtml = await readFile(paths.publicHtml, "utf8");
+      await writeFile(paths.canonicalData, "sentinel-canonical\n");
+      await writeFile(paths.publicData, "sentinel-public\n");
+
+      await assert.rejects(
+        generateMarketBriefAssets(paths),
+        /invalid generated market brief|observations|tags/i,
+      );
+
+      assert.equal(await readFile(paths.canonicalData, "utf8"), "sentinel-canonical\n");
+      assert.equal(await readFile(paths.publicData, "utf8"), "sentinel-public\n");
+      assert.equal(await readFile(paths.canonicalHtml, "utf8"), originalCanonicalHtml);
+      assert.equal(await readFile(paths.publicHtml, "utf8"), originalPublicHtml);
     });
   }
 });

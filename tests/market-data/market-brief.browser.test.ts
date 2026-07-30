@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { spawn, type ChildProcess } from "node:child_process";
 import { createServer, type ServerResponse } from "node:http";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import test from "node:test";
 import { chromium, type BrowserContext, type Page } from "playwright";
@@ -10,16 +12,10 @@ import type { MarketSnapshot } from "../../market-data/types.ts";
 
 const projectRoot = new URL("../../", import.meta.url);
 const compositionRoot = new URL("../../hyperframes/weekly-ai-market-brief/", import.meta.url);
-const chromePath = [
-  process.env.CHROME_PATH,
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/usr/bin/google-chrome",
-  "/usr/bin/chromium",
-].find((path) => path && existsSync(path));
 const embeddedPattern =
   /<script id="embedded-market-brief" type="application\/json">[\s\S]*?<\/script>/;
 
-type DataMode = "valid" | "malformed" | "hanging" | "unreachable";
+type DataMode = "valid" | "malformed" | "hanging" | "unreachable" | "deferred";
 
 function htmlWithBrief(html: string, brief: MarketBriefPayload): string {
   const json = JSON.stringify(brief).replaceAll("<", "\\u003c");
@@ -59,6 +55,99 @@ async function newCompositionPage(
   return { context, page };
 }
 
+async function reservePort(): Promise<number> {
+  const server = createServer();
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  await new Promise<void>((resolve, reject) =>
+    server.close((error) => (error ? reject(error) : resolve())),
+  );
+  return address.port;
+}
+
+async function startActualApp(): Promise<{
+  child: ChildProcess;
+  logs: () => string;
+  stop: () => Promise<void>;
+  url: string;
+}> {
+  const port = await reservePort();
+  const executable = join(
+    fileURLToPath(projectRoot),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "vinext.cmd" : "vinext",
+  );
+  const child = spawn(
+    executable,
+    ["dev", "--host", "127.0.0.1", "--port", String(port)],
+    {
+      cwd: fileURLToPath(projectRoot),
+      env: { ...process.env, WRANGLER_LOG_PATH: ".wrangler/wrangler.log" },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let output = "";
+  child.stdout?.setEncoding("utf8").on("data", (chunk) => {
+    output += chunk;
+  });
+  child.stderr?.setEncoding("utf8").on("data", (chunk) => {
+    output += chunk;
+  });
+  const url = `http://localhost:${port}`;
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) {
+      throw new Error(`Actual app exited before startup:\n${output}`);
+    }
+    try {
+      const response = await fetch(url);
+      if (response.ok) break;
+    } catch {
+      // The bounded readiness loop keeps polling until the server accepts requests.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (Date.now() >= deadline) {
+    child.kill();
+    throw new Error(`Timed out starting actual app:\n${output}`);
+  }
+  return {
+    child,
+    logs: () => output,
+    stop: async () => {
+      if (child.exitCode !== null) return;
+      child.kill();
+      await Promise.race([
+        new Promise<void>((resolve) => child.once("exit", () => resolve())),
+        new Promise<void>((resolve) => setTimeout(resolve, 3_000)),
+      ]);
+    },
+    url,
+  };
+}
+
+test("uses the repository-pinned Playwright Chromium runtime", async () => {
+  const executable = chromium.executablePath();
+  assert.equal(
+    existsSync(executable),
+    true,
+    `missing pinned Chromium at ${executable}; run npm run market:browser:install`,
+  );
+  assert.doesNotMatch(
+    executable,
+    /Google Chrome\.app|[\\/]usr[\\/](?:local[\\/])?bin[\\/](?:google-chrome|chromium)/i,
+  );
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+  try {
+    browser = await chromium.launch({ headless: true });
+    assert.equal(browser.version().length > 0, true);
+  } finally {
+    await browser?.close();
+  }
+});
+
 test("actual market-brief composition passes its browser behavior matrix", async (t) => {
   const [canonicalHtml, snapshot] = await Promise.all([
     readFile(new URL("index.html", compositionRoot), "utf8"),
@@ -82,6 +171,7 @@ test("actual market-brief composition passes its browser behavior matrix", async
   let data = saturdayBrief as unknown;
   let dataMode: DataMode = "valid";
   const hangingResponses = new Set<ServerResponse>();
+  let deferredResponse: ServerResponse | undefined;
   const server = createServer(async (request, response) => {
     const path = new URL(request.url ?? "/", "http://localhost").pathname;
     if (path === "/index.html") {
@@ -97,6 +187,13 @@ test("actual market-brief composition passes its browser behavior matrix", async
       }
       if (dataMode === "unreachable") {
         response.destroy();
+        return;
+      }
+      if (dataMode === "deferred") {
+        deferredResponse = response;
+        response.on("close", () => {
+          if (deferredResponse === response) deferredResponse = undefined;
+        });
         return;
       }
       response.setHeader("content-type", "application/json");
@@ -119,9 +216,10 @@ test("actual market-brief composition passes its browser behavior matrix", async
   const address = server.address();
   assert.ok(address && typeof address === "object");
   const baseUrl = `http://127.0.0.1:${address.port}`;
-  const browser = await chromium.launch({ executablePath: chromePath, headless: true });
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
 
   try {
+    browser = await chromium.launch({ headless: true });
     await t.test("desktop English", async () => {
       embedded = saturdayBrief;
       data = saturdayBrief;
@@ -151,15 +249,77 @@ test("actual market-brief composition passes its browser behavior matrix", async
     });
 
     await t.test("replay starts the real timeline again", async () => {
-      const { context, page } = await newCompositionPage(browser, baseUrl, {
-        query: "lang=en&embed=1&playback=1",
-      });
-      await page.waitForTimeout(350);
-      const time = await page.evaluate(
-        () => window.__timelines["weekly-ai-market-brief"].time(),
-      );
-      assert.ok(time > 0.1 && time < 2, `expected replay near the beginning, got ${time}`);
-      await context.close();
+      const app = await startActualApp();
+      let context: BrowserContext | undefined;
+      try {
+        context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+        const gsapPath = fileURLToPath(
+          new URL("../../node_modules/gsap/dist/gsap.min.js", import.meta.url),
+        );
+        await context.route("https://cdn.jsdelivr.net/**", async (route) => {
+          await route.fulfill({
+            body: await readFile(gsapPath),
+            contentType: "application/javascript",
+          });
+        });
+        const page = await context.newPage();
+        await page.goto(app.url, { waitUntil: "networkidle" });
+        const iframe = page.locator(".market-film-frame iframe");
+        await iframe.waitFor();
+        const initialFrame = page.frames().find((frame) =>
+          frame.url().includes("/market-brief/index.html"),
+        );
+        assert.ok(initialFrame, `market brief iframe missing:\n${app.logs()}`);
+        await initialFrame.waitForFunction(
+          () => Boolean(window.__timelines?.["weekly-ai-market-brief"]),
+        );
+        await initialFrame.evaluate(() => {
+          const timeline = window.__timelines["weekly-ai-market-brief"];
+          timeline.seek(timeline.duration()).pause();
+        });
+        const advancedTime = await initialFrame.evaluate(
+          () => window.__timelines["weekly-ai-market-brief"].time(),
+        );
+        assert.ok(advancedTime > 25);
+
+        const initialSrc = await iframe.getAttribute("src");
+        await page.locator(".market-film-replay").click();
+        await page.waitForFunction(
+          (oldUrl) =>
+            document
+              .querySelector(".market-film-frame iframe")
+              ?.getAttribute("src")
+              ?.includes("playback=1") &&
+            document
+              .querySelector(".market-film-frame iframe")
+              ?.getAttribute("src") !== oldUrl,
+          initialSrc,
+          { timeout: 10_000 },
+        );
+        const replayFrame = page.frames().find((frame) =>
+          frame.url().includes("playback=1"),
+        );
+        assert.ok(replayFrame, "replay did not remount the market brief iframe");
+        assert.notEqual(replayFrame, initialFrame);
+        await replayFrame.waitForFunction(
+          () => Boolean(window.__timelines?.["weekly-ai-market-brief"]),
+        );
+        const restartedAt = await replayFrame.evaluate(
+          () => window.__timelines["weekly-ai-market-brief"].time(),
+        );
+        assert.ok(restartedAt >= 0 && restartedAt < 1);
+        await replayFrame.waitForTimeout(350);
+        const progressedTo = await replayFrame.evaluate(
+          () => window.__timelines["weekly-ai-market-brief"].time(),
+        );
+        assert.ok(
+          progressedTo > restartedAt + 0.1,
+          `expected replay progression after ${restartedAt}, got ${progressedTo}`,
+        );
+      } finally {
+        await context?.close();
+        await app.stop();
+      }
     });
 
     await t.test("reduced motion seeks synchronously to the closing thesis", async () => {
@@ -241,6 +401,10 @@ test("actual market-brief composition passes its browser behavior matrix", async
         ["observation rule", (brief) => {
           brief.nextWeekObservations = [];
         }],
+        ["rendered tag cardinality", (brief) => {
+          brief.labels.tags.en = ["CORRUPTED"];
+          brief.labels.tags.zh = ["已破壞"];
+        }],
       ];
 
       for (const [name, mutate] of malformedCases) {
@@ -265,6 +429,38 @@ test("actual market-brief composition passes its browser behavior matrix", async
           await context.close();
         });
       }
+    });
+
+    await t.test("render failure leaves the embedded DOM unchanged and resolves fallback", async () => {
+      embedded = saturdayBrief;
+      const fetched = structuredClone(saturdayBrief);
+      fetched.labels.title = { en: "CORRUPTED TITLE", zh: "已破壞標題" };
+      data = fetched;
+      dataMode = "deferred";
+      const { context, page } = await newCompositionPage(browser, baseUrl, {
+        query: "lang=en&embed=1",
+      });
+      await page.locator(".event-board").evaluate((element) => element.remove());
+      assert.ok(deferredResponse, "expected the fetched brief response to be deferred");
+      deferredResponse.setHeader("content-type", "application/json");
+      deferredResponse.end(JSON.stringify(data));
+      const outcome = await page.evaluate(async () => {
+        try {
+          const brief = await window.briefReady;
+          return { status: "resolved", runId: brief.runId };
+        } catch {
+          return { status: "rejected", runId: "" };
+        }
+      });
+      assert.deepEqual(outcome, {
+        status: "resolved",
+        runId: saturdayBrief.runId,
+      });
+      assert.equal(
+        await page.locator('[data-brief="title"]').first().innerText(),
+        saturdayBrief.labels.title.en,
+      );
+      await context.close();
     });
 
     await t.test("hanging fetch never delays normal playback", async () => {
@@ -299,7 +495,8 @@ test("actual market-brief composition passes its browser behavior matrix", async
     });
   } finally {
     for (const response of hangingResponses) response.destroy();
-    await browser.close();
+    deferredResponse?.destroy();
+    await browser?.close();
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),
     );
@@ -308,7 +505,17 @@ test("actual market-brief composition passes its browser behavior matrix", async
 
 declare global {
   interface Window {
-    __timelines: Record<string, { paused(): boolean; time(): number }>;
+    __timelines: Record<
+      string,
+      {
+        pause(): unknown;
+        paused(): boolean;
+        duration(): number;
+        seek(time: number): { pause(): unknown };
+        time(): number;
+      }
+    >;
+    briefReady: Promise<MarketBriefPayload>;
     loadBrief(): Promise<MarketBriefPayload>;
   }
 }

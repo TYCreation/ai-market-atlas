@@ -78,6 +78,18 @@ function assertSnapshotBriefCardinality(snapshot: MarketSnapshot): void {
       `${snapshot.cadence} market brief requires at least ${min} unique key signals`,
     );
   }
+  const tags = snapshot.pages["/"].report.thesis.tags;
+  if (tags.zh.length !== 3 || tags.en.length !== 3) {
+    throw new Error("Market brief requires exactly three thesis tags per language");
+  }
+  if (
+    snapshot.cadence !== "wednesday" &&
+    !PAGE_ORDER.some(
+      (page) => snapshot.pages[page].report.nextObservations.length > 0,
+    )
+  ) {
+    throw new Error(`${snapshot.cadence} market brief requires next-week observations`);
+  }
 }
 
 function featuredSignalIds(
@@ -200,84 +212,90 @@ function isLocalizedSignal(value: unknown): value is LocalizedSignal {
 }
 
 export function isMarketBriefPayload(value: unknown): value is MarketBriefPayload {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<MarketBriefPayload>;
-  if (
-    candidate.cadence !== "wednesday" &&
-    candidate.cadence !== "saturday" &&
-    candidate.cadence !== "month-end"
-  ) {
-    return false;
-  }
-  const signals = Array.isArray(candidate.signals) ? candidate.signals : [];
-  const signalIds = signals
-    .filter((signal) => signal && typeof signal.id === "string")
-    .map((signal) => signal.id);
-  const signalIdSet = new Set(signalIds);
-  const sourceIds = Array.isArray(candidate.sourceIds) ? candidate.sourceIds : [];
-  const sourceIdSet = new Set(sourceIds);
-  const featuredSignalIds = Array.isArray(candidate.featuredSignalIds)
-    ? candidate.featuredSignalIds
-    : [];
-  const featuredIdSet = new Set(featuredSignalIds);
-  const { min, max } = CADENCE_BOUNDS[candidate.cadence];
-  const labels = candidate.labels;
-  const structurallyValid =
-    candidate.schemaVersion === 1 &&
-    typeof candidate.runId === "string" &&
-    candidate.runId.length > 0 &&
-    typeof candidate.dataCutoff === "string" &&
-    !Number.isNaN(Date.parse(candidate.dataCutoff)) &&
-    sourceIds.length > 0 &&
-    sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
-    sourceIdSet.size === sourceIds.length &&
-    signals.length >= min &&
-    signalIdSet.size === signals.length &&
-    signals.every(
-      (signal) =>
-        signal &&
-        typeof signal.id === "string" &&
-        signal.id.length > 0 &&
-        PAGE_SLUGS.has(signal.page) &&
-        (signal.kind === "modeled" || signal.kind === "published") &&
-        Array.isArray(signal.sourceIds) &&
-        signal.sourceIds.length > 0 &&
-        signal.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
-        new Set(signal.sourceIds).size === signal.sourceIds.length &&
-        signal.sourceIds.every((id) => sourceIdSet.has(id)) &&
-        isLocalizedSignal(signal.zh) &&
-        isLocalizedSignal(signal.en),
-    ) &&
-    featuredSignalIds.length >= min &&
-    featuredSignalIds.length <= max &&
-    featuredIdSet.size === featuredSignalIds.length &&
-    featuredSignalIds.every((id) => typeof id === "string" && signalIdSet.has(id)) &&
-    Array.isArray(candidate.nextWeekObservations) &&
-    candidate.nextWeekObservations.every(isBilingualText) &&
-    labels !== undefined &&
-    isBilingualText(labels.eyebrow) &&
-    isBilingualText(labels.title) &&
-    isBilingualText(labels.summary) &&
-    isBilingualText(labels.signal) &&
-    isBilingualText(labels.thesis) &&
-    Array.isArray(labels.tags.zh) &&
-    labels.tags.zh.every((tag) => typeof tag === "string" && tag.length > 0) &&
-    Array.isArray(labels.tags.en) &&
-    labels.tags.en.every((tag) => typeof tag === "string" && tag.length > 0) &&
-    isBilingualText(candidate.methodology) &&
-    isBilingualText(candidate.notInvestmentAdvice);
-  if (!structurallyValid) return false;
+  try {
+    if (!value || typeof value !== "object") return false;
+    const candidate = value as Partial<MarketBriefPayload>;
+    if (
+      candidate.cadence !== "wednesday" &&
+      candidate.cadence !== "saturday" &&
+      candidate.cadence !== "month-end"
+    ) {
+      return false;
+    }
+    const signals = Array.isArray(candidate.signals) ? candidate.signals : [];
+    const signalIds = signals
+      .filter((signal) => signal && typeof signal.id === "string")
+      .map((signal) => signal.id);
+    const signalIdSet = new Set(signalIds);
+    const sourceIds = Array.isArray(candidate.sourceIds) ? candidate.sourceIds : [];
+    const sourceIdSet = new Set(sourceIds);
+    const featuredSignalIds = Array.isArray(candidate.featuredSignalIds)
+      ? candidate.featuredSignalIds
+      : [];
+    const featuredIdSet = new Set(featuredSignalIds);
+    const { min, max } = CADENCE_BOUNDS[candidate.cadence];
+    const labels = candidate.labels;
+    const structurallyValid =
+      candidate.schemaVersion === 1 &&
+      typeof candidate.runId === "string" &&
+      candidate.runId.length > 0 &&
+      typeof candidate.dataCutoff === "string" &&
+      !Number.isNaN(Date.parse(candidate.dataCutoff)) &&
+      sourceIds.length > 0 &&
+      sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
+      sourceIdSet.size === sourceIds.length &&
+      signals.length >= min &&
+      signalIdSet.size === signals.length &&
+      signals.every(
+        (signal) =>
+          signal &&
+          typeof signal.id === "string" &&
+          signal.id.length > 0 &&
+          PAGE_SLUGS.has(signal.page) &&
+          (signal.kind === "modeled" || signal.kind === "published") &&
+          Array.isArray(signal.sourceIds) &&
+          signal.sourceIds.length > 0 &&
+          signal.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
+          new Set(signal.sourceIds).size === signal.sourceIds.length &&
+          signal.sourceIds.every((id) => sourceIdSet.has(id)) &&
+          isLocalizedSignal(signal.zh) &&
+          isLocalizedSignal(signal.en),
+      ) &&
+      featuredSignalIds.length >= min &&
+      featuredSignalIds.length <= max &&
+      featuredIdSet.size === featuredSignalIds.length &&
+      featuredSignalIds.every((id) => typeof id === "string" && signalIdSet.has(id)) &&
+      Array.isArray(candidate.nextWeekObservations) &&
+      candidate.nextWeekObservations.every(isBilingualText) &&
+      Boolean(labels) &&
+      isBilingualText(labels?.eyebrow) &&
+      isBilingualText(labels?.title) &&
+      isBilingualText(labels?.summary) &&
+      isBilingualText(labels?.signal) &&
+      isBilingualText(labels?.thesis) &&
+      Array.isArray(labels?.tags?.zh) &&
+      labels.tags.zh.length === 3 &&
+      labels.tags.zh.every((tag) => typeof tag === "string" && tag.length > 0) &&
+      Array.isArray(labels?.tags?.en) &&
+      labels.tags.en.length === 3 &&
+      labels.tags.en.every((tag) => typeof tag === "string" && tag.length > 0) &&
+      isBilingualText(candidate.methodology) &&
+      isBilingualText(candidate.notInvestmentAdvice);
+    if (!structurallyValid) return false;
 
-  const boundSourceIds = new Set(signals.flatMap((signal) => signal.sourceIds));
-  if (
-    boundSourceIds.size !== sourceIdSet.size ||
-    [...boundSourceIds].some((id) => !sourceIdSet.has(id))
-  ) {
+    const boundSourceIds = new Set(signals.flatMap((signal) => signal.sourceIds));
+    if (
+      boundSourceIds.size !== sourceIdSet.size ||
+      [...boundSourceIds].some((id) => !sourceIdSet.has(id))
+    ) {
+      return false;
+    }
+    return candidate.cadence === "wednesday"
+      ? candidate.nextWeekObservations.length === 0
+      : candidate.nextWeekObservations.length > 0;
+  } catch {
     return false;
   }
-  return candidate.cadence === "wednesday"
-    ? candidate.nextWeekObservations.length === 0
-    : candidate.nextWeekObservations.length > 0;
 }
 
 function isCompleteBrief(brief: MarketBriefPayload): boolean {
@@ -301,13 +319,6 @@ function changedKeySignalIds(
   prior: MarketBriefPayload,
 ): Set<string> {
   const changed = new Set<string>();
-  if (
-    snapshot.keySignalIds.length !== prior.signals.length ||
-    snapshot.keySignalIds.some((id, index) => id !== prior.signals[index]?.id)
-  ) {
-    for (const id of snapshot.keySignalIds) changed.add(id);
-    return changed;
-  }
   const priorById = new Map(prior.signals.map((signal) => [signal.id, signal]));
   for (const id of snapshot.keySignalIds) {
     const metric = snapshot.metrics[id];
@@ -323,6 +334,15 @@ function changedKeySignalIds(
     ) {
       changed.add(id);
     }
+  }
+  if (
+    changed.size === 0 &&
+    (snapshot.keySignalIds.length !== prior.signals.length ||
+      snapshot.keySignalIds.some((id, index) => id !== prior.signals[index]?.id))
+  ) {
+    snapshot.keySignalIds.forEach((id, index) => {
+      if (id !== prior.signals[index]?.id) changed.add(id);
+    });
   }
   return changed;
 }
@@ -390,6 +410,9 @@ export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): P
     changes.size === 0
       ? reusePriorContent(current, existing)
       : current;
+  if (!isMarketBriefPayload(brief)) {
+    throw new Error("Invalid generated market brief payload");
+  }
   const data = serializeBrief(brief);
   const canonicalHtml = await readFile(paths.canonicalHtml, "utf8");
   const html = upsertEmbeddedBrief(canonicalHtml, brief);

@@ -880,6 +880,7 @@
       }
 
       function isValidBrief(brief, expectedBrief) {
+        try {
         const cadenceBounds = {
           wednesday: { min: 3, max: 5 },
           saturday: { min: 5, max: 8 },
@@ -945,12 +946,17 @@
           hasBilingualText(brief.labels.thesis) &&
           brief.labels.tags &&
           Array.isArray(brief.labels.tags.zh) &&
+          brief.labels.tags.zh.length === 3 &&
           brief.labels.tags.zh.every((tag) => typeof tag === "string" && tag.length > 0) &&
           Array.isArray(brief.labels.tags.en) &&
+          brief.labels.tags.en.length === 3 &&
           brief.labels.tags.en.every((tag) => typeof tag === "string" && tag.length > 0) &&
           hasBilingualText(brief.methodology) &&
           hasBilingualText(brief.notInvestmentAdvice)
         );
+        } catch {
+          return false;
+        }
       }
 
       function readEmbeddedBrief() {
@@ -968,18 +974,13 @@
         throw new Error("The embedded market brief is invalid.");
       }
 
-      function setBriefText(name, value) {
-        document.querySelectorAll("[data-brief]").forEach((element) => {
-          if (element.dataset.brief === name) element.textContent = value;
-        });
-      }
-
-      function renderBrief(brief) {
+      function buildBriefRenderPlan(brief) {
         const localized = (value) => value[language];
         const signalById = new Map(brief.signals.map((signal) => [signal.id, signal]));
         const featured = brief.featuredSignalIds
           .map((id) => signalById.get(id))
           .filter(Boolean);
+        if (featured.length === 0) throw new Error("Brief has no featured signals");
         const at = (index) => featured[index % featured.length];
         const date = new Intl.DateTimeFormat(language === "en" ? "en-US" : "zh-TW", {
           dateStyle: "medium",
@@ -989,47 +990,44 @@
           language === "en"
             ? { wednesday: "Wednesday update", saturday: "Saturday brief", "month-end": "Month-end brief" }
             : { wednesday: "週三更新", saturday: "週六快報", "month-end": "月末快報" };
-
-        document.documentElement.lang = language === "en" ? "en" : "zh-Hant";
-        setBriefText("eyebrow", localized(brief.labels.eyebrow));
-        setBriefText("title", localized(brief.labels.title));
-        setBriefText("summary", localized(brief.labels.summary));
-        setBriefText("signal", localized(brief.labels.signal));
-        setBriefText("thesis", localized(brief.labels.thesis));
-        setBriefText("methodology", localized(brief.methodology));
-        setBriefText("not-advice", localized(brief.notInvestmentAdvice));
-        setBriefText("edition", `${cadence[brief.cadence]} · ${date} · ${brief.runId}`);
         const showsNextWeek = brief.cadence !== "wednesday";
-        const eventBoard = document.querySelector(".event-board");
-        const equityLayout = document.querySelector(".equity-layout");
-        eventBoard.hidden = !showsNextWeek;
-        eventBoard.setAttribute("aria-hidden", String(!showsNextWeek));
-        equityLayout.classList.toggle("no-observations", !showsNextWeek);
+        const texts = new Map([
+          ["eyebrow", localized(brief.labels.eyebrow)],
+          ["title", localized(brief.labels.title)],
+          ["summary", localized(brief.labels.summary)],
+          ["signal", localized(brief.labels.signal)],
+          ["thesis", localized(brief.labels.thesis)],
+          ["methodology", localized(brief.methodology)],
+          ["not-advice", localized(brief.notInvestmentAdvice)],
+          ["edition", `${cadence[brief.cadence]} · ${date} · ${brief.runId}`],
+        ]);
         if (showsNextWeek) {
-          setBriefText("next-label", language === "en" ? "NEXT OBSERVATIONS" : "下週觀察");
-          setBriefText("next-code", language === "en" ? "NEXT" : "下週");
+          texts.set("next-label", language === "en" ? "NEXT OBSERVATIONS" : "下週觀察");
+          texts.set("next-code", language === "en" ? "NEXT" : "下週");
         }
 
         for (let index = 0; index < 8; index += 1) {
           const signal = at(index);
-          setBriefText(`signal-${index}-label`, signal[language].label);
-          setBriefText(`signal-${index}-value`, signal[language].value);
-          setBriefText(`signal-${index}-code`, signal.page === "/" ? "PULSE" : signal.page.slice(1).toUpperCase());
-          setBriefText(
-            `signal-${index}-kind`,
-            signal.kind === "modeled"
-              ? language === "en"
-                ? "MODELED"
-                : "模型值"
-              : language === "en"
-                ? "PUBLISHED"
-                : "已發布",
-          );
+          texts.set(`signal-${index}-label`, signal[language].label);
+          texts.set(`signal-${index}-value`, signal[language].value);
+          if (index >= 5) {
+            texts.set(`signal-${index}-code`, signal.page === "/" ? "PULSE" : signal.page.slice(1).toUpperCase());
+            texts.set(
+              `signal-${index}-kind`,
+              signal.kind === "modeled"
+                ? language === "en"
+                  ? "MODELED"
+                  : "模型值"
+                : language === "en"
+                  ? "PUBLISHED"
+                  : "已發布",
+            );
+          }
         }
 
         if (showsNextWeek) {
           for (let index = 0; index < 3; index += 1) {
-            setBriefText(
+            texts.set(
               `next-${index}`,
               localized(
                 brief.nextWeekObservations[index % brief.nextWeekObservations.length],
@@ -1038,8 +1036,71 @@
           }
         }
         brief.labels.tags[language].slice(0, 3).forEach((tag, index) => {
-          setBriefText(`tag-${index}`, tag);
+          texts.set(`tag-${index}`, tag);
         });
+        return {
+          documentLanguage: language === "en" ? "en" : "zh-Hant",
+          showsNextWeek,
+          texts,
+        };
+      }
+
+      function applyBriefRenderPlan(plan) {
+        const eventBoard = document.querySelector(".event-board");
+        const equityLayout = document.querySelector(".equity-layout");
+        if (!eventBoard || !equityLayout) return false;
+        const targets = [...document.querySelectorAll("[data-brief]")];
+        const targetGroups = new Map();
+        for (const [name] of plan.texts) {
+          const elements = targets.filter((element) => element.dataset.brief === name);
+          if (elements.length === 0) return false;
+          targetGroups.set(name, elements);
+        }
+        const textSnapshots = targets.map((element) => [element, element.textContent]);
+        const snapshot = {
+          documentLanguage: document.documentElement.lang,
+          eventHidden: eventBoard.hidden,
+          eventAriaHidden: eventBoard.getAttribute("aria-hidden"),
+          noObservations: equityLayout.classList.contains("no-observations"),
+        };
+        try {
+          document.documentElement.lang = plan.documentLanguage;
+          for (const [name, value] of plan.texts) {
+            targetGroups.get(name).forEach((element) => {
+              element.textContent = value;
+            });
+          }
+          eventBoard.hidden = !plan.showsNextWeek;
+          eventBoard.setAttribute("aria-hidden", String(!plan.showsNextWeek));
+          equityLayout.classList.toggle("no-observations", !plan.showsNextWeek);
+          return true;
+        } catch {
+          document.documentElement.lang = snapshot.documentLanguage;
+          textSnapshots.forEach(([element, text]) => {
+            try {
+              element.textContent = text;
+            } catch {
+              // Preserve the rest of the last complete render if one node cannot restore.
+            }
+          });
+          eventBoard.hidden = snapshot.eventHidden;
+          if (snapshot.eventAriaHidden === null) {
+            eventBoard.removeAttribute("aria-hidden");
+          } else {
+            eventBoard.setAttribute("aria-hidden", snapshot.eventAriaHidden);
+          }
+          equityLayout.classList.toggle("no-observations", snapshot.noObservations);
+          return false;
+        }
+      }
+
+      function renderBrief(brief) {
+        if (!isValidBrief(brief, lastEmbeddedBrief)) return false;
+        try {
+          return applyBriefRenderPlan(buildBriefRenderPlan(brief));
+        } catch {
+          return false;
+        }
       }
 
       async function loadBrief() {
@@ -1163,13 +1224,7 @@
       }
 
       window.briefReady = loadBrief().then((brief) => {
-        try {
-          renderBrief(brief);
-        } catch {
-          renderBrief(lastEmbeddedBrief);
-          return lastEmbeddedBrief;
-        }
-        return brief;
+        return renderBrief(brief) ? brief : lastEmbeddedBrief;
       });
     </script>
   </body>
