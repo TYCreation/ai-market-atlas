@@ -317,8 +317,8 @@ function sameStringSet(left: string[], right: string[]): boolean {
 function changedKeySignalIds(
   snapshot: MarketSnapshot,
   prior: MarketBriefPayload,
-): Set<string> {
-  const changed = new Set<string>();
+): { orderChanged: boolean; signalIds: Set<string> } {
+  const signalIds = new Set<string>();
   const priorById = new Map(prior.signals.map((signal) => [signal.id, signal]));
   for (const id of snapshot.keySignalIds) {
     const metric = snapshot.metrics[id];
@@ -332,19 +332,15 @@ function changedKeySignalIds(
       metric.display.en !== previous.en.value ||
       !sameStringSet(metric.sourceIds, previous.sourceIds)
     ) {
-      changed.add(id);
+      signalIds.add(id);
     }
   }
-  if (
-    changed.size === 0 &&
-    (snapshot.keySignalIds.length !== prior.signals.length ||
-      snapshot.keySignalIds.some((id, index) => id !== prior.signals[index]?.id))
-  ) {
-    snapshot.keySignalIds.forEach((id, index) => {
-      if (id !== prior.signals[index]?.id) changed.add(id);
-    });
-  }
-  return changed;
+  return {
+    orderChanged:
+      snapshot.keySignalIds.length !== prior.signals.length ||
+      snapshot.keySignalIds.some((id, index) => id !== prior.signals[index]?.id),
+    signalIds,
+  };
 }
 
 function reusePriorContent(
@@ -401,13 +397,14 @@ export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): P
   const changes =
     snapshot.cadence === "wednesday" && existing && isCompleteBrief(existing)
       ? changedKeySignalIds(snapshot, existing)
-      : new Set<string>();
-  const current = buildMarketBrief(snapshot, changes);
+      : { orderChanged: false, signalIds: new Set<string>() };
+  const current = buildMarketBrief(snapshot, changes.signalIds);
   const brief =
     snapshot.cadence === "wednesday" &&
     existing &&
     isCompleteBrief(existing) &&
-    changes.size === 0
+    changes.signalIds.size === 0 &&
+    !changes.orderChanged
       ? reusePriorContent(current, existing)
       : current;
   if (!isMarketBriefPayload(brief)) {

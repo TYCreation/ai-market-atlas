@@ -243,6 +243,32 @@ test("prioritizes a genuinely added /sic signal when a Wednesday ID is replaced"
   assert.ok(brief.featuredSignalIds.length <= 5);
 });
 
+test("does not treat reorder-only positional mismatches as changed signal records", async () => {
+  const saturday = await currentSnapshot();
+  const { paths } = await generatePriorBrief(saturday);
+  const wednesday = makeWednesday(saturday);
+  wednesday.keySignalIds.reverse();
+  wednesday.pages["/"].report.title = {
+    en: "Fresh reorder-only Wednesday",
+    zh: "本期僅重排週三更新",
+  };
+  await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
+
+  await generateMarketBriefAssets(paths);
+
+  const brief = JSON.parse(
+    await readFile(paths.canonicalData, "utf8"),
+  ) as MarketBriefPayload;
+  const featuredSicCount = brief.featuredSignalIds.filter((id) =>
+    id.startsWith("sic."),
+  ).length;
+  assert.equal(brief.labels.title.en, "Fresh reorder-only Wednesday");
+  assert.ok(
+    featuredSicCount < 4,
+    `reorder-only cut falsely prioritized ${featuredSicCount} /sic signals: ${brief.featuredSignalIds.join(", ")}`,
+  );
+});
+
 test("detects key-signal changes from IDs, values, kinds, and source bindings", async (t) => {
   const mutations: Array<[string, (snapshot: MarketSnapshot) => void]> = [
     [

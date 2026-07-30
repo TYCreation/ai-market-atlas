@@ -9,6 +9,10 @@ import test from "node:test";
 import { chromium, type BrowserContext, type Page } from "playwright";
 import { buildMarketBrief, type MarketBriefPayload } from "../../scripts/generate-market-brief.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
+import {
+  localFilePath,
+  stopChildProcess,
+} from "./helpers/market-browser-runtime.ts";
 
 const projectRoot = new URL("../../", import.meta.url);
 const compositionRoot = new URL("../../hyperframes/weekly-ai-market-brief/", import.meta.url);
@@ -38,8 +42,8 @@ async function newCompositionPage(
     reducedMotion: options.reducedMotion,
     viewport: options.viewport ?? { width: 1920, height: 1080 },
   });
-  const gsapPath = join(
-    new URL("../../node_modules/gsap/dist/gsap.min.js", import.meta.url).pathname,
+  const gsapPath = localFilePath(
+    new URL("../../node_modules/gsap/dist/gsap.min.js", import.meta.url),
   );
   await context.route("https://cdn.jsdelivr.net/**", async (route) => {
     await route.fulfill({
@@ -73,15 +77,16 @@ async function startActualApp(): Promise<{
   url: string;
 }> {
   const port = await reservePort();
-  const executable = join(
+  const vinextCli = join(
     fileURLToPath(projectRoot),
     "node_modules",
-    ".bin",
-    process.platform === "win32" ? "vinext.cmd" : "vinext",
+    "vinext",
+    "dist",
+    "cli.js",
   );
   const child = spawn(
-    executable,
-    ["dev", "--host", "127.0.0.1", "--port", String(port)],
+    process.execPath,
+    [vinextCli, "dev", "--host", "127.0.0.1", "--port", String(port)],
     {
       cwd: fileURLToPath(projectRoot),
       env: { ...process.env, WRANGLER_LOG_PATH: ".wrangler/wrangler.log" },
@@ -110,20 +115,13 @@ async function startActualApp(): Promise<{
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (Date.now() >= deadline) {
-    child.kill();
+    await stopChildProcess(child);
     throw new Error(`Timed out starting actual app:\n${output}`);
   }
   return {
     child,
     logs: () => output,
-    stop: async () => {
-      if (child.exitCode !== null) return;
-      child.kill();
-      await Promise.race([
-        new Promise<void>((resolve) => child.once("exit", () => resolve())),
-        new Promise<void>((resolve) => setTimeout(resolve, 3_000)),
-      ]);
-    },
+    stop: () => stopChildProcess(child),
     url,
   };
 }
@@ -248,12 +246,12 @@ test("actual market-brief composition passes its browser behavior matrix", async
       await context.close();
     });
 
-    await t.test("replay starts the real timeline again", async () => {
+    await t.test("completes the real timeline before and after replay remount", async () => {
       const app = await startActualApp();
       let context: BrowserContext | undefined;
       try {
         context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-        const gsapPath = fileURLToPath(
+        const gsapPath = localFilePath(
           new URL("../../node_modules/gsap/dist/gsap.min.js", import.meta.url),
         );
         await context.route("https://cdn.jsdelivr.net/**", async (route) => {
@@ -273,14 +271,36 @@ test("actual market-brief composition passes its browser behavior matrix", async
         await initialFrame.waitForFunction(
           () => Boolean(window.__timelines?.["weekly-ai-market-brief"]),
         );
-        await initialFrame.evaluate(() => {
+        const initialStartedAt = await initialFrame.evaluate(() => {
           const timeline = window.__timelines["weekly-ai-market-brief"];
-          timeline.seek(timeline.duration()).pause();
+          timeline.timeScale(20);
+          return timeline.time();
         });
-        const advancedTime = await initialFrame.evaluate(
-          () => window.__timelines["weekly-ai-market-brief"].time(),
+        await initialFrame.waitForFunction(
+          (startedAt) => {
+            const timeline = window.__timelines["weekly-ai-market-brief"];
+            return timeline.time() > startedAt + 0.1 && timeline.progress() < 1;
+          },
+          initialStartedAt,
         );
-        assert.ok(advancedTime > 25);
+        await initialFrame.evaluate(() => {
+          window.__timelines["weekly-ai-market-brief"].timeScale(100);
+        });
+        await initialFrame.waitForFunction(
+          () => window.__timelines["weekly-ai-market-brief"].progress() === 1,
+        );
+        const initialCompleted = await initialFrame.evaluate(() => {
+          const timeline = window.__timelines["weekly-ai-market-brief"];
+          return {
+            duration: timeline.duration(),
+            progress: timeline.progress(),
+            time: timeline.time(),
+          };
+        });
+        assert.equal(initialCompleted.progress, 1);
+        assert.ok(
+          Math.abs(initialCompleted.time - initialCompleted.duration) < 0.01,
+        );
 
         const initialSrc = await iframe.getAttribute("src");
         await page.locator(".market-film-replay").click();
@@ -305,16 +325,46 @@ test("actual market-brief composition passes its browser behavior matrix", async
           () => Boolean(window.__timelines?.["weekly-ai-market-brief"]),
         );
         const restartedAt = await replayFrame.evaluate(
-          () => window.__timelines["weekly-ai-market-brief"].time(),
+          () => {
+            const timeline = window.__timelines["weekly-ai-market-brief"];
+            timeline.timeScale(20);
+            return { progress: timeline.progress(), time: timeline.time() };
+          },
         );
-        assert.ok(restartedAt >= 0 && restartedAt < 1);
-        await replayFrame.waitForTimeout(350);
-        const progressedTo = await replayFrame.evaluate(
-          () => window.__timelines["weekly-ai-market-brief"].time(),
+        assert.ok(restartedAt.time >= 0 && restartedAt.time < 1);
+        assert.ok(restartedAt.progress < 0.05);
+        await replayFrame.waitForFunction(
+          (startedAt) => {
+            const timeline = window.__timelines["weekly-ai-market-brief"];
+            return timeline.time() > startedAt + 0.1 && timeline.progress() < 1;
+          },
+          restartedAt.time,
         );
+        const progressedTo = await replayFrame.evaluate(() => {
+          const timeline = window.__timelines["weekly-ai-market-brief"];
+          return { progress: timeline.progress(), time: timeline.time() };
+        });
         assert.ok(
-          progressedTo > restartedAt + 0.1,
-          `expected replay progression after ${restartedAt}, got ${progressedTo}`,
+          progressedTo.time > restartedAt.time + 0.1 && progressedTo.progress < 1,
+          `expected replay progression after ${restartedAt.time}, got ${progressedTo.time}`,
+        );
+        await replayFrame.evaluate(() => {
+          window.__timelines["weekly-ai-market-brief"].timeScale(100);
+        });
+        await replayFrame.waitForFunction(
+          () => window.__timelines["weekly-ai-market-brief"].progress() === 1,
+        );
+        const replayCompleted = await replayFrame.evaluate(() => {
+          const timeline = window.__timelines["weekly-ai-market-brief"];
+          return {
+            duration: timeline.duration(),
+            progress: timeline.progress(),
+            time: timeline.time(),
+          };
+        });
+        assert.equal(replayCompleted.progress, 1);
+        assert.ok(
+          Math.abs(replayCompleted.time - replayCompleted.duration) < 0.01,
         );
       } finally {
         await context?.close();
@@ -511,8 +561,10 @@ declare global {
         pause(): unknown;
         paused(): boolean;
         duration(): number;
+        progress(): number;
         seek(time: number): { pause(): unknown };
         time(): number;
+        timeScale(value: number): unknown;
       }
     >;
     briefReady: Promise<MarketBriefPayload>;
