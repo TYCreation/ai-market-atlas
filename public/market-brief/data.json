@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 1,
+  "runId": "2026-07-25-saturday",
+  "cadence": "saturday",
+  "dataCutoff": "2026-07-25T01:00:00.000Z",
+  "sourceIds": [
+    "atlas-model",
+    "broadcom-q2-fy26",
+    "doe-data-centers",
+    "gemini-pricing",
+    "iea-data-centres",
+    "iea-energy-ai",
+    "infineon-200mm",
+    "nvidia-q1-fy27",
+    "onsemi-ai",
+    "openai-pricing",
+    "stanford-economy",
+    "stm-q1-2026",
+    "tsmc-q1-2026",
+    "wolfspeed-ai"
+  ],
+  "signals": [
+    {
+      "id": "pulse.infrastructure_spend",
+      "page": "/",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "zh": {
+        "label": "制約輪動",
+        "value": "$2.8T"
+      },
+      "en": {
+        "label": "Constraint rotation",
+        "value": "$2.8T"
+      }
+    },
+    {
+      "id": "pulse.accelerator_market",
+      "page": "/",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27"
+      ],
+      "zh": {
+        "label": "制約輪動",
+        "value": "$242B"
+      },
+      "en": {
+        "label": "Constraint rotation",
+        "value": "$242B"
+      }
+    },
+    {
+      "id": "pulse.power_queue",
+      "page": "/",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "iea-energy-ai",
+        "iea-data-centres"
+      ],
+      "zh": {
+        "label": "制約輪動",
+        "value": "36.2GW"
+      },
+      "en": {
+        "label": "Constraint rotation",
+        "value": "36.2GW"
+      }
+    },
+    {
+      "id": "pulse.enterprise_agents",
+      "page": "/",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "zh": {
+        "label": "制約輪動",
+        "value": "220+"
+      },
+      "en": {
+        "label": "Constraint rotation",
+        "value": "220+"
+      }
+    },
+    {
+      "id": "stocks.basket_30d",
+      "page": "/stocks",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "zh": {
+        "label": "領漲範圍擴大",
+        "value": "+6.4%"
+      },
+      "en": {
+        "label": "Leadership broadening",
+        "value": "+6.4%"
+      }
+    },
+    {
+      "id": "stocks.positive_breadth",
+      "page": "/stocks",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model"
+      ],
+      "zh": {
+        "label": "領漲範圍擴大",
+        "value": "68%"
+      },
+      "en": {
+        "label": "Leadership broadening",
+        "value": "68%"
+      }
+    },
+    {
+      "id": "stocks.median_forward_pe",
+      "page": "/stocks",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27",
+        "broadcom-q2-fy26",
+        "tsmc-q1-2026"
+      ],
+      "zh": {
+        "label": "領漲範圍擴大",
+        "value": "31.8×"
+      },
+      "en": {
+        "label": "Leadership broadening",
+        "value": "31.8×"
+      }
+    },
+    {
+      "id": "stocks.catalyst_count",
+      "page": "/stocks",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27",
+        "broadcom-q2-fy26",
+        "tsmc-q1-2026"
+      ],
+      "zh": {
+        "label": "領漲範圍擴大",
+        "value": "12"
+      },
+      "en": {
+        "label": "Leadership broadening",
+        "value": "12"
+      }
+    },
+    {
+      "id": "compute.accelerator_pool",
+      "page": "/compute",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27",
+        "broadcom-q2-fy26"
+      ],
+      "zh": {
+        "label": "選擇性緊張",
+        "value": "$242B"
+      },
+      "en": {
+        "label": "Selective tightness",
+        "value": "$242B"
+      }
+    },
+    {
+      "id": "compute.hbm_demand",
+      "page": "/compute",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "tsmc-q1-2026"
+      ],
+      "zh": {
+        "label": "選擇性緊張",
+        "value": "+94%"
+      },
+      "en": {
+        "label": "Selective tightness",
+        "value": "+94%"
+      }
+    },
+    {
+      "id": "compute.packaging_lead_weeks",
+      "page": "/compute",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "tsmc-q1-2026"
+      ],
+      "zh": {
+        "label": "選擇性緊張",
+        "value": "28週"
+      },
+      "en": {
+        "label": "Selective tightness",
+        "value": "28wk"
+      }
+    },
+    {
+      "id": "compute.inference_cost_change",
+      "page": "/compute",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "nvidia-q1-fy27"
+      ],
+      "zh": {
+        "label": "選擇性緊張",
+        "value": "−58%"
+      },
+      "en": {
+        "label": "Selective tightness",
+        "value": "−58%"
+      }
+    },
+    {
+      "id": "energy.announced_power_gw",
+      "page": "/energy",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "iea-energy-ai",
+        "iea-data-centres"
+      ],
+      "zh": {
+        "label": "電力受限",
+        "value": "36.2GW"
+      },
+      "en": {
+        "label": "Power constrained",
+        "value": "36.2GW"
+      }
+    },
+    {
+      "id": "energy.committed_power_gw",
+      "page": "/energy",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "iea-energy-ai"
+      ],
+      "zh": {
+        "label": "電力受限",
+        "value": "12.8GW"
+      },
+      "en": {
+        "label": "Power constrained",
+        "value": "12.8GW"
+      }
+    },
+    {
+      "id": "energy.interconnection_years",
+      "page": "/energy",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "doe-data-centers"
+      ],
+      "zh": {
+        "label": "電力受限",
+        "value": "4.6年"
+      },
+      "en": {
+        "label": "Power constrained",
+        "value": "4.6yr"
+      }
+    },
+    {
+      "id": "energy.liquid_cooling_share",
+      "page": "/energy",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "iea-data-centres"
+      ],
+      "zh": {
+        "label": "電力受限",
+        "value": "42%"
+      },
+      "en": {
+        "label": "Power constrained",
+        "value": "42%"
+      }
+    },
+    {
+      "id": "models.production_agents",
+      "page": "/models",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "zh": {
+        "label": "採用面擴大",
+        "value": "220+"
+      },
+      "en": {
+        "label": "Adoption broadening",
+        "value": "220+"
+      }
+    },
+    {
+      "id": "models.software_spend_growth",
+      "page": "/models",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "zh": {
+        "label": "採用面擴大",
+        "value": "+37%"
+      },
+      "en": {
+        "label": "Adoption broadening",
+        "value": "+37%"
+      }
+    },
+    {
+      "id": "models.managed_tokens",
+      "page": "/models",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "openai-pricing",
+        "gemini-pricing"
+      ],
+      "zh": {
+        "label": "採用面擴大",
+        "value": "1.8T"
+      },
+      "en": {
+        "label": "Adoption broadening",
+        "value": "1.8T"
+      }
+    },
+    {
+      "id": "models.api_deployment_share",
+      "page": "/models",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "stanford-economy"
+      ],
+      "zh": {
+        "label": "採用面擴大",
+        "value": "68%"
+      },
+      "en": {
+        "label": "Adoption broadening",
+        "value": "68%"
+      }
+    },
+    {
+      "id": "sic.market_2030_usd_b",
+      "page": "/sic",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "wolfspeed-ai",
+        "stm-q1-2026",
+        "infineon-200mm"
+      ],
+      "zh": {
+        "label": "跨入 AI 封裝",
+        "value": "$23B"
+      },
+      "en": {
+        "label": "AI packaging crossover",
+        "value": "$23B"
+      }
+    },
+    {
+      "id": "sic.wafer_frontier_mm",
+      "page": "/sic",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "wolfspeed-ai",
+        "infineon-200mm"
+      ],
+      "zh": {
+        "label": "跨入 AI 封裝",
+        "value": "300mm"
+      },
+      "en": {
+        "label": "AI packaging crossover",
+        "value": "300mm"
+      }
+    },
+    {
+      "id": "sic.packaging_watts",
+      "page": "/sic",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "wolfspeed-ai"
+      ],
+      "zh": {
+        "label": "跨入 AI 封裝",
+        "value": "1000W+"
+      },
+      "en": {
+        "label": "AI packaging crossover",
+        "value": "1000W+"
+      }
+    },
+    {
+      "id": "sic.ev_penetration",
+      "page": "/sic",
+      "kind": "modeled",
+      "sourceIds": [
+        "atlas-model",
+        "onsemi-ai",
+        "stm-q1-2026"
+      ],
+      "zh": {
+        "label": "跨入 AI 封裝",
+        "value": "35%+"
+      },
+      "en": {
+        "label": "AI packaging crossover",
+        "value": "35%+"
+      }
+    }
+  ],
+  "featuredSignalIds": [
+    "pulse.infrastructure_spend",
+    "stocks.basket_30d",
+    "compute.accelerator_pool",
+    "energy.announced_power_gw",
+    "models.production_agents",
+    "sic.market_2030_usd_b",
+    "pulse.accelerator_market",
+    "pulse.power_queue"
+  ],
+  "nextWeekObservations": [
+    {
+      "en": "Next read · utility queue",
+      "zh": "下一讀 · 公用事業排隊"
+    },
+    {
+      "en": "Next read · revision breadth",
+      "zh": "下一讀 · 上修廣度"
+    },
+    {
+      "en": "Next read · supplier mix",
+      "zh": "下一讀 · 供應商組合"
+    },
+    {
+      "en": "Next read · project conversion",
+      "zh": "下一讀 · 專案轉化"
+    },
+    {
+      "en": "Next read · outcome cohort",
+      "zh": "下一讀 · 成果群組"
+    },
+    {
+      "en": "Next read · packaging customers",
+      "zh": "下一讀 · 封裝客戶"
+    }
+  ],
+  "labels": {
+    "eyebrow": {
+      "en": "AI economy · executive overview",
+      "zh": "AI 經濟 · 高層總覽"
+    },
+    "title": {
+      "en": "Markets move. Signals remain.",
+      "zh": "市場變動，信號留存。"
+    },
+    "summary": {
+      "en": "A weekly operating view of the AI economy—connecting compute supply, power availability, model economics, and enterprise adoption in one decision-ready brief.",
+      "zh": "每週掌握 AI 經濟的營運全貌，將算力供給、電力可用性、模型經濟與企業採用整合成一份可直接決策的情報簡報。"
+    },
+    "signal": {
+      "en": "Constraint rotation",
+      "zh": "制約輪動"
+    },
+    "thesis": {
+      "en": "The constraint stack is rotating from silicon to electrons.",
+      "zh": "制約堆疊正從矽晶片轉向電力。"
+    },
+    "tags": {
+      "en": [
+        "Compute supply",
+        "Power access",
+        "Agent economics"
+      ],
+      "zh": [
+        "算力供給",
+        "電力取得",
+        "代理經濟"
+      ]
+    }
+  },
+  "methodology": {
+    "zh": "模型值由 AI Market Atlas 依已列來源建模；請查閱來源與方法說明。",
+    "en": "Modeled values are produced by AI Market Atlas from the listed sources; review the sources and methodology."
+  },
+  "notInvestmentAdvice": {
+    "zh": "本快報不構成投資建議。",
+    "en": "This brief is not investment advice."
+  }
+}

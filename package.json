@@ -19,6 +19,8 @@
     "market:validate": "node --experimental-strip-types scripts/market-update.ts validate",
     "market:promote": "node --experimental-strip-types scripts/market-update.ts promote",
     "market:prune": "node --experimental-strip-types scripts/market-update.ts prune",
+    "market:brief": "node --experimental-strip-types scripts/generate-market-brief.ts",
+    "check:hyperframes": "npm --prefix hyperframes/weekly-ai-market-brief run check",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
