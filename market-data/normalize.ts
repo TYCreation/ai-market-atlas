@@ -75,10 +75,11 @@ function normalizeMetric(metric: MetricRecord): MetricRecord {
     throw new Error(`${metric.id} has an invalid market/time-zone label`);
   }
   const targetUnit = canonicalTargetUnit(metric, market);
+  const convertedUnit = targetUnit && metric.unit !== targetUnit ? targetUnit : undefined;
   let numericValue = metric.numericValue;
-  if (targetUnit && metric.unit !== targetUnit) {
+  if (convertedUnit) {
     try {
-      numericValue = normalizeUnit(metric.numericValue, metric.unit, targetUnit);
+      numericValue = normalizeUnit(metric.numericValue, metric.unit, convertedUnit);
     } catch {
       throw new Error(`${metric.id} has an incompatible unit ${metric.unit}; expected ${targetUnit}`);
     }
@@ -110,7 +111,13 @@ function normalizeMetric(metric: MetricRecord): MetricRecord {
     market,
     asOf: canonicalIso(metric.asOf),
     sourceIds: [...metric.sourceIds].sort(),
-    observations: metric.observations.map((observation) => ({ ...observation, asOf: canonicalIso(observation.asOf) })),
+    observations: metric.observations.map((observation) => ({
+      ...observation,
+      numericValue: convertedUnit
+        ? normalizeUnit(observation.numericValue, metric.unit, convertedUnit)
+        : observation.numericValue,
+      asOf: canonicalIso(observation.asOf),
+    })),
   };
 }
 

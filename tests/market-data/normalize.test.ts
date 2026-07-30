@@ -204,10 +204,21 @@ test("canonicalizes catalog unit aliases and rejects currency and unit mismatche
   const alias = structuredClone(validCandidate);
   alias.metrics["pulse.infrastructure_spend"].unit = "trillion-usd";
   alias.metrics["pulse.infrastructure_spend"].numericValue = 2.8;
+  for (const observation of alias.metrics["pulse.infrastructure_spend"].observations) {
+    observation.numericValue = 2.8;
+  }
   alias.metrics["compute.accelerator_pool"].currency = "US$";
   const normalized = normalizeCandidate(alias, previousSnapshot, runStart);
   assert.equal(normalized.metrics["pulse.infrastructure_spend"].unit, "$B");
   assert.equal(normalized.metrics["pulse.infrastructure_spend"].numericValue, 2800);
+  assert.deepEqual(
+    normalized.metrics["pulse.infrastructure_spend"].observations.map((observation) => observation.numericValue),
+    [2800, 2800],
+  );
+  assert.deepEqual(
+    normalized.metrics["compute.accelerator_pool"].observations,
+    alias.metrics["compute.accelerator_pool"].observations,
+  );
   assert.equal(normalized.metrics["compute.accelerator_pool"].currency, "USD");
   assert.equal(normalized.metrics["stocks.nvda.price"].currency, "USD");
 

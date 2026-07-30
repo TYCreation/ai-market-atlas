@@ -108,3 +108,28 @@ npm test
 ```
 
 Output: production build completed; rendered HTML suite `tests 6`, `pass 6`, `fail 0`.
+
+## Review fix round 2
+
+### Exact changes
+
+- `normalizeCandidate` now applies the same explicit unit conversion to every `MetricObservation.numericValue` as to the enclosing metric's `numericValue`.
+- The unit-alias regression sets both infrastructure-spend observations to `2.8 trillion-usd` and verifies all three values normalize to `2800 $B`; it also verifies already-canonical observations remain unchanged.
+
+### Test files
+
+- `tests/market-data/normalize.test.ts`
+
+### Commands and outputs
+
+```text
+node --experimental-strip-types --test tests/market-data/normalize.test.ts
+```
+
+Output: `tests 8`, `pass 8`, `fail 0`.
+
+```text
+npm run test:market
+```
+
+Output: `tests 18`, `pass 18`, `fail 0`.
