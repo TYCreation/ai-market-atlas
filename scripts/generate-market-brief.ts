@@ -54,33 +54,68 @@ export type MarketBriefAssetPaths = {
 };
 
 const PAGE_ORDER: PageSlug[] = ["/", "/stocks", "/compute", "/energy", "/models", "/sic"];
+const PAGE_SLUGS = new Set<PageSlug>(PAGE_ORDER);
+const CADENCE_BOUNDS: Record<RunCadence, { min: number; max: number }> = {
+  wednesday: { min: 3, max: 5 },
+  saturday: { min: 5, max: 8 },
+  "month-end": { min: 5, max: 8 },
+};
 const EMBEDDED_BRIEF =
   /<script id="embedded-market-brief" type="application\/json">[\s\S]*?<\/script>/;
 const BODY_SCRIPT_ANCHOR = "\n    <script>\n      const params = ";
 
-function featuredSignalIds(snapshot: MarketSnapshot): string[] {
-  const limit = snapshot.cadence === "wednesday" ? 5 : 8;
+function assertUnique(values: string[], label: string): void {
+  if (new Set(values).size !== values.length) {
+    throw new Error(`${label} contains a duplicate key signal`);
+  }
+}
+
+function assertSnapshotBriefCardinality(snapshot: MarketSnapshot): void {
+  assertUnique(snapshot.keySignalIds, "Market snapshot key signal list");
+  const { min } = CADENCE_BOUNDS[snapshot.cadence];
+  if (snapshot.keySignalIds.length < min) {
+    throw new Error(
+      `${snapshot.cadence} market brief requires at least ${min} unique key signals`,
+    );
+  }
+}
+
+function featuredSignalIds(
+  snapshot: MarketSnapshot,
+  changedSignalIds: ReadonlySet<string> = new Set(),
+): string[] {
+  const limit = CADENCE_BOUNDS[snapshot.cadence].max;
   const ordered = snapshot.keySignalIds.map((id) => {
     const metric = snapshot.metrics[id];
     if (!metric) throw new Error(`Market brief references missing key signal ${id}`);
     return metric;
   });
-  const preferred =
-    snapshot.cadence === "wednesday"
-      ? [
-          ...ordered.filter((metric) => snapshot.pages[metric.page].changed),
-          ...ordered.filter((metric) => !snapshot.pages[metric.page].changed),
-        ]
-      : ordered;
   const selected: string[] = [];
+  const changedPages = new Set<PageSlug>();
+
+  if (snapshot.cadence === "wednesday") {
+    for (const metric of ordered) {
+      if (changedSignalIds.has(metric.id)) changedPages.add(metric.page);
+    }
+    if (changedSignalIds.size === 0) {
+      for (const page of PAGE_ORDER) {
+        if (snapshot.pages[page].changed) changedPages.add(page);
+      }
+    }
+    for (const metric of ordered) {
+      if (changedPages.has(metric.page) && selected.length < limit) {
+        selected.push(metric.id);
+      }
+    }
+  }
 
   for (const page of PAGE_ORDER) {
-    const metric = preferred.find(
+    const metric = ordered.find(
       (candidate) => candidate.page === page && !selected.includes(candidate.id),
     );
     if (metric && selected.length < limit) selected.push(metric.id);
   }
-  for (const metric of preferred) {
+  for (const metric of ordered) {
     if (selected.length === limit) break;
     if (!selected.includes(metric.id)) selected.push(metric.id);
   }
@@ -92,8 +127,12 @@ function nextWeekObservations(snapshot: MarketSnapshot): BilingualText[] {
   return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.slice(0, 1));
 }
 
-export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
+export function buildMarketBrief(
+  snapshot: MarketSnapshot,
+  changedSignalIds: ReadonlySet<string> = new Set(),
+): MarketBriefPayload {
   assertMarketSnapshot(snapshot);
+  assertSnapshotBriefCardinality(snapshot);
   const signals = snapshot.keySignalIds.map((id): MarketBriefSignal => {
     const metric = snapshot.metrics[id];
     if (!metric) throw new Error(`Market brief references missing key signal ${id}`);
@@ -117,7 +156,7 @@ export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
     dataCutoff: snapshot.dataCutoff,
     sourceIds,
     signals,
-    featuredSignalIds: featuredSignalIds(snapshot),
+    featuredSignalIds: featuredSignalIds(snapshot, changedSignalIds),
     nextWeekObservations: nextWeekObservations(snapshot),
     labels: {
       eyebrow: report.eyebrow,
@@ -160,48 +199,59 @@ function isLocalizedSignal(value: unknown): value is LocalizedSignal {
   );
 }
 
-function isMarketBriefPayload(value: unknown): value is MarketBriefPayload {
+export function isMarketBriefPayload(value: unknown): value is MarketBriefPayload {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<MarketBriefPayload>;
-  const signalIds = new Set(
-    Array.isArray(candidate.signals)
-      ? candidate.signals
-          .filter((signal) => signal && typeof signal.id === "string")
-          .map((signal) => signal.id)
-      : [],
-  );
+  if (
+    candidate.cadence !== "wednesday" &&
+    candidate.cadence !== "saturday" &&
+    candidate.cadence !== "month-end"
+  ) {
+    return false;
+  }
+  const signals = Array.isArray(candidate.signals) ? candidate.signals : [];
+  const signalIds = signals
+    .filter((signal) => signal && typeof signal.id === "string")
+    .map((signal) => signal.id);
+  const signalIdSet = new Set(signalIds);
+  const sourceIds = Array.isArray(candidate.sourceIds) ? candidate.sourceIds : [];
+  const sourceIdSet = new Set(sourceIds);
+  const featuredSignalIds = Array.isArray(candidate.featuredSignalIds)
+    ? candidate.featuredSignalIds
+    : [];
+  const featuredIdSet = new Set(featuredSignalIds);
+  const { min, max } = CADENCE_BOUNDS[candidate.cadence];
   const labels = candidate.labels;
-  return (
+  const structurallyValid =
     candidate.schemaVersion === 1 &&
     typeof candidate.runId === "string" &&
     candidate.runId.length > 0 &&
-    (candidate.cadence === "wednesday" ||
-      candidate.cadence === "saturday" ||
-      candidate.cadence === "month-end") &&
     typeof candidate.dataCutoff === "string" &&
     !Number.isNaN(Date.parse(candidate.dataCutoff)) &&
-    Array.isArray(candidate.sourceIds) &&
-    candidate.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
-    Array.isArray(candidate.signals) &&
-    candidate.signals.length > 0 &&
-    candidate.signals.every(
+    sourceIds.length > 0 &&
+    sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
+    sourceIdSet.size === sourceIds.length &&
+    signals.length >= min &&
+    signalIdSet.size === signals.length &&
+    signals.every(
       (signal) =>
         signal &&
         typeof signal.id === "string" &&
         signal.id.length > 0 &&
-        typeof signal.page === "string" &&
+        PAGE_SLUGS.has(signal.page) &&
         (signal.kind === "modeled" || signal.kind === "published") &&
         Array.isArray(signal.sourceIds) &&
         signal.sourceIds.length > 0 &&
         signal.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
+        new Set(signal.sourceIds).size === signal.sourceIds.length &&
+        signal.sourceIds.every((id) => sourceIdSet.has(id)) &&
         isLocalizedSignal(signal.zh) &&
         isLocalizedSignal(signal.en),
     ) &&
-    Array.isArray(candidate.featuredSignalIds) &&
-    candidate.featuredSignalIds.length >= 3 &&
-    candidate.featuredSignalIds.every(
-      (id) => typeof id === "string" && signalIds.has(id),
-    ) &&
+    featuredSignalIds.length >= min &&
+    featuredSignalIds.length <= max &&
+    featuredIdSet.size === featuredSignalIds.length &&
+    featuredSignalIds.every((id) => typeof id === "string" && signalIdSet.has(id)) &&
     Array.isArray(candidate.nextWeekObservations) &&
     candidate.nextWeekObservations.every(isBilingualText) &&
     labels !== undefined &&
@@ -215,8 +265,19 @@ function isMarketBriefPayload(value: unknown): value is MarketBriefPayload {
     Array.isArray(labels.tags.en) &&
     labels.tags.en.every((tag) => typeof tag === "string" && tag.length > 0) &&
     isBilingualText(candidate.methodology) &&
-    isBilingualText(candidate.notInvestmentAdvice)
-  );
+    isBilingualText(candidate.notInvestmentAdvice);
+  if (!structurallyValid) return false;
+
+  const boundSourceIds = new Set(signals.flatMap((signal) => signal.sourceIds));
+  if (
+    boundSourceIds.size !== sourceIdSet.size ||
+    [...boundSourceIds].some((id) => !sourceIdSet.has(id))
+  ) {
+    return false;
+  }
+  return candidate.cadence === "wednesday"
+    ? candidate.nextWeekObservations.length === 0
+    : candidate.nextWeekObservations.length > 0;
 }
 
 function isCompleteBrief(brief: MarketBriefPayload): boolean {
@@ -228,11 +289,54 @@ function isCompleteBrief(brief: MarketBriefPayload): boolean {
   );
 }
 
-function hasChangedKeySignal(snapshot: MarketSnapshot): boolean {
-  return snapshot.keySignalIds.some((id) => {
+function sameStringSet(left: string[], right: string[]): boolean {
+  return (
+    left.length === right.length &&
+    [...left].sort().every((value, index) => value === [...right].sort()[index])
+  );
+}
+
+function changedKeySignalIds(
+  snapshot: MarketSnapshot,
+  prior: MarketBriefPayload,
+): Set<string> {
+  const changed = new Set<string>();
+  if (
+    snapshot.keySignalIds.length !== prior.signals.length ||
+    snapshot.keySignalIds.some((id, index) => id !== prior.signals[index]?.id)
+  ) {
+    for (const id of snapshot.keySignalIds) changed.add(id);
+    return changed;
+  }
+  const priorById = new Map(prior.signals.map((signal) => [signal.id, signal]));
+  for (const id of snapshot.keySignalIds) {
     const metric = snapshot.metrics[id];
-    return metric ? snapshot.pages[metric.page].changed : true;
-  });
+    const previous = priorById.get(id);
+    if (
+      !metric ||
+      !previous ||
+      metric.page !== previous.page ||
+      metric.kind !== previous.kind ||
+      metric.display.zh !== previous.zh.value ||
+      metric.display.en !== previous.en.value ||
+      !sameStringSet(metric.sourceIds, previous.sourceIds)
+    ) {
+      changed.add(id);
+    }
+  }
+  return changed;
+}
+
+function reusePriorContent(
+  current: MarketBriefPayload,
+  prior: MarketBriefPayload,
+): MarketBriefPayload {
+  return {
+    ...current,
+    labels: prior.labels,
+    methodology: prior.methodology,
+    notInvestmentAdvice: prior.notInvestmentAdvice,
+  };
 }
 
 function serializeBrief(brief: MarketBriefPayload): string {
@@ -272,14 +376,20 @@ async function loadSnapshot(path: string): Promise<MarketSnapshot> {
 
 export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): Promise<void> {
   const snapshot = await loadSnapshot(paths.snapshotPath);
+  assertSnapshotBriefCardinality(snapshot);
   const existing = await loadExistingBrief(paths.canonicalData);
+  const changes =
+    snapshot.cadence === "wednesday" && existing && isCompleteBrief(existing)
+      ? changedKeySignalIds(snapshot, existing)
+      : new Set<string>();
+  const current = buildMarketBrief(snapshot, changes);
   const brief =
     snapshot.cadence === "wednesday" &&
-    !hasChangedKeySignal(snapshot) &&
     existing &&
-    isCompleteBrief(existing)
-      ? existing
-      : buildMarketBrief(snapshot);
+    isCompleteBrief(existing) &&
+    changes.size === 0
+      ? reusePriorContent(current, existing)
+      : current;
   const data = serializeBrief(brief);
   const canonicalHtml = await readFile(paths.canonicalHtml, "utf8");
   const html = upsertEmbeddedBrief(canonicalHtml, brief);
@@ -292,18 +402,28 @@ export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): P
   ]);
 }
 
-function option(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  if (index < 0) return undefined;
-  const value = process.argv[index + 1];
-  if (!value || value.startsWith("--")) throw new Error(`${name} requires a path`);
-  return value;
+function parseCliArgs(args: string[]): { snapshotPath?: string } {
+  let snapshotPath: string | undefined;
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === "--snapshot" || argument.startsWith("--snapshot=")) {
+      if (snapshotPath !== undefined) throw new Error("Duplicate --snapshot option");
+      const value =
+        argument === "--snapshot" ? args[++index] : argument.slice("--snapshot=".length);
+      if (!value || value.startsWith("--")) throw new Error("--snapshot requires a path");
+      snapshotPath = value;
+      continue;
+    }
+    if (argument.startsWith("-")) throw new Error(`Unknown option: ${argument}`);
+    throw new Error(`Unexpected positional argument: ${argument}`);
+  }
+  return { snapshotPath };
 }
 
-function defaultPaths(): MarketBriefAssetPaths {
+function defaultPaths(snapshotOption?: string): MarketBriefAssetPaths {
   const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   return {
-    snapshotPath: resolve(repositoryRoot, option("--snapshot") ?? "data/market/current.json"),
+    snapshotPath: resolve(repositoryRoot, snapshotOption ?? "data/market/current.json"),
     canonicalData: resolve(repositoryRoot, "hyperframes/weekly-ai-market-brief/data.json"),
     publicData: resolve(repositoryRoot, "public/market-brief/data.json"),
     canonicalHtml: resolve(repositoryRoot, "hyperframes/weekly-ai-market-brief/index.html"),
@@ -315,5 +435,6 @@ if (
   process.argv[1] &&
   pathToFileURL(resolve(process.argv[1])).href === import.meta.url
 ) {
-  await generateMarketBriefAssets(defaultPaths());
+  const { snapshotPath } = parseCliArgs(process.argv.slice(2));
+  await generateMarketBriefAssets(defaultPaths(snapshotPath));
 }

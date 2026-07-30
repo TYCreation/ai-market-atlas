@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { copyFile, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { copyFile, cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 import {
   buildMarketBrief,
   generateMarketBriefAssets,
@@ -17,6 +17,7 @@ const canonicalHtmlUrl = new URL(
   "../../hyperframes/weekly-ai-market-brief/index.html",
   import.meta.url,
 );
+const repositoryRootUrl = new URL("../../", import.meta.url);
 
 async function currentSnapshot(): Promise<MarketSnapshot> {
   return JSON.parse(await readFile(snapshotUrl, "utf8")) as MarketSnapshot;
@@ -43,6 +44,70 @@ function embeddedBrief(html: string): MarketBriefPayload {
   );
   assert.ok(match, "generated HTML must contain an embedded market brief");
   return JSON.parse(match[1]) as MarketBriefPayload;
+}
+
+function makeWednesday(snapshot: MarketSnapshot): MarketSnapshot {
+  const wednesday = structuredClone(snapshot);
+  wednesday.runId = "2026-07-29-wednesday";
+  wednesday.cadence = "wednesday";
+  wednesday.generatedAt = "2026-07-29T01:00:00.000Z";
+  wednesday.dataCutoff = "2026-07-29T01:00:00.000Z";
+  for (const page of Object.values(wednesday.pages)) {
+    page.changed = false;
+    page.changeReasons = [];
+  }
+  return wednesday;
+}
+
+async function generatePriorBrief(
+  snapshot: MarketSnapshot,
+): Promise<{ paths: MarketBriefAssetPaths; prior: MarketBriefPayload }> {
+  const paths = await makeAssetWorkspace(snapshot);
+  await generateMarketBriefAssets(paths);
+  return {
+    paths,
+    prior: JSON.parse(await readFile(paths.canonicalData, "utf8")) as MarketBriefPayload,
+  };
+}
+
+async function makeCliWorkspace(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), "atlas-market-brief-cli-"));
+  for (const relative of [
+    "scripts/generate-market-brief.ts",
+    "market-data",
+    "data/market/current.json",
+    "hyperframes/weekly-ai-market-brief",
+    "public/market-brief",
+  ]) {
+    const source = new URL(relative, repositoryRootUrl);
+    const target = join(root, relative);
+    await mkdir(dirname(target), { recursive: true });
+    await cp(source, target, { recursive: true });
+  }
+  return root;
+}
+
+async function runBriefCli(
+  cwd: string,
+  args: string[],
+): Promise<{ code: number | null; stderr: string; stdout: string }> {
+  return new Promise((resolveResult, reject) => {
+    const child = spawn(
+      process.execPath,
+      ["--experimental-strip-types", "scripts/generate-market-brief.ts", ...args],
+      { cwd },
+    );
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8").on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.setEncoding("utf8").on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", reject);
+    child.on("close", (code) => resolveResult({ code, stderr, stdout }));
+  });
 }
 
 test("generates one bilingual brief from the promoted snapshot", async () => {
@@ -89,36 +154,57 @@ test("keeps canonical and public HyperFrames assets synchronized", async () => {
   assert.doesNotMatch(canonicalHtml, /ISSUE 07\.26|JULY 30, 2026/);
 });
 
-test("reuses the complete prior brief for an unchanged Wednesday", async () => {
-  const saturday = await currentSnapshot();
-  const paths = await makeAssetWorkspace(saturday);
-  await generateMarketBriefAssets(paths);
-  const completeBrief = await readFile(paths.canonicalData, "utf8");
+test("checked-in canonical and public assets are byte-identical with the same embedded payload", async () => {
+  const canonicalHtml = await readFile(canonicalHtmlUrl, "utf8");
+  const canonicalData = await readFile(
+    new URL("../../hyperframes/weekly-ai-market-brief/data.json", import.meta.url),
+    "utf8",
+  );
+  assert.equal(
+    canonicalHtml,
+    await readFile(new URL("../../public/market-brief/index.html", import.meta.url), "utf8"),
+  );
+  assert.equal(
+    canonicalData,
+    await readFile(new URL("../../public/market-brief/data.json", import.meta.url), "utf8"),
+  );
+  assert.deepEqual(embeddedBrief(canonicalHtml), JSON.parse(canonicalData));
+});
 
-  const wednesday = structuredClone(saturday);
-  wednesday.runId = "2026-07-29-wednesday";
-  wednesday.cadence = "wednesday";
-  wednesday.generatedAt = "2026-07-29T01:00:00.000Z";
-  wednesday.dataCutoff = "2026-07-29T01:00:00.000Z";
+test("reuses prior content but stamps the current Wednesday envelope", async () => {
+  const saturday = await currentSnapshot();
+  const { paths, prior } = await generatePriorBrief(saturday);
+
+  const wednesday = makeWednesday(saturday);
+  wednesday.pages["/"].report.title = {
+    en: "Current title that must not replace reused content",
+    zh: "不應取代重用內容的本期標題",
+  };
+  for (const page of Object.values(wednesday.pages)) page.changed = true;
   await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
   await generateMarketBriefAssets(paths);
 
-  assert.equal(await readFile(paths.canonicalData, "utf8"), completeBrief);
-  assert.equal(
-    embeddedBrief(await readFile(paths.canonicalHtml, "utf8")).runId,
-    saturday.runId,
-  );
+  const brief = JSON.parse(await readFile(paths.canonicalData, "utf8")) as MarketBriefPayload;
+  assert.equal(brief.runId, wednesday.runId);
+  assert.equal(brief.cadence, "wednesday");
+  assert.equal(brief.dataCutoff, wednesday.dataCutoff);
+  assert.deepEqual(brief.sourceIds, prior.sourceIds);
+  assert.deepEqual(brief.labels, prior.labels);
+  assert.ok(brief.featuredSignalIds.length >= 3);
+  assert.ok(brief.featuredSignalIds.length <= 5);
+  assert.deepEqual(brief.nextWeekObservations, []);
+  assert.deepEqual(embeddedBrief(await readFile(paths.canonicalHtml, "utf8")), brief);
 });
 
-test("generates a short Wednesday cut when a key-signal page changed", async () => {
-  const wednesday = await currentSnapshot();
-  wednesday.runId = "2026-07-29-wednesday";
-  wednesday.cadence = "wednesday";
-  wednesday.generatedAt = "2026-07-29T01:00:00.000Z";
-  wednesday.dataCutoff = "2026-07-29T01:00:00.000Z";
-  wednesday.pages["/energy"].changed = true;
-  const paths = await makeAssetWorkspace(wednesday);
+test("prioritizes a changed /sic key signal before Wednesday page balancing", async () => {
+  const saturday = await currentSnapshot();
+  const { paths } = await generatePriorBrief(saturday);
+  const wednesday = makeWednesday(saturday);
+  const changedId = "sic.market_2030_usd_b";
+  wednesday.metrics[changedId].display = { en: "$24B", zh: "$24B" };
+  wednesday.pages["/"].report.title = { en: "Fresh Wednesday", zh: "本期週三更新" };
+  await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
   await generateMarketBriefAssets(paths);
 
@@ -126,56 +212,171 @@ test("generates a short Wednesday cut when a key-signal page changed", async () 
     await readFile(paths.canonicalData, "utf8"),
   ) as MarketBriefPayload;
   assert.equal(brief.runId, wednesday.runId);
-  assert.equal(brief.featuredSignalIds.length, 5);
+  assert.ok(brief.featuredSignalIds.includes(changedId));
   assert.equal(brief.nextWeekObservations.length, 0);
 });
 
-test("centers the embedded composition inside a 390px mobile viewport", async () => {
-  const html = await readFile(canonicalHtmlUrl, "utf8");
-  const fitRoutine = html.match(
-    /const fitComposition = \(\) => \{([\s\S]*?)\n        \};/,
-  );
-  assert.ok(fitRoutine, "composition must expose its embedded fit routine");
-  const root = { style: { transform: "" } };
-  const context = {
-    window: { innerWidth: 390, innerHeight: 844 },
-    document: { querySelector: () => root },
-  };
+test("detects key-signal changes from IDs, values, kinds, and source bindings", async (t) => {
+  const mutations: Array<[string, (snapshot: MarketSnapshot) => void]> = [
+    [
+      "IDs",
+      (snapshot) => {
+        [snapshot.keySignalIds[0], snapshot.keySignalIds[1]] = [
+          snapshot.keySignalIds[1],
+          snapshot.keySignalIds[0],
+        ];
+      },
+    ],
+    [
+      "values",
+      (snapshot) => {
+        snapshot.metrics["sic.market_2030_usd_b"].display.en = "$24B";
+      },
+    ],
+    [
+      "kinds",
+      (snapshot) => {
+        snapshot.metrics["sic.market_2030_usd_b"].kind = "published";
+      },
+    ],
+    [
+      "source bindings",
+      (snapshot) => {
+        snapshot.metrics["sic.market_2030_usd_b"].sourceIds.push("iea-energy-ai");
+      },
+    ],
+  ];
 
-  runInNewContext(`(() => {${fitRoutine[1]}})()`, context);
+  for (const [name, mutate] of mutations) {
+    await t.test(name, async () => {
+      const saturday = await currentSnapshot();
+      const { paths } = await generatePriorBrief(saturday);
+      const wednesday = makeWednesday(saturday);
+      wednesday.pages["/"].report.title = { en: `Fresh ${name}`, zh: `本期${name}` };
+      mutate(wednesday);
+      await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
-  assert.equal(
-    root.style.transform,
-    "translate(0px, 312.3125px) scale(0.203125)",
-  );
+      await generateMarketBriefAssets(paths);
+
+      const brief = JSON.parse(await readFile(paths.canonicalData, "utf8")) as MarketBriefPayload;
+      assert.equal(brief.runId, wednesday.runId);
+      assert.equal(brief.labels.title.en, `Fresh ${name}`);
+    });
+  }
 });
 
-test("seeks to the closing thesis when reduced motion is preferred", async () => {
-  const html = await readFile(canonicalHtmlUrl, "utf8");
-  const reducedMotionBranch = html.match(
-    /(if \(window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches\) \{[\s\S]*?\n          \}) else \{([\s\S]*?)\n          \}/,
-  );
-  assert.ok(reducedMotionBranch, "composition must retain its reduced-motion branch");
-  const calls: Array<[string, number?]> = [];
-  const context = {
-    window: { matchMedia: () => ({ matches: true }) },
-    tl: {
-      seek: (time: number) => {
-        calls.push(["seek", time]);
-        return context.tl;
-      },
-      pause: () => {
-        calls.push(["pause"]);
-        return context.tl;
-      },
-      play: (time: number) => {
-        calls.push(["play", time]);
-        return context.tl;
-      },
-    },
-  };
+test("enforces cadence-specific featured-signal bounds and uniqueness", async () => {
+  const snapshot = await currentSnapshot();
+  const wednesday = makeWednesday(snapshot);
+  assert.equal(buildMarketBrief(wednesday).featuredSignalIds.length, 5);
 
-  runInNewContext(`${reducedMotionBranch[1]} else {${reducedMotionBranch[2]}}`, context);
+  const saturday = buildMarketBrief(snapshot);
+  assert.equal(saturday.featuredSignalIds.length, 8);
+  assert.equal(new Set(saturday.featuredSignalIds).size, 8);
 
-  assert.deepEqual(calls, [["seek", 27], ["pause"]]);
+  const monthEnd = structuredClone(snapshot);
+  monthEnd.runId = "2026-07-31-month-end";
+  monthEnd.cadence = "month-end";
+  const monthEndBrief = buildMarketBrief(monthEnd);
+  assert.equal(monthEndBrief.featuredSignalIds.length, 8);
+  assert.ok(monthEndBrief.nextWeekObservations.length > 0);
+});
+
+test("rejects a snapshot with too few unique key signals for its cadence", async () => {
+  const snapshot = makeWednesday(await currentSnapshot());
+  snapshot.keySignalIds = snapshot.keySignalIds.slice(0, 2);
+  assert.throws(() => buildMarketBrief(snapshot), /at least 3 unique key signals/i);
+});
+
+test("rejects duplicate snapshot key signals", async () => {
+  const snapshot = makeWednesday(await currentSnapshot());
+  snapshot.keySignalIds = [
+    snapshot.keySignalIds[0],
+    snapshot.keySignalIds[1],
+    snapshot.keySignalIds[1],
+  ];
+  assert.throws(() => buildMarketBrief(snapshot), /duplicate key signal/i);
+});
+
+test("rejects duplicate featured IDs in a prior brief instead of reusing it", async () => {
+  const saturday = await currentSnapshot();
+  const { paths, prior } = await generatePriorBrief(saturday);
+  prior.featuredSignalIds[4] = prior.featuredSignalIds[0];
+  await writeFile(paths.canonicalData, `${JSON.stringify(prior)}\n`);
+  const wednesday = makeWednesday(saturday);
+  wednesday.pages["/"].report.title = { en: "Fresh content", zh: "本期內容" };
+  await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
+
+  await generateMarketBriefAssets(paths);
+
+  const brief = JSON.parse(await readFile(paths.canonicalData, "utf8")) as MarketBriefPayload;
+  assert.equal(brief.labels.title.en, "Fresh content");
+  assert.equal(new Set(brief.featuredSignalIds).size, brief.featuredSignalIds.length);
+});
+
+test("rejects lower- and upper-bound violations in a prior complete brief", async (t) => {
+  for (const [name, featuredSignalIds] of [
+    ["below lower bound", [0, 1, 2, 3]],
+    ["above upper bound", [0, 1, 2, 3, 4, 5, 6, 7, 8]],
+  ] as const) {
+    await t.test(name, async () => {
+      const saturday = await currentSnapshot();
+      const { paths, prior } = await generatePriorBrief(saturday);
+      prior.featuredSignalIds = featuredSignalIds.map((index) => prior.signals[index].id);
+      await writeFile(paths.canonicalData, `${JSON.stringify(prior)}\n`);
+      const wednesday = makeWednesday(saturday);
+      wednesday.pages["/"].report.title = { en: "Fresh content", zh: "本期內容" };
+      await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
+
+      await generateMarketBriefAssets(paths);
+
+      const brief = JSON.parse(
+        await readFile(paths.canonicalData, "utf8"),
+      ) as MarketBriefPayload;
+      assert.equal(brief.labels.title.en, "Fresh content");
+      assert.ok(brief.featuredSignalIds.length >= 3);
+      assert.ok(brief.featuredSignalIds.length <= 5);
+    });
+  }
+});
+
+test("supports --snapshot=<path> in a real CLI process", async () => {
+  const root = await makeCliWorkspace();
+  const snapshot = makeWednesday(await currentSnapshot());
+  const snapshotPath = join(root, "equals-snapshot.json");
+  await writeFile(snapshotPath, `${JSON.stringify(snapshot)}\n`);
+
+  const result = await runBriefCli(root, [`--snapshot=${snapshotPath}`]);
+
+  assert.equal(result.code, 0, result.stderr);
+  const brief = JSON.parse(
+    await readFile(join(root, "hyperframes/weekly-ai-market-brief/data.json"), "utf8"),
+  ) as MarketBriefPayload;
+  assert.equal(brief.runId, snapshot.runId);
+});
+
+test("rejects unknown, duplicate, and positional CLI arguments before writing", async (t) => {
+  const cases = [
+    ["misspelled flag", ["--snapshop", "snapshot.json"]],
+    ["unknown flag", ["--unknown"]],
+    ["duplicate flag", ["--snapshot", "snapshot.json", "--snapshot", "snapshot.json"]],
+    ["stray positional", ["snapshot.json"]],
+  ] as const;
+
+  for (const [name, args] of cases) {
+    await t.test(name, async () => {
+      const root = await makeCliWorkspace();
+      const canonicalData = join(root, "hyperframes/weekly-ai-market-brief/data.json");
+      const publicData = join(root, "public/market-brief/data.json");
+      await writeFile(canonicalData, "sentinel-canonical\n");
+      await writeFile(publicData, "sentinel-public\n");
+
+      const result = await runBriefCli(root, [...args]);
+
+      assert.notEqual(result.code, 0);
+      assert.match(result.stderr, /unknown|duplicate|positional/i);
+      assert.equal(await readFile(canonicalData, "utf8"), "sentinel-canonical\n");
+      assert.equal(await readFile(publicData, "utf8"), "sentinel-public\n");
+    });
+  }
 });

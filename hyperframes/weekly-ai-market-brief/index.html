@@ -482,6 +482,10 @@
         width: 100%;
       }
 
+      .equity-layout.no-observations {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
       .leader-board,
       .event-board {
         background: #0c1b29;
@@ -541,6 +545,10 @@
         display: flex;
         flex-direction: column;
         gap: 24px;
+      }
+
+      .event-board[hidden] {
+        display: none;
       }
 
       .event-board h3 {
@@ -852,6 +860,12 @@
           signal &&
           typeof signal.id === "string" &&
           signal.id.length > 0 &&
+          ["/", "/stocks", "/compute", "/energy", "/models", "/sic"].includes(signal.page) &&
+          (signal.kind === "modeled" || signal.kind === "published") &&
+          Array.isArray(signal.sourceIds) &&
+          signal.sourceIds.length > 0 &&
+          new Set(signal.sourceIds).size === signal.sourceIds.length &&
+          signal.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
           signal.zh &&
           typeof signal.zh.label === "string" &&
           signal.zh.label.length > 0 &&
@@ -865,23 +879,60 @@
         );
       }
 
-      function isValidBrief(brief, expectedRunId) {
+      function isValidBrief(brief, expectedBrief) {
+        const cadenceBounds = {
+          wednesday: { min: 3, max: 5 },
+          saturday: { min: 5, max: 8 },
+          "month-end": { min: 5, max: 8 },
+        };
+        const cadence = cadenceBounds[brief?.cadence];
+        const signalIds = Array.isArray(brief?.signals)
+          ? brief.signals.map((signal) => signal?.id)
+          : [];
+        const featuredIds = Array.isArray(brief?.featuredSignalIds)
+          ? brief.featuredSignalIds
+          : [];
+        const sourceIds = Array.isArray(brief?.sourceIds) ? brief.sourceIds : [];
+        const sourceIdSet = new Set(sourceIds);
         if (
           !brief ||
           brief.schemaVersion !== 1 ||
           typeof brief.runId !== "string" ||
           brief.runId.length === 0 ||
-          (expectedRunId && brief.runId !== expectedRunId) ||
+          (expectedBrief &&
+            (brief.runId !== expectedBrief.runId ||
+              brief.cadence !== expectedBrief.cadence ||
+              brief.dataCutoff !== expectedBrief.dataCutoff)) ||
+          !cadence ||
+          typeof brief.dataCutoff !== "string" ||
+          Number.isNaN(Date.parse(brief.dataCutoff)) ||
+          sourceIds.length === 0 ||
+          sourceIds.some((id) => typeof id !== "string" || id.length === 0) ||
+          sourceIdSet.size !== sourceIds.length ||
           !Array.isArray(brief.signals) ||
-          brief.signals.length === 0 ||
+          brief.signals.length < cadence.min ||
+          new Set(signalIds).size !== signalIds.length ||
           !brief.signals.every(hasLocalizedSignal) ||
-          !Array.isArray(brief.featuredSignalIds) ||
-          brief.featuredSignalIds.length < 3 ||
-          !brief.featuredSignalIds.every((id) =>
-            brief.signals.some((signal) => signal.id === id),
+          brief.signals.some((signal) =>
+            signal.sourceIds.some((id) => !sourceIdSet.has(id)),
           ) ||
+          featuredIds.length < cadence.min ||
+          featuredIds.length > cadence.max ||
+          new Set(featuredIds).size !== featuredIds.length ||
+          !featuredIds.every((id) => signalIds.includes(id)) ||
           !Array.isArray(brief.nextWeekObservations) ||
-          !brief.nextWeekObservations.every(hasBilingualText)
+          !brief.nextWeekObservations.every(hasBilingualText) ||
+          (brief.cadence === "wednesday" && brief.nextWeekObservations.length !== 0) ||
+          (brief.cadence !== "wednesday" && brief.nextWeekObservations.length === 0)
+        ) {
+          return false;
+        }
+        const boundSourceIds = new Set(
+          brief.signals.flatMap((signal) => signal.sourceIds),
+        );
+        if (
+          boundSourceIds.size !== sourceIdSet.size ||
+          [...boundSourceIds].some((id) => !sourceIdSet.has(id))
         ) {
           return false;
         }
@@ -948,8 +999,16 @@
         setBriefText("methodology", localized(brief.methodology));
         setBriefText("not-advice", localized(brief.notInvestmentAdvice));
         setBriefText("edition", `${cadence[brief.cadence]} · ${date} · ${brief.runId}`);
-        setBriefText("next-label", language === "en" ? "NEXT OBSERVATIONS" : "下週觀察");
-        setBriefText("next-code", language === "en" ? "NEXT" : "下週");
+        const showsNextWeek = brief.cadence !== "wednesday";
+        const eventBoard = document.querySelector(".event-board");
+        const equityLayout = document.querySelector(".equity-layout");
+        eventBoard.hidden = !showsNextWeek;
+        eventBoard.setAttribute("aria-hidden", String(!showsNextWeek));
+        equityLayout.classList.toggle("no-observations", !showsNextWeek);
+        if (showsNextWeek) {
+          setBriefText("next-label", language === "en" ? "NEXT OBSERVATIONS" : "下週觀察");
+          setBriefText("next-code", language === "en" ? "NEXT" : "下週");
+        }
 
         for (let index = 0; index < 8; index += 1) {
           const signal = at(index);
@@ -968,12 +1027,15 @@
           );
         }
 
-        const observations =
-          brief.nextWeekObservations.length > 0
-            ? brief.nextWeekObservations
-            : [brief.labels.signal, brief.methodology, brief.notInvestmentAdvice];
-        for (let index = 0; index < 3; index += 1) {
-          setBriefText(`next-${index}`, localized(observations[index % observations.length]));
+        if (showsNextWeek) {
+          for (let index = 0; index < 3; index += 1) {
+            setBriefText(
+              `next-${index}`,
+              localized(
+                brief.nextWeekObservations[index % brief.nextWeekObservations.length],
+              ),
+            );
+          }
         }
         brief.labels.tags[language].slice(0, 3).forEach((tag, index) => {
           setBriefText(`tag-${index}`, tag);
@@ -981,29 +1043,30 @@
       }
 
       async function loadBrief() {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 1500);
         try {
           const dataUrl = new URL("data.json", window.location.href);
           const response = await fetch(dataUrl, {
             cache: "no-store",
             credentials: "same-origin",
+            signal: controller.signal,
           });
           if (!response.ok) throw new Error(`Brief request failed with ${response.status}`);
           const brief = await response.json();
-          if (!isValidBrief(brief, lastEmbeddedBrief.runId)) {
+          if (!isValidBrief(brief, lastEmbeddedBrief)) {
             throw new Error("Fetched brief does not match the embedded run.");
           }
           return brief;
         } catch {
           return lastEmbeddedBrief;
+        } finally {
+          window.clearTimeout(timeout);
         }
       }
 
       window.loadBrief = loadBrief;
       renderBrief(lastEmbeddedBrief);
-      const briefReady = loadBrief().then((brief) => {
-        renderBrief(brief);
-        return brief;
-      });
 
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
@@ -1092,14 +1155,22 @@
         fitComposition();
         window.addEventListener("resize", fitComposition);
 
-        briefReady.finally(() => {
-          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            tl.seek(27).pause();
-          } else {
-            tl.play(0);
-          }
-        });
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          tl.seek(27).pause();
+        } else {
+          tl.play(0);
+        }
       }
+
+      window.briefReady = loadBrief().then((brief) => {
+        try {
+          renderBrief(brief);
+        } catch {
+          renderBrief(lastEmbeddedBrief);
+          return lastEmbeddedBrief;
+        }
+        return brief;
+      });
     </script>
   </body>
 </html>
