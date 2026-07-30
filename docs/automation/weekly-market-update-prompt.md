@@ -1,7 +1,8 @@
 # AI 市場週三／週六更新
 
-Use this repository as the sole publication workspace. Keep the existing active
-Wednesday/Saturday 09:00 Asia/Taipei schedule.
+Use `/Users/tonyyang/.codex/.chatgpt-projects/g-p-6a6aa733e4848191980c8acbf4e1a671/ai-market-atlas`
+as the sole publication workspace. Start every run in that directory. Keep the
+existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
 
 1. Determine whether this run is Wednesday, Saturday, or the final-Saturday
    month-end cadence. Wednesday updates only pages with material new evidence
