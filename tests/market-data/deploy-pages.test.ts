@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import {
   cp,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -17,6 +19,8 @@ import {
   LAST_GOOD_ANCHOR_NAME,
   readDeploymentManifest,
   readLastGoodAnchor,
+  recoverLastGoodTransition,
+  replaceLastGoodTransactionally,
   revalidatePublicationState,
   runDeployPagesAtProjectRoot,
   validateLastGoodDirectory,
@@ -64,6 +68,28 @@ async function writeLastGoodFixture(
     artifactTreeSha256,
     manifestSha256: hashCandidate(manifest),
   };
+}
+
+async function writeTransitionFixture(
+  root: string,
+  previousAnchor: Awaited<ReturnType<typeof writeLastGoodFixture>>,
+  nextAnchor: Awaited<ReturnType<typeof writeLastGoodFixture>>,
+): Promise<{ backupName: string; stagingName: string }> {
+  const ownerToken = randomUUID();
+  const backupName = `.pages-last-good.${ownerToken}.backup`;
+  const stagingName = `.pages-last-good.${ownerToken}.staging`;
+  await writeFile(
+    join(root, "work", ".pages-last-good-transition.json"),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      ownerToken,
+      backupName,
+      stagingName,
+      previousAnchor,
+      nextAnchor,
+    })}\n`,
+  );
+  return { backupName, stagingName };
 }
 
 test("wrangler deployment uses a fixed argument vector without shell interpolation", async () => {
@@ -386,6 +412,136 @@ test("last-good anchor rejects malformed files and symlinks", async () => {
   await writeFile(outside, "{}\n");
   await symlink(outside, anchorPath);
   await assert.rejects(() => readLastGoodAnchor(root), /anchor.*unsafe/i);
+});
+
+test("failed anchor commit restores the old last-good directory and anchor", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-lkg-anchor-failure-"));
+  const lastGood = join(root, "work", "pages-last-good");
+  const candidate = join(root, "work", "pages-candidate");
+  const previousAnchor = await writeLastGoodFixture(
+    lastGood,
+    "2026-07-25-saturday",
+    "a".repeat(64),
+    "trusted previous artifact",
+  );
+  const nextAnchor = await writeLastGoodFixture(
+    candidate,
+    "2026-08-01-saturday",
+    "b".repeat(64),
+    "verified replacement artifact",
+  );
+  await writeLastGoodAnchorAtomically(root, previousAnchor);
+
+  await assert.rejects(
+    () =>
+      replaceLastGoodTransactionally({
+        projectRoot: root,
+        sourceDirectory: candidate,
+        previousAnchor,
+        nextAnchor,
+        writeAnchor: async () => {
+          throw new Error("forced anchor commit failure");
+        },
+      }),
+    /forced anchor commit failure/i,
+  );
+
+  assert.deepEqual(await readLastGoodAnchor(root), previousAnchor);
+  await validateLastGoodDirectory(lastGood, previousAnchor);
+  assert.equal(
+    await readFile(join(lastGood, "index.html"), "utf8"),
+    "trusted previous artifact",
+  );
+  assert.deepEqual(
+    (await readdir(join(root, "work"))).filter((name) =>
+      name.includes("transition") || name.endsWith(".backup"),
+    ),
+    [],
+  );
+});
+
+test("startup restores the anchored backup after a crash before anchor commit", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-lkg-pre-anchor-crash-"));
+  const work = join(root, "work");
+  const lastGood = join(work, "pages-last-good");
+  const candidate = join(work, "pages-candidate");
+  const previousAnchor = await writeLastGoodFixture(
+    lastGood,
+    "2026-07-25-saturday",
+    "a".repeat(64),
+    "trusted previous artifact",
+  );
+  const nextAnchor = await writeLastGoodFixture(
+    candidate,
+    "2026-08-01-saturday",
+    "b".repeat(64),
+    "verified replacement artifact",
+  );
+  await writeLastGoodAnchorAtomically(root, previousAnchor);
+  const transition = await writeTransitionFixture(
+    root,
+    previousAnchor,
+    nextAnchor,
+  );
+  await rename(lastGood, join(work, transition.backupName));
+  await rename(candidate, lastGood);
+
+  await recoverLastGoodTransition(root);
+
+  assert.deepEqual(await readLastGoodAnchor(root), previousAnchor);
+  await validateLastGoodDirectory(lastGood, previousAnchor);
+  assert.equal(
+    await readFile(join(lastGood, "index.html"), "utf8"),
+    "trusted previous artifact",
+  );
+  assert.equal(
+    (await readdir(work)).some((name) => name === transition.backupName),
+    false,
+  );
+});
+
+test("startup keeps the new anchored directory after a crash before backup cleanup", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-lkg-post-anchor-crash-"));
+  const work = join(root, "work");
+  const lastGood = join(work, "pages-last-good");
+  const candidate = join(work, "pages-candidate");
+  const previousAnchor = await writeLastGoodFixture(
+    lastGood,
+    "2026-07-25-saturday",
+    "a".repeat(64),
+    "trusted previous artifact",
+  );
+  const nextAnchor = await writeLastGoodFixture(
+    candidate,
+    "2026-08-01-saturday",
+    "b".repeat(64),
+    "verified replacement artifact",
+  );
+  const transition = await writeTransitionFixture(
+    root,
+    previousAnchor,
+    nextAnchor,
+  );
+  await rename(lastGood, join(work, transition.backupName));
+  await rename(candidate, lastGood);
+  await writeLastGoodAnchorAtomically(root, nextAnchor);
+
+  await recoverLastGoodTransition(root);
+
+  assert.deepEqual(await readLastGoodAnchor(root), nextAnchor);
+  await validateLastGoodDirectory(lastGood, nextAnchor);
+  assert.equal(
+    await readFile(join(lastGood, "index.html"), "utf8"),
+    "verified replacement artifact",
+  );
+  assert.equal(
+    (await readdir(work)).some(
+      (name) =>
+        name === transition.backupName ||
+        name === ".pages-last-good-transition.json",
+    ),
+    false,
+  );
 });
 
 test("orchestration never re-anchors an existing last-good directory", async () => {

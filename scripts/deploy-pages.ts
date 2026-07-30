@@ -12,6 +12,7 @@ import {
 } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import {
   ARTIFACT_MANIFEST_NAME,
   hashArtifactTree,
@@ -63,6 +64,7 @@ type PublicationLockOwner = {
 const PUBLICATION_LOCK_NAME = ".market-publication.lock";
 const STALE_LOCK_AGE_MS = 60 * 60 * 1_000;
 export const LAST_GOOD_ANCHOR_NAME = ".pages-last-good-anchor.json";
+const LAST_GOOD_TRANSITION_NAME = ".pages-last-good-transition.json";
 
 export type LastGoodAnchor = {
   schemaVersion: 1;
@@ -70,6 +72,15 @@ export type LastGoodAnchor = {
   candidateSha256: string;
   artifactTreeSha256: string;
   manifestSha256: string;
+};
+
+type LastGoodTransition = {
+  schemaVersion: 1;
+  ownerToken: string;
+  backupName: string;
+  stagingName: string;
+  previousAnchor: LastGoodAnchor;
+  nextAnchor: LastGoodAnchor;
 };
 
 function assertLastGoodAnchor(value: unknown): asserts value is LastGoodAnchor {
@@ -163,6 +174,106 @@ export async function writeLastGoodAnchorAtomically(
   );
   try {
     await writeFile(temporary, `${JSON.stringify(anchor, null, 2)}\n`, {
+      flag: "wx",
+      mode: 0o600,
+    });
+    await rename(temporary, destination);
+  } catch (error) {
+    await rm(temporary, { force: true });
+    throw error;
+  }
+}
+
+function assertLastGoodTransition(
+  value: unknown,
+): asserts value is LastGoodTransition {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    Object.keys(value).sort().join(",") !==
+      [
+        "backupName",
+        "nextAnchor",
+        "ownerToken",
+        "previousAnchor",
+        "schemaVersion",
+        "stagingName",
+      ]
+        .sort()
+        .join(",")
+  ) {
+    throw new Error("last-good transition is invalid");
+  }
+  const transition = value as Partial<LastGoodTransition>;
+  if (
+    transition.schemaVersion !== 1 ||
+    typeof transition.ownerToken !== "string" ||
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(
+      transition.ownerToken,
+    ) ||
+    transition.backupName !==
+      `.pages-last-good.${transition.ownerToken}.backup` ||
+    transition.stagingName !==
+      `.pages-last-good.${transition.ownerToken}.staging`
+  ) {
+    throw new Error("last-good transition is invalid");
+  }
+  assertLastGoodAnchor(transition.previousAnchor);
+  assertLastGoodAnchor(transition.nextAnchor);
+}
+
+function lastGoodTransitionPath(projectRoot: string): string {
+  return join(resolve(projectRoot), "work", LAST_GOOD_TRANSITION_NAME);
+}
+
+async function readLastGoodTransition(
+  projectRoot: string,
+): Promise<LastGoodTransition | undefined> {
+  const path = lastGoodTransitionPath(projectRoot);
+  let metadata;
+  try {
+    metadata = await lstat(path);
+  } catch (error) {
+    if (isMissing(error)) return undefined;
+    throw error;
+  }
+  if (metadata.isSymbolicLink() || !metadata.isFile()) {
+    throw new Error("last-good transition is unsafe");
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(await readFile(path, "utf8")) as unknown;
+  } catch {
+    throw new Error("last-good transition is invalid");
+  }
+  assertLastGoodTransition(value);
+  return value;
+}
+
+async function writeLastGoodTransitionAtomically(
+  projectRoot: string,
+  transition: LastGoodTransition,
+): Promise<void> {
+  assertLastGoodTransition(transition);
+  const workDirectory = join(resolve(projectRoot), "work");
+  const workMetadata = await lstat(workDirectory);
+  if (workMetadata.isSymbolicLink() || !workMetadata.isDirectory()) {
+    throw new Error("last-good transition work directory is unsafe");
+  }
+  const destination = lastGoodTransitionPath(projectRoot);
+  try {
+    await lstat(destination);
+    throw new Error("last-good transition already exists");
+  } catch (error) {
+    if (!isMissing(error)) throw error;
+  }
+  const temporary = join(
+    workDirectory,
+    `.${LAST_GOOD_TRANSITION_NAME}.${transition.ownerToken}.tmp`,
+  );
+  try {
+    await writeFile(temporary, `${JSON.stringify(transition, null, 2)}\n`, {
       flag: "wx",
       mode: 0o600,
     });
@@ -302,9 +413,14 @@ export async function withPublicationLock<T>(
 function assertPagesDirectory(path: string, expectedName?: string): string {
   const absolute = resolve(path);
   const name = basename(absolute);
+  const isTransitionDirectory =
+    /^\.pages-last-good\.[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\.(?:backup|staging)$/.test(
+      name,
+    );
   if (
     basename(dirname(absolute)) !== "work" ||
-    !["pages-candidate", "pages-last-good"].includes(name) ||
+    (!["pages-candidate", "pages-last-good"].includes(name) &&
+      !isTransitionDirectory) ||
     (expectedName !== undefined && name !== expectedName)
   ) {
     throw new Error("Pages directory is invalid or unsafe");
@@ -613,6 +729,175 @@ export async function validateLastGoodDirectory(
   }
 }
 
+async function safeTransitionDirectoryExists(path: string): Promise<boolean> {
+  let metadata;
+  try {
+    metadata = await lstat(path);
+  } catch (error) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+  if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
+    throw new Error(`last-good transition directory is unsafe: ${path}`);
+  }
+  return true;
+}
+
+async function removeValidatedTransitionDirectory(
+  path: string,
+  anchor: LastGoodAnchor,
+): Promise<void> {
+  if (!(await safeTransitionDirectoryExists(path))) return;
+  await validateLastGoodDirectory(path, anchor);
+  await rm(path, { recursive: true });
+}
+
+export async function recoverLastGoodTransition(
+  projectRoot: string,
+): Promise<void> {
+  projectRoot = resolve(projectRoot);
+  const transition = await readLastGoodTransition(projectRoot);
+  if (!transition) return;
+
+  const workDirectory = join(projectRoot, "work");
+  const workMetadata = await lstat(workDirectory);
+  if (workMetadata.isSymbolicLink() || !workMetadata.isDirectory()) {
+    throw new Error("last-good transition work directory is unsafe");
+  }
+  const current = join(workDirectory, "pages-last-good");
+  const backup = join(workDirectory, transition.backupName);
+  const staging = join(workDirectory, transition.stagingName);
+  const anchor = await readLastGoodAnchor(projectRoot);
+
+  if (isDeepStrictEqual(anchor, transition.previousAnchor)) {
+    const backupExists = await safeTransitionDirectoryExists(backup);
+    const currentExists = await safeTransitionDirectoryExists(current);
+    if (backupExists) {
+      await validateLastGoodDirectory(backup, transition.previousAnchor);
+      if (currentExists) {
+        try {
+          await validateLastGoodDirectory(current, transition.previousAnchor);
+        } catch {
+          await validateLastGoodDirectory(current, transition.nextAnchor);
+        }
+        await rm(current, { recursive: true });
+      }
+      await rename(backup, current);
+    } else {
+      if (!currentExists) {
+        throw new Error("last-good transition lost the anchored directory");
+      }
+      await validateLastGoodDirectory(current, transition.previousAnchor);
+    }
+    await removeValidatedTransitionDirectory(
+      staging,
+      transition.nextAnchor,
+    );
+    await validateLastGoodDirectory(current, transition.previousAnchor);
+  } else if (isDeepStrictEqual(anchor, transition.nextAnchor)) {
+    await validateLastGoodDirectory(current, transition.nextAnchor);
+    await removeValidatedTransitionDirectory(
+      backup,
+      transition.previousAnchor,
+    );
+    await removeValidatedTransitionDirectory(
+      staging,
+      transition.nextAnchor,
+    );
+  } else {
+    throw new Error("last-good transition does not match the trusted anchor");
+  }
+
+  await rm(lastGoodTransitionPath(projectRoot));
+}
+
+export async function replaceLastGoodTransactionally(options: {
+  projectRoot: string;
+  sourceDirectory: string;
+  previousAnchor: LastGoodAnchor;
+  nextAnchor: LastGoodAnchor;
+  writeAnchor?: typeof writeLastGoodAnchorAtomically;
+}): Promise<void> {
+  const projectRoot = resolve(options.projectRoot);
+  const source = assertPagesDirectory(
+    options.sourceDirectory,
+    "pages-candidate",
+  );
+  const workDirectory = join(projectRoot, "work");
+  const destination = join(workDirectory, "pages-last-good");
+  if (dirname(source) !== workDirectory) {
+    throw new Error("Pages directories must share the project work directory");
+  }
+  assertLastGoodAnchor(options.previousAnchor);
+  assertLastGoodAnchor(options.nextAnchor);
+  await recoverLastGoodTransition(projectRoot);
+  if (
+    !isDeepStrictEqual(
+      await readLastGoodAnchor(projectRoot),
+      options.previousAnchor,
+    )
+  ) {
+    throw new Error("last-good anchor changed before replacement");
+  }
+  await validateLastGoodDirectory(destination, options.previousAnchor);
+  await validateLastGoodDirectory(source, options.nextAnchor);
+
+  const ownerToken = randomUUID();
+  const transition: LastGoodTransition = {
+    schemaVersion: 1,
+    ownerToken,
+    backupName: `.pages-last-good.${ownerToken}.backup`,
+    stagingName: `.pages-last-good.${ownerToken}.staging`,
+    previousAnchor: options.previousAnchor,
+    nextAnchor: options.nextAnchor,
+  };
+  const backup = join(workDirectory, transition.backupName);
+  const staging = join(workDirectory, transition.stagingName);
+  let transitionWritten = false;
+  try {
+    await cp(source, staging, {
+      recursive: true,
+      dereference: false,
+      force: false,
+      errorOnExist: true,
+    });
+    await assertDirectoryTreeSafe(staging);
+    await validateLastGoodDirectory(staging, options.nextAnchor);
+    await writeLastGoodTransitionAtomically(projectRoot, transition);
+    transitionWritten = true;
+    await rename(destination, backup);
+    await rename(staging, destination);
+    await validateLastGoodDirectory(destination, options.nextAnchor);
+    await (options.writeAnchor ?? writeLastGoodAnchorAtomically)(
+      projectRoot,
+      options.nextAnchor,
+    );
+    if (
+      !isDeepStrictEqual(
+        await readLastGoodAnchor(projectRoot),
+        options.nextAnchor,
+      )
+    ) {
+      throw new Error("last-good anchor commit did not persist");
+    }
+    await recoverLastGoodTransition(projectRoot);
+  } catch (error) {
+    if (transitionWritten) {
+      try {
+        await recoverLastGoodTransition(projectRoot);
+      } catch (recoveryError) {
+        throw new AggregateError(
+          [error, recoveryError],
+          "last-good replacement and recovery both failed",
+        );
+      }
+    } else {
+      await rm(staging, { recursive: true, force: true });
+    }
+    throw error;
+  }
+}
+
 export async function revalidatePublicationState(options: {
   runId: string;
   candidatePath: string;
@@ -693,6 +978,7 @@ async function runLockedDeployPagesAtProjectRoot(
     monthlyIndexPath: join(marketRoot, "monthly", "index.json"),
   };
 
+  await recoverLastGoodTransition(projectRoot);
   let lastGoodAnchor: LastGoodAnchor;
   try {
     lastGoodAnchor = await readLastGoodAnchor(projectRoot);
@@ -841,12 +1127,13 @@ async function runLockedDeployPagesAtProjectRoot(
       expectedArtifactTreeSha256: string,
       expectedManifestSha256: string,
     ) => {
-      await copyDirectoryAtomically(
-        from,
-        to,
-        expectedArtifactTreeSha256,
-        expectedManifestSha256,
-      );
+      if (
+        resolve(to) !== resolve(lastGoodDirectory) ||
+        expectedArtifactTreeSha256 !== candidateExport.artifactTreeSha256 ||
+        expectedManifestSha256 !== candidateExport.manifestSha256
+      ) {
+        throw new Error("last-good replacement identities changed");
+      }
       const nextAnchor: LastGoodAnchor = {
         schemaVersion: 1,
         runId: candidateExport.runId,
@@ -854,8 +1141,12 @@ async function runLockedDeployPagesAtProjectRoot(
         artifactTreeSha256: candidateExport.artifactTreeSha256,
         manifestSha256: candidateExport.manifestSha256,
       };
-      await validateLastGoodDirectory(lastGoodDirectory, nextAnchor);
-      await writeLastGoodAnchorAtomically(projectRoot, nextAnchor);
+      await replaceLastGoodTransactionally({
+        projectRoot,
+        sourceDirectory: from,
+        previousAnchor: lastGoodAnchor,
+        nextAnchor,
+      });
       lastGoodAnchor = nextAnchor;
     },
     promote: (expectedCandidateSha256: string) =>
