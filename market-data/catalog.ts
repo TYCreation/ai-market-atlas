@@ -35,10 +35,10 @@ export function stockMetricId(ticker: string, field: StockMetricField) {
   return `stocks.${ticker.toLowerCase()}.${field}`;
 }
 
-const EQUITY_TICKERS = ["NVDA", "AVGO", "AMD", "TSM", "VRT", "ETN", "CEG", "WOLF", "ON", "NOW", "PLTR", "CRM"] as const;
+export const EQUITY_UNIVERSE = ["NVDA", "AVGO", "AMD", "TSM", "VRT", "ETN", "CEG", "WOLF", "ON", "NOW", "PLTR", "CRM"] as const;
 
 export const REQUIRED_STOCK_METRIC_IDS = new Set(
-  EQUITY_TICKERS.flatMap((ticker) => [
+  EQUITY_UNIVERSE.flatMap((ticker) => [
     stockMetricId(ticker, "price"),
     stockMetricId(ticker, "weekReturn"),
     stockMetricId(ticker, "monthReturn"),

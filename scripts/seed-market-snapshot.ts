@@ -16,7 +16,30 @@ function option(name: string, fallback: string): string {
 }
 
 function timestampFor(runId: string): string {
-  return `${/^(\d{4}-\d{2}-\d{2})/.exec(runId)?.[1] ?? "2026-07-30"}T08:00:00.000Z`;
+  const date = /^(\d{4}-\d{2}-\d{2})/.exec(runId)?.[1];
+  if (!date) throw new Error("run ID must begin with YYYY-MM-DD");
+  return `${date}T01:00:00.000Z`;
+}
+
+const MONTHS = new Map([
+  ["january", "01"], ["february", "02"], ["march", "03"], ["april", "04"],
+  ["may", "05"], ["june", "06"], ["july", "07"], ["august", "08"],
+  ["september", "09"], ["october", "10"], ["november", "11"], ["december", "12"],
+]);
+
+// A source without a day is stored at the first instant of its stated ISO period.
+function sourcePublishedAt(published: string, retrievedAt: string): string {
+  if (/\b(live|continuously maintained)\b/i.test(published)) return retrievedAt;
+  const exact = /^(\w+) (\d{1,2}), (\d{4})$/.exec(published);
+  if (exact) {
+    const month = MONTHS.get(exact[1].toLowerCase());
+    if (!month) throw new Error(`Unsupported source month: ${published}`);
+    return `${exact[3]}-${month}-${exact[2].padStart(2, "0")}T00:00:00.000Z`;
+  }
+  const monthPeriod = /(?:^|\bUpdated\s+)(January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})/i.exec(published);
+  if (monthPeriod) return `${monthPeriod[2]}-${MONTHS.get(monthPeriod[1].toLowerCase())}-01T00:00:00.000Z`;
+  if (/^\d{4}$/.test(published)) return `${published}-01-01T00:00:00.000Z`;
+  throw new Error(`Unsupported source publication period: ${published}`);
 }
 
 function numericValue(display: string): number {
@@ -53,7 +76,7 @@ function createSnapshot(runId: string): MarketSnapshot {
   const timestamp = timestampFor(runId);
   const sources: Record<string, SourceRecord> = Object.fromEntries(Object.values(sourceBundles).flatMap((bundle) => bundle.sources).map((source) => [source.id, {
     id: source.id, kind: source.kind, publisher: source.publisher, title: source.title,
-    ...(source.url ? { url: source.url } : {}), publishedAt: timestamp, retrievedAt: timestamp, scope: source.scope,
+    ...(source.url ? { url: source.url } : {}), publishedAt: sourcePublishedAt(source.published, timestamp), retrievedAt: timestamp, scope: source.scope,
   }]));
   const metrics: Record<string, MetricRecord> = {};
   for (const [page, index, id, unit] of KPI_CATALOG) {
@@ -74,7 +97,7 @@ function createSnapshot(runId: string): MarketSnapshot {
 }
 
 const output = resolve(option("--output", "data/market/current.json"));
-const snapshot = createSnapshot(option("--run-id", "2026-07-30-seed"));
+const snapshot = createSnapshot(option("--run-id", "2026-07-25-saturday"));
 assertMarketSnapshot(snapshot);
 await mkdir(dirname(output), { recursive: true });
 await writeFile(output, `${JSON.stringify(snapshot, null, 2)}\n`);
