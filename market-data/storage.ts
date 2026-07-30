@@ -14,6 +14,7 @@ export type PromotionResult = {
   archivedPath: string;
   previousRunId: string;
   archivedSha256: string;
+  promotedSha256: string;
   monthlyArchiveMonth?: string;
 };
 
@@ -279,6 +280,7 @@ export async function promoteCandidate(paths: StoragePaths): Promise<PromotionRe
     archivedPath,
     previousRunId: previous.runId,
     archivedSha256: hashCandidate(previous),
+    promotedSha256: hashCandidate(normalized),
     ...(monthlyArchiveMonth === undefined ? {} : { monthlyArchiveMonth }),
   };
 }
@@ -306,7 +308,7 @@ export async function restoreCurrent(paths: StoragePaths, promotion: PromotionRe
     throw new Error("promotion archive identity does not match");
   }
   const current = await readCurrent(paths.currentPath);
-  if (current.runId !== promotion.runId) {
+  if (current.runId !== promotion.runId || hashCandidate(current) !== promotion.promotedSha256) {
     throw new Error("current snapshot identity does not match the promotion");
   }
   await writeSnapshotAtomically(paths.currentPath, archived);

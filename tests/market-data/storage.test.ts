@@ -180,6 +180,27 @@ test("reuses an authenticated rollback archive for a same-run retry", async () =
   assert.equal(JSON.parse(await readFile(paths.currentPath, "utf8")).runId, first.runId);
 });
 
+test("rejects a stale same-run rollback result but accepts the newest result", async () => {
+  const paths = await makeFixtureWorkspace();
+  const first = await promoteCandidate(paths);
+  await restoreCurrent(paths, first);
+
+  const retryCandidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
+  retryCandidate.metrics["stocks.nvda.price"].numericValue += 1;
+  await writeFile(paths.candidatePath, JSON.stringify(retryCandidate));
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
+  const newest = await promoteCandidate(paths);
+  const beforeCurrent = await readFile(paths.currentPath, "utf8");
+  const beforeIndex = await readFile(paths.monthlyIndexPath, "utf8");
+
+  await assert.rejects(() => restoreCurrent(paths, first), /current snapshot identity does not match the promotion/);
+  assert.equal(await readFile(paths.currentPath, "utf8"), beforeCurrent);
+  assert.equal(await readFile(paths.monthlyIndexPath, "utf8"), beforeIndex);
+
+  await restoreCurrent(paths, newest);
+  assert.equal(JSON.parse(await readFile(paths.currentPath, "utf8")).runId, first.previousRunId);
+});
+
 test("rejects a mismatched existing archive before promotion", async () => {
   const paths = await makeFixtureWorkspace();
   const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
