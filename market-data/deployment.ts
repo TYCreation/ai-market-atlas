@@ -2,15 +2,17 @@ import { lstat, readFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import {
   assertAutoPublishReview,
+  hashCandidate,
   isSafeMarketRunId,
   type AutomatedReview,
 } from "./review.ts";
 import { assertMarketSnapshot } from "./schema.ts";
 import type { PromotionResult } from "./storage.ts";
+import type { MarketSnapshot } from "./types.ts";
 
 export type PublishDependencies = {
   deploy(directory: string, branch: string): Promise<string>;
-  verify(baseUrl: string, routes: string[]): Promise<void>;
+  verify(baseUrl: string, directory: string): Promise<void>;
   copyDirectory(from: string, to: string): Promise<void>;
   promote(): Promise<PromotionResult>;
   restoreSnapshot(promotion: PromotionResult): Promise<void>;
@@ -24,6 +26,7 @@ export type PublishOptions = {
   lastGoodDirectory: string;
   productionBaseUrl: string;
   routes: string[];
+  expectedCandidateSha256?: string;
 };
 
 export type VerificationExpectation = {
@@ -32,12 +35,50 @@ export type VerificationExpectation = {
   archiveMonths: string[];
   sourceIds: string[];
   archiveSourceIds: Record<string, string[]>;
+  routeIdentities: Record<string, RouteVerificationIdentity>;
 };
+
+export type RouteVerificationIdentity =
+  | {
+      kind: "current";
+      runId: string;
+      dataCutoff: string;
+      sourceIds: string[];
+    }
+  | {
+      kind: "archive-index";
+      archiveMonths: string[];
+    }
+  | {
+      kind: "archive-detail";
+      archiveMonth: string;
+      runId: string;
+      dataCutoff: string;
+      sourceIds: string[];
+    }
+  | {
+      kind: "market-brief";
+      runId: string;
+      dataCutoff: string;
+      sourceIds: string[];
+      payloadSha256?: string;
+    };
 
 export type DeploymentFetcher = (
   input: string | URL | Request,
   init?: RequestInit,
 ) => Promise<Response>;
+
+export type CandidateAuthorizationOptions = Pick<
+  PublishOptions,
+  "runId" | "candidatePath" | "reviewPath"
+>;
+
+export type AuthorizedCandidatePublication = {
+  candidate: MarketSnapshot;
+  review: AutomatedReview;
+  candidateSha256: string;
+};
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -120,18 +161,6 @@ async function readRegularJson(path: string, label: string): Promise<unknown> {
   }
 }
 
-function assertReviewShape(value: unknown): asserts value is AutomatedReview {
-  if (
-    value === null ||
-    typeof value !== "object" ||
-    Array.isArray(value) ||
-    !Array.isArray((value as { checks?: unknown }).checks) ||
-    !Array.isArray((value as { issues?: unknown }).issues)
-  ) {
-    throw new Error("persisted automated review is invalid");
-  }
-}
-
 function assertSafeRoutes(routes: string[]): void {
   if (
     routes.length === 0 ||
@@ -186,6 +215,57 @@ function assertVerificationExpectation(
   ) {
     throw new Error("deployment verification expectation is invalid");
   }
+  if (
+    expectation.routeIdentities === null ||
+    typeof expectation.routeIdentities !== "object" ||
+    Array.isArray(expectation.routeIdentities)
+  ) {
+    throw new Error("deployment route identities are invalid");
+  }
+}
+
+function sortedUnique(values: string[]): string[] {
+  return [...new Set(values)].sort();
+}
+
+function assertExactValues(
+  actual: string[],
+  expected: string[],
+  label: string,
+): void {
+  if (
+    actual.length !== new Set(actual).size ||
+    JSON.stringify(sortedUnique(actual)) !==
+      JSON.stringify(sortedUnique(expected))
+  ) {
+    throw new Error(`${label} does not match`);
+  }
+}
+
+function sourceCardIds(body: string, archive: boolean): string[] {
+  const prefix = archive ? "archive-source-" : "source-";
+  const expression = new RegExp(
+    `id=["']${prefix}([a-z0-9][a-z0-9._-]*)["']`,
+    "gi",
+  );
+  return [...body.matchAll(expression)].map((match) => match[1]);
+}
+
+function embeddedBrief(body: string): Record<string, unknown> {
+  const match =
+    /<script id=["']embedded-market-brief["'] type=["']application\/json["']>([\s\S]*?)<\/script>/i.exec(
+      body,
+    );
+  if (!match) throw new Error("market brief embedded identity is missing");
+  try {
+    const value: unknown = JSON.parse(match[1]);
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("invalid");
+    }
+    return value as Record<string, unknown>;
+  } catch {
+    throw new Error("market brief embedded identity is invalid");
+  }
 }
 
 function assertVerificationContent(
@@ -193,55 +273,77 @@ function assertVerificationContent(
   body: string,
   expectation: VerificationExpectation,
 ): void {
-  if (route === "/market-brief/" || route === "/market-brief") {
+  const identity = expectation.routeIdentities[route];
+  if (!identity) {
+    throw new Error(`${route} verification identity is missing`);
+  }
+  if (identity.kind === "market-brief") {
     if (!body.includes("AI MARKET ATLAS")) {
       throw new Error(`${route} market brief marker is missing`);
     }
-    return;
-  }
-  const archiveDetail = /^\/archive\/(\d{4}-(?:0[1-9]|1[0-2]))\/?$/.exec(
-    route,
-  );
-  if (archiveDetail) {
-    const expectedSourceIds =
-      expectation.archiveSourceIds[archiveDetail[1]] ?? [];
+    const brief = embeddedBrief(body);
     if (
-      !expectation.archiveMonths.includes(archiveDetail[1]) ||
-      !body.includes(archiveDetail[1])
+      brief.runId !== identity.runId ||
+      brief.dataCutoff !== identity.dataCutoff ||
+      !Array.isArray(brief.sourceIds) ||
+      !brief.sourceIds.every((sourceId) => typeof sourceId === "string")
     ) {
-      throw new Error(`${route} archive month marker is missing`);
+      throw new Error(`${route} market brief identity does not match`);
     }
+    assertExactValues(
+      brief.sourceIds as string[],
+      identity.sourceIds,
+      `${route} market brief sources`,
+    );
     if (
-      !expectedSourceIds.some((sourceId) =>
-        body.includes(`source-${sourceId}`),
-      )
+      identity.payloadSha256 !== undefined &&
+      hashCandidate(brief) !== identity.payloadSha256
     ) {
-      throw new Error(`${route} source marker is missing`);
+      throw new Error(`${route} market brief payload hash does not match`);
     }
     return;
   }
-  if (route === "/archive" || route === "/archive/") {
-    if (expectation.archiveMonths.some((month) => !body.includes(month))) {
-      throw new Error(`${route} archive month marker is missing`);
+  if (identity.kind === "archive-detail") {
+    const escapedMonth = identity.archiveMonth.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (
+      !new RegExp(`(?:^|[^0-9-])${escapedMonth}(?:[^0-9-]|$)`).test(body) ||
+      !body.includes(identity.runId) ||
+      !body.includes(identity.dataCutoff)
+    ) {
+      throw new Error(`${route} archive month/runId/cutoff identity is missing`);
     }
+    assertExactValues(
+      sourceCardIds(body, true),
+      identity.sourceIds,
+      `${route} archive sources`,
+    );
     return;
   }
-  if (!body.includes(expectation.runId)) {
+  if (identity.kind === "archive-index") {
+    const archiveMonths = [
+      ...body.matchAll(/href=["']\/archive\/(\d{4}-(?:0[1-9]|1[0-2]))["']/g),
+    ].map((match) => match[1]);
+    assertExactValues(
+      archiveMonths,
+      identity.archiveMonths,
+      `${route} archive months`,
+    );
+    return;
+  }
+  if (!body.includes(identity.runId)) {
     throw new Error(`${route} runId marker is missing`);
   }
   if (
-    !body.includes(expectation.dataCutoff) ||
+    !body.includes(identity.dataCutoff) ||
     !/(?:資料截止|Data cutoff)/i.test(body)
   ) {
     throw new Error(`${route} cutoff marker is missing`);
   }
-  if (
-    !expectation.sourceIds.some((sourceId) =>
-      body.includes(`source-${sourceId}`),
-    )
-  ) {
-    throw new Error(`${route} source marker is missing`);
-  }
+  assertExactValues(
+    sourceCardIds(body, false),
+    identity.sourceIds,
+    `${route} current sources`,
+  );
 }
 
 function assertVerificationBaseUrl(value: string): URL {
@@ -272,6 +374,9 @@ export async function verifyDeployment(
   const base = assertVerificationBaseUrl(baseUrl);
   assertSafeRoutes(routes);
   assertVerificationExpectation(expectation);
+  if (routes.some((route) => expectation.routeIdentities[route] === undefined)) {
+    throw new Error("deployment route identity is missing");
+  }
 
   for (const route of routes) {
     let response: Response | undefined;
@@ -327,14 +432,12 @@ function assertProductionUrl(value: string): void {
   }
 }
 
-async function authorize(options: PublishOptions): Promise<void> {
+export async function authorizeCandidatePublication(
+  options: CandidateAuthorizationOptions,
+): Promise<AuthorizedCandidatePublication> {
   if (!isSafeMarketRunId(options.runId)) {
     throw new Error("publication runId is unsafe");
   }
-  assertSafeDirectory(options.candidateDirectory, "pages-candidate");
-  assertSafeDirectory(options.lastGoodDirectory, "pages-last-good");
-  assertSafeRoutes(options.routes);
-  assertProductionUrl(options.productionBaseUrl);
   const candidatePath = resolve(options.candidatePath);
   const reviewPath = resolve(options.reviewPath);
   if (
@@ -345,9 +448,6 @@ async function authorize(options: PublishOptions): Promise<void> {
     throw new Error("candidate or review path is invalid or unsafe");
   }
   await Promise.all([
-    rejectDirectorySymlinkIfPresent("work", "work directory"),
-    rejectSymlinkIfPresent(options.candidateDirectory, "candidate directory"),
-    rejectSymlinkIfPresent(options.lastGoodDirectory, "last-good directory"),
     rejectDirectorySymlinkIfPresent(dirname(candidatePath), "market directory"),
     rejectDirectorySymlinkIfPresent(dirname(reviewPath), "reviews directory"),
   ]);
@@ -360,8 +460,31 @@ async function authorize(options: PublishOptions): Promise<void> {
   if (candidate.runId !== options.runId) {
     throw new Error("candidate runId does not match publication runId");
   }
-  assertReviewShape(review);
   assertAutoPublishReview(review, candidate);
+  return {
+    candidate,
+    review,
+    candidateSha256: hashCandidate(candidate),
+  };
+}
+
+async function authorize(options: PublishOptions): Promise<void> {
+  assertSafeDirectory(options.candidateDirectory, "pages-candidate");
+  assertSafeDirectory(options.lastGoodDirectory, "pages-last-good");
+  assertSafeRoutes(options.routes);
+  assertProductionUrl(options.productionBaseUrl);
+  await Promise.all([
+    rejectDirectorySymlinkIfPresent("work", "work directory"),
+    rejectSymlinkIfPresent(options.candidateDirectory, "candidate directory"),
+    rejectSymlinkIfPresent(options.lastGoodDirectory, "last-good directory"),
+  ]);
+  const authorization = await authorizeCandidatePublication(options);
+  if (
+    options.expectedCandidateSha256 !== undefined &&
+    authorization.candidateSha256 !== options.expectedCandidateSha256
+  ) {
+    throw new Error("candidate does not match the exported manifest hash");
+  }
 }
 
 export async function publishWithRestore(
@@ -376,7 +499,7 @@ export async function publishWithRestore(
       options.candidateDirectory,
       branch,
     );
-    await dependencies.verify(previewUrl, options.routes);
+    await dependencies.verify(previewUrl, options.candidateDirectory);
   } catch (error) {
     throw new Error(`Preview publication failed: ${errorMessage(error)}`);
   }
@@ -384,7 +507,10 @@ export async function publishWithRestore(
   const promotion = await dependencies.promote();
   try {
     await dependencies.deploy(options.candidateDirectory, "main");
-    await dependencies.verify(options.productionBaseUrl, options.routes);
+    await dependencies.verify(
+      options.productionBaseUrl,
+      options.candidateDirectory,
+    );
   } catch (candidateError) {
     let snapshotOutcome = "snapshot restoration succeeded";
     let siteOutcome = "site restoration succeeded";
@@ -395,7 +521,10 @@ export async function publishWithRestore(
     }
     try {
       await dependencies.deploy(options.lastGoodDirectory, "main");
-      await dependencies.verify(options.productionBaseUrl, options.routes);
+      await dependencies.verify(
+        options.productionBaseUrl,
+        options.lastGoodDirectory,
+      );
     } catch (restoreError) {
       siteOutcome = `site restoration failed: ${errorMessage(restoreError)}`;
     }

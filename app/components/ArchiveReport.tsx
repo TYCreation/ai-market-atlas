@@ -33,7 +33,7 @@ export function ArchiveReport({
         <p className="archive-title-en">{titleEn}</p>
         <p className="archive-summary">{archive.summary.zh}</p>
         <p className="archive-summary archive-summary-en">{archive.summary.en}</p>
-        <p className="archive-meta">
+        <p className="archive-meta" data-data-cutoff={archive.dataCutoff}>
           資料截止 · {archive.dataCutoff.slice(0, 10)} · {archive.runId}
           <span>Data cutoff · {archive.dataCutoff.slice(0, 10)}</span>
         </p>

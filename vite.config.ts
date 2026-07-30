@@ -1,5 +1,7 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
+import { realpath, stat } from "node:fs/promises";
+import { resolve } from "node:path";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 import {
@@ -50,11 +52,22 @@ export default defineConfig(async () => {
     process.env.MARKET_SNAPSHOT_PATH,
   );
   await loadMarketSnapshot(marketSnapshotPath);
+  const requestedMonthlyIndexPath = resolve(
+    process.env.MARKET_MONTHLY_INDEX_PATH ??
+      "data/market/monthly/index.json",
+  );
+  const marketMonthlyIndexPath = await realpath(requestedMonthlyIndexPath);
+  if (!(await stat(marketMonthlyIndexPath)).isFile()) {
+    throw new Error(
+      `Market monthly index path is not a regular file: ${requestedMonthlyIndexPath}`,
+    );
+  }
 
   return {
     resolve: {
       alias: {
         "#market-snapshot": marketSnapshotPath,
+        "#market-monthly-index": marketMonthlyIndexPath,
       },
     },
     server: isCodexSeatbeltSandbox

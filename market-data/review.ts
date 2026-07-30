@@ -431,37 +431,34 @@ export function assertArchivedAutoPublishReview(
   }
 }
 
-export function assertAutoPublishReview(review: AutomatedReview, snapshot: unknown): void {
-  if (review.schemaVersion !== 1) throw new Error("automated review schema is unsupported");
-  if (review.candidateSha256 !== hashCandidate(snapshot)) {
-    throw new Error("review candidate hash does not match");
-  }
+export function assertAutoPublishReview(
+  review: unknown,
+  snapshot: unknown,
+): asserts review is AutomatedReview {
   const snapshotRunId =
     snapshot !== null && typeof snapshot === "object" && typeof (snapshot as Record<string, unknown>).runId === "string"
       ? (snapshot as Record<string, string>).runId
       : undefined;
   if (
     snapshotRunId === undefined ||
+    !isRecord(review) ||
     review.runId !== snapshotRunId ||
-    review.reviewId !== `${review.runId}:${review.candidateSha256}` ||
-    review.reviewedMetricCount !== asCount(snapshot, "metrics") ||
-    review.reviewedSourceCount !== asCount(snapshot, "sources")
+    typeof review.candidateSha256 !== "string" ||
+    review.reviewId !== `${review.runId}:${review.candidateSha256}`
   ) {
     throw new Error("review identity does not match");
   }
   if (review.decision !== "auto_publish") {
-    throw new Error(`automated review decision is ${review.decision}`);
+    throw new Error(`automated review decision is ${String(review.decision)}`);
+  }
+  assertArchivedAutoPublishReview(review, snapshotRunId);
+  if (review.candidateSha256 !== hashCandidate(snapshot)) {
+    throw new Error("review candidate hash does not match");
   }
   if (
-    review.checks.length !== REQUIRED_CHECK_IDS.length ||
-    REQUIRED_CHECK_IDS.some((id) => !review.checks.some((check) => check.id === id))
+    review.reviewedMetricCount !== asCount(snapshot, "metrics") ||
+    review.reviewedSourceCount !== asCount(snapshot, "sources")
   ) {
-    throw new Error("automated review checks are incomplete");
-  }
-  if (
-    review.checks.some((check) => check.status === "fail") ||
-    review.issues.some((candidateIssue) => candidateIssue.severity === "block")
-  ) {
-    throw new Error("automated review contains a failed check");
+    throw new Error("review identity does not match");
   }
 }

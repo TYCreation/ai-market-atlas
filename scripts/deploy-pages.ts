@@ -11,6 +11,7 @@ import {
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  authorizeCandidatePublication,
   publishWithRestore,
   verifyDeployment,
   type VerificationExpectation,
@@ -19,6 +20,7 @@ import { isSafeMarketRunId } from "../market-data/review.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import {
   promoteCandidate,
+  projectMonthlyArchive,
   restoreCurrent,
   type StoragePaths,
 } from "../market-data/storage.ts";
@@ -225,6 +227,11 @@ async function readManifest(directory: string): Promise<DeploymentManifest> {
     Array.isArray(value) ||
     typeof (value as { runId?: unknown }).runId !== "string" ||
     typeof (value as { dataCutoff?: unknown }).dataCutoff !== "string" ||
+    typeof (value as { candidateSha256?: unknown }).candidateSha256 !==
+      "string" ||
+    !/^[a-f0-9]{64}$/.test(
+      (value as { candidateSha256: string }).candidateSha256,
+    ) ||
     !Array.isArray((value as { routes?: unknown }).routes) ||
     !(value as { routes: unknown[] }).routes.every(
       (route) => typeof route === "string",
@@ -247,7 +254,11 @@ async function readManifest(directory: string): Promise<DeploymentManifest> {
       (sourceIds) =>
         Array.isArray(sourceIds) &&
         sourceIds.every((sourceId) => typeof sourceId === "string"),
-    )
+    ) ||
+    (value as { routeIdentities?: unknown }).routeIdentities === null ||
+    typeof (value as { routeIdentities?: unknown }).routeIdentities !==
+      "object" ||
+    Array.isArray((value as { routeIdentities?: unknown }).routeIdentities)
   ) {
     throw new Error("deployment manifest is invalid");
   }
@@ -274,11 +285,23 @@ async function readSnapshot(path: string, label: string) {
   return value;
 }
 
-async function runDeployPages(args: string[]): Promise<void> {
-  if (args.length !== 0) {
-    throw new Error("market:deploy does not accept command-line arguments");
-  }
-  const projectRoot = resolve(fileURLToPath(new URL("../", import.meta.url)));
+export type DeployPagesRuntime = {
+  exportPages: typeof exportPages;
+  verifyDeployment: typeof verifyDeployment;
+  publishWithRestore: typeof publishWithRestore;
+};
+
+const defaultRuntime: DeployPagesRuntime = {
+  exportPages,
+  verifyDeployment,
+  publishWithRestore,
+};
+
+export async function runDeployPagesAtProjectRoot(
+  projectRoot: string,
+  runtime: DeployPagesRuntime = defaultRuntime,
+): Promise<void> {
+  projectRoot = resolve(projectRoot);
   const marketRoot = join(projectRoot, "data", "market");
   const candidatePath = join(marketRoot, "candidate.json");
   const currentPath = join(marketRoot, "current.json");
@@ -286,6 +309,11 @@ async function runDeployPages(args: string[]): Promise<void> {
   const lastGoodDirectory = join(projectRoot, "work", "pages-last-good");
   const candidate = await readSnapshot(candidatePath, "candidate");
   const reviewPath = join(marketRoot, "reviews", `${candidate.runId}.json`);
+  const authorization = await authorizeCandidatePublication({
+    runId: candidate.runId,
+    candidatePath,
+    reviewPath,
+  });
   const storagePaths: StoragePaths = {
     candidatePath,
     reviewPath,
@@ -296,13 +324,13 @@ async function runDeployPages(args: string[]): Promise<void> {
 
   if (!(await pathExistsAsSafeDirectory(lastGoodDirectory))) {
     const current = await readSnapshot(currentPath, "current snapshot");
-    const currentExport = await exportPages({
+    const currentExport = await runtime.exportPages({
       projectRoot,
       snapshotPath: currentPath,
       outputDirectory: lastGoodDirectory,
     });
     try {
-      await verifyDeployment(
+      await runtime.verifyDeployment(
         PRODUCTION_BASE_URL,
         currentExport.routes,
         {
@@ -311,6 +339,7 @@ async function runDeployPages(args: string[]): Promise<void> {
           archiveMonths: currentExport.archiveMonths,
           sourceIds: currentExport.sourceIds,
           archiveSourceIds: currentExport.archiveSourceIds,
+          routeIdentities: currentExport.routeIdentities,
         },
       );
     } catch (error) {
@@ -325,10 +354,19 @@ async function runDeployPages(args: string[]): Promise<void> {
     await readManifest(lastGoodDirectory);
   }
 
-  const candidateExport = await exportPages({
+  const candidateExport = await runtime.exportPages({
     projectRoot,
     snapshotPath: candidatePath,
     outputDirectory: candidateDirectory,
+    authorizedCandidateSha256: authorization.candidateSha256,
+    ...(authorization.candidate.cadence === "month-end"
+      ? {
+          prospectiveArchive: projectMonthlyArchive(
+            authorization.candidate,
+            authorization.review,
+          ),
+        }
+      : {}),
   });
   const activeDirectoryByUrl = new Map<string, string>();
   const dependencies = {
@@ -340,10 +378,13 @@ async function runDeployPages(args: string[]): Promise<void> {
       }
       return url;
     },
-    verify: async (baseUrl: string, routes: string[]) => {
-      const directory = activeDirectoryByUrl.get(baseUrl);
-      if (!directory) {
+    verify: async (baseUrl: string, directory: string) => {
+      const activeDirectory = activeDirectoryByUrl.get(baseUrl);
+      if (!activeDirectory) {
         throw new Error("no deployed asset directory is bound to verification URL");
+      }
+      if (resolve(activeDirectory) !== resolve(directory)) {
+        throw new Error("verification directory does not match deployed assets");
       }
       const manifest = await readManifest(directory);
       const expectation: VerificationExpectation = {
@@ -352,21 +393,16 @@ async function runDeployPages(args: string[]): Promise<void> {
         archiveMonths: manifest.archiveMonths,
         sourceIds: manifest.sourceIds,
         archiveSourceIds: manifest.archiveSourceIds,
+        routeIdentities: manifest.routeIdentities,
       };
-      if (
-        routes.length !== manifest.routes.length ||
-        routes.some((route, index) => route !== manifest.routes[index])
-      ) {
-        throw new Error("verification routes do not match deployed assets");
-      }
-      await verifyDeployment(baseUrl, routes, expectation);
+      await runtime.verifyDeployment(baseUrl, manifest.routes, expectation);
     },
     copyDirectory: copyDirectoryAtomically,
     promote: () => promoteCandidate(storagePaths),
     restoreSnapshot: (promotion: Awaited<ReturnType<typeof promoteCandidate>>) =>
       restoreCurrent(storagePaths, promotion),
   };
-  const promotion = await publishWithRestore(dependencies, {
+  const promotion = await runtime.publishWithRestore(dependencies, {
     runId: candidate.runId,
     candidatePath,
     reviewPath,
@@ -374,9 +410,19 @@ async function runDeployPages(args: string[]): Promise<void> {
     lastGoodDirectory,
     productionBaseUrl: PRODUCTION_BASE_URL,
     routes: candidateExport.routes,
+    expectedCandidateSha256: candidateExport.candidateSha256,
   });
   process.stdout.write(
     `${JSON.stringify({ published: true, runId: promotion.runId })}\n`,
+  );
+}
+
+async function runDeployPages(args: string[]): Promise<void> {
+  if (args.length !== 0) {
+    throw new Error("market:deploy does not accept command-line arguments");
+  }
+  await runDeployPagesAtProjectRoot(
+    resolve(fileURLToPath(new URL("../", import.meta.url))),
   );
 }
 

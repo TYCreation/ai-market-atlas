@@ -1,13 +1,62 @@
 import assert from "node:assert/strict";
-import { lstat, readFile, readdir, rm } from "node:fs/promises";
+import {
+  cp,
+  lstat,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { projectMonthlyArchive } from "../../market-data/storage.ts";
 import { exportPages } from "../../scripts/export-pages.ts";
+import { generateMarketBriefAssets } from "../../scripts/generate-market-brief.ts";
+import type { MarketSnapshot } from "../../market-data/types.ts";
+import { autoPublishReview } from "./helpers.ts";
 
 const projectRoot = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const outputDirectory = join(projectRoot, "work", "pages-candidate");
 const snapshotPath = join(projectRoot, "data", "market", "current.json");
+
+async function isolatedExportProject(build: boolean): Promise<string> {
+  const isolatedRoot = await mkdtemp(join(tmpdir(), "market-export-project-"));
+  for (const directory of [
+    ".openai",
+    "app",
+    "build",
+    "data",
+    "hyperframes",
+    "market-data",
+    "public",
+    "scripts",
+    "worker",
+    ...(build ? [] : ["dist"]),
+  ]) {
+    await cp(join(projectRoot, directory), join(isolatedRoot, directory), {
+      recursive: true,
+    });
+  }
+  for (const file of [
+    "package.json",
+    "package-lock.json",
+    "postcss.config.mjs",
+    "tsconfig.json",
+    "vite.config.ts",
+  ]) {
+    await cp(join(projectRoot, file), join(isolatedRoot, file));
+  }
+  await symlink(
+    join(projectRoot, "node_modules"),
+    join(isolatedRoot, "node_modules"),
+    "dir",
+  );
+  return isolatedRoot;
+}
 
 test("exports every current/archive route and public asset without localhost metadata", async () => {
   await rm(outputDirectory, { recursive: true, force: true });
@@ -75,8 +124,50 @@ test("exports every current/archive route and public asset without localhost met
         archiveMonths: result.archiveMonths,
         sourceIds: result.sourceIds,
         archiveSourceIds: result.archiveSourceIds,
+        candidateSha256: result.candidateSha256,
+        routeIdentities: result.routeIdentities,
       },
     );
+    assert.deepEqual(result.routeIdentities["/compute"], {
+      kind: "current",
+      runId: "2026-07-25-saturday",
+      dataCutoff: "2026-07-25T01:00:00.000Z",
+      sourceIds: [
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "nvidia-q1-fy27",
+        "tsmc-q1-2026",
+      ],
+    });
+    assert.deepEqual(result.routeIdentities["/archive/2026-07"], {
+      kind: "archive-detail",
+      archiveMonth: "2026-07",
+      runId: "2026-07-25-saturday",
+      dataCutoff: "2026-07-25T01:00:00.000Z",
+      sourceIds: result.archiveSourceIds["2026-07"],
+    });
+    assert.deepEqual(result.routeIdentities["/market-brief/"], {
+      kind: "market-brief",
+      runId: "2026-07-25-saturday",
+      dataCutoff: "2026-07-25T01:00:00.000Z",
+      sourceIds: [
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "doe-data-centers",
+        "gemini-pricing",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "infineon-200mm",
+        "nvidia-q1-fy27",
+        "onsemi-ai",
+        "openai-pricing",
+        "stanford-economy",
+        "stm-q1-2026",
+        "tsmc-q1-2026",
+        "wolfspeed-ai",
+      ],
+      payloadSha256: result.routeIdentities["/market-brief/"].payloadSha256,
+    });
   } finally {
     await rm(outputDirectory, { recursive: true, force: true });
   }
@@ -104,4 +195,177 @@ test("rejects unsafe export paths before build or output mutation", async () => 
       }),
     /snapshot path is unsafe/i,
   );
+});
+
+test("rejects an export whose snapshot no longer matches the authorized candidate hash", async () => {
+  await assert.rejects(
+    () =>
+      exportPages({
+        projectRoot,
+        snapshotPath,
+        outputDirectory,
+        build: false,
+        authorizedCandidateSha256: "0".repeat(64),
+      }),
+    /authorized candidate hash/i,
+  );
+});
+
+test("rejects stale copied market-brief JSON and embedded identities", async (t) => {
+  const isolatedRoot = await isolatedExportProject(false);
+  const isolatedSnapshotPath = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "current.json",
+  );
+  const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
+  const briefDirectory = join(isolatedRoot, "dist", "client", "market-brief");
+  const dataPath = join(briefDirectory, "data.json");
+  const htmlPath = join(briefDirectory, "index.html");
+  const originalData = await readFile(dataPath, "utf8");
+  const originalHtml = await readFile(htmlPath, "utf8");
+
+  try {
+    await t.test("stale data.json", async () => {
+      const data = JSON.parse(originalData) as Record<string, unknown>;
+      data.runId = "2026-07-18-saturday";
+      await writeFile(dataPath, `${JSON.stringify(data)}\n`);
+      try {
+        await assert.rejects(
+          () =>
+            exportPages({
+              projectRoot: isolatedRoot,
+              snapshotPath: isolatedSnapshotPath,
+              outputDirectory: isolatedOutput,
+              build: false,
+            }),
+          /market brief.*identity|market brief.*runId/i,
+        );
+      } finally {
+        await writeFile(dataPath, originalData);
+      }
+    });
+
+    await t.test("stale embedded JSON", async () => {
+      const staleHtml = originalHtml.replace(
+        '"runId":"2026-07-25-saturday"',
+        '"runId":"2026-07-18-saturday"',
+      );
+      assert.notEqual(staleHtml, originalHtml);
+      await writeFile(htmlPath, staleHtml);
+      try {
+        await assert.rejects(
+          () =>
+            exportPages({
+              projectRoot: isolatedRoot,
+              snapshotPath: isolatedSnapshotPath,
+              outputDirectory: isolatedOutput,
+              build: false,
+            }),
+          /market brief.*identity|market brief.*runId/i,
+        );
+      } finally {
+        await writeFile(htmlPath, originalHtml);
+      }
+    });
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
+});
+
+test("exports a month-end candidate with its prospective archive without mutating tracked storage", async () => {
+  const isolatedRoot = await isolatedExportProject(true);
+  const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
+  const isolatedSnapshotPath = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "current.json",
+  );
+  const candidatePath = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "candidate.json",
+  );
+  const monthlyIndexPath = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "monthly",
+    "index.json",
+  );
+  const canonicalData = join(
+    isolatedRoot,
+    "hyperframes",
+    "weekly-ai-market-brief",
+    "data.json",
+  );
+  const canonicalHtml = join(
+    isolatedRoot,
+    "hyperframes",
+    "weekly-ai-market-brief",
+    "index.html",
+  );
+  const publicData = join(isolatedRoot, "public", "market-brief", "data.json");
+  const publicHtml = join(isolatedRoot, "public", "market-brief", "index.html");
+  const originalMonthlyIndex = await readFile(monthlyIndexPath, "utf8");
+  const originalTrackedMonthlyIndex = await readFile(
+    join(projectRoot, "data", "market", "monthly", "index.json"),
+    "utf8",
+  );
+  const candidate = JSON.parse(
+    await readFile(isolatedSnapshotPath, "utf8"),
+  ) as MarketSnapshot;
+  candidate.runId = "2026-08-29-month-end";
+  candidate.cadence = "month-end";
+  candidate.generatedAt = "2026-08-29T01:00:00.000Z";
+  candidate.dataCutoff = "2026-08-29T01:00:00.000Z";
+  const review = autoPublishReview(candidate);
+  const prospectiveArchive = projectMonthlyArchive(candidate, review);
+  await writeFile(candidatePath, `${JSON.stringify(candidate, null, 2)}\n`);
+
+  try {
+    await generateMarketBriefAssets({
+      snapshotPath: candidatePath,
+      canonicalData,
+      canonicalHtml,
+      publicData,
+      publicHtml,
+    });
+    const result = await exportPages({
+      projectRoot: isolatedRoot,
+      snapshotPath: candidatePath,
+      outputDirectory: isolatedOutput,
+      prospectiveArchive,
+    });
+
+    assert.ok(result.routes.includes("/archive/2026-08"));
+    assert.equal(
+      (
+        await lstat(
+          join(isolatedOutput, "archive", "2026-08", "index.html"),
+        )
+      ).isFile(),
+      true,
+    );
+    assert.deepEqual(result.routeIdentities["/archive/2026-08"], {
+      kind: "archive-detail",
+      archiveMonth: "2026-08",
+      runId: candidate.runId,
+      dataCutoff: candidate.dataCutoff,
+      sourceIds: prospectiveArchive.sourceIds,
+    });
+    assert.equal(await readFile(monthlyIndexPath, "utf8"), originalMonthlyIndex);
+    assert.equal(
+      await readFile(
+        join(projectRoot, "data", "market", "monthly", "index.json"),
+        "utf8",
+      ),
+      originalTrackedMonthlyIndex,
+    );
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
 });

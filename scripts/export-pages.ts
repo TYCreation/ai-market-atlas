@@ -13,8 +13,19 @@ import {
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
+import type { RouteVerificationIdentity } from "../market-data/deployment.ts";
 import { parseMonthlyArchiveIndex } from "../market-data/monthly.ts";
+import {
+  assertMonthlyArchiveRecord,
+  type MonthlyArchiveRecord,
+} from "../market-data/monthly-record.ts";
+import { hashCandidate } from "../market-data/review.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
+import { buildSourceBundles } from "../market-data/view-model.ts";
+import {
+  buildMarketBrief,
+  isMarketBriefPayload,
+} from "./generate-market-brief.ts";
 
 type WorkerModule = {
   default: {
@@ -34,6 +45,8 @@ export type ExportPagesOptions = {
   snapshotPath?: string;
   outputDirectory?: string;
   build?: boolean;
+  authorizedCandidateSha256?: string;
+  prospectiveArchive?: MonthlyArchiveRecord;
 };
 
 export type ExportPagesResult = {
@@ -44,6 +57,8 @@ export type ExportPagesResult = {
   archiveMonths: string[];
   sourceIds: string[];
   archiveSourceIds: Record<string, string[]>;
+  candidateSha256: string;
+  routeIdentities: Record<string, RouteVerificationIdentity>;
 };
 
 export type DeploymentManifest = Omit<ExportPagesResult, "outputDirectory">;
@@ -212,6 +227,36 @@ async function listHtmlFiles(directory: string): Promise<string[]> {
   return files;
 }
 
+function parseEmbeddedMarketBrief(html: string): unknown {
+  const match =
+    /<script id="embedded-market-brief" type="application\/json">([\s\S]*?)<\/script>/.exec(
+      html,
+    );
+  if (!match) throw new Error("copied market brief embedded identity is missing");
+  try {
+    return JSON.parse(match[1]) as unknown;
+  } catch {
+    throw new Error("copied market brief embedded identity is invalid");
+  }
+}
+
+function assertMarketBriefIdentity(
+  value: unknown,
+  expected: ReturnType<typeof buildMarketBrief>,
+  label: string,
+): void {
+  if (
+    !isMarketBriefPayload(value) ||
+    value.runId !== expected.runId ||
+    value.dataCutoff !== expected.dataCutoff ||
+    JSON.stringify([...value.sourceIds].sort()) !==
+      JSON.stringify([...expected.sourceIds].sort()) ||
+    hashCandidate(value) !== hashCandidate(expected)
+  ) {
+    throw new Error(`${label} market brief identity does not match snapshot`);
+  }
+}
+
 export async function exportPages(
   options: ExportPagesOptions = {},
 ): Promise<ExportPagesResult> {
@@ -237,33 +282,88 @@ export async function exportPages(
   await assertRegularFile(snapshotPath, "market snapshot");
   const snapshot: unknown = JSON.parse(await readFile(snapshotPath, "utf8"));
   assertMarketSnapshot(snapshot);
-
-  if (options.build !== false) {
-    await runCommand("npm", ["run", "build"], {
-      cwd: projectRoot,
-      env: {
-        ...process.env,
-        MARKET_SNAPSHOT_PATH: snapshotPath,
-        WRANGLER_LOG_PATH: ".wrangler/wrangler.log",
-      },
-    });
+  const candidateSha256 = hashCandidate(snapshot);
+  if (
+    options.authorizedCandidateSha256 !== undefined &&
+    options.authorizedCandidateSha256 !== candidateSha256
+  ) {
+    throw new Error("snapshot no longer matches its authorized candidate hash");
   }
 
-  const clientDirectory = resolve(projectRoot, "dist/client");
-  const serverPath = resolve(projectRoot, "dist/server/index.js");
   const monthlyIndexPath = resolve(
     projectRoot,
     "data/market/monthly/index.json",
   );
+  await assertRegularFile(monthlyIndexPath, "monthly archive index");
+  const trackedMonthlyIndex: unknown = JSON.parse(
+    await readFile(monthlyIndexPath, "utf8"),
+  );
+  const trackedMonthlyArchives = parseMonthlyArchiveIndex(trackedMonthlyIndex);
+  let exportMonthlyIndex = trackedMonthlyIndex as Record<
+    string,
+    MonthlyArchiveRecord
+  >;
+  if (options.prospectiveArchive !== undefined) {
+    assertMonthlyArchiveRecord(options.prospectiveArchive);
+    if (
+      snapshot.cadence !== "month-end" ||
+      options.prospectiveArchive.runId !== snapshot.runId ||
+      options.prospectiveArchive.dataCutoff !== snapshot.dataCutoff ||
+      trackedMonthlyArchives.some(
+        ({ archive }) => archive.month === options.prospectiveArchive?.month,
+      )
+    ) {
+      throw new Error("prospective monthly archive does not match candidate");
+    }
+    if (options.build === false) {
+      throw new Error("prospective monthly archive requires a fresh build");
+    }
+    exportMonthlyIndex = {
+      ...exportMonthlyIndex,
+      [options.prospectiveArchive.month]: options.prospectiveArchive,
+    };
+  }
+
+  let temporaryMonthlyIndex: string | undefined;
+  if (options.prospectiveArchive !== undefined) {
+    const workDirectory = resolve(projectRoot, "work");
+    await mkdir(workDirectory, { recursive: true });
+    temporaryMonthlyIndex = join(
+      workDirectory,
+      `.monthly-index.${process.pid}.${randomUUID()}.json`,
+    );
+    await writeFile(
+      temporaryMonthlyIndex,
+      `${JSON.stringify(exportMonthlyIndex, null, 2)}\n`,
+      { flag: "wx" },
+    );
+  }
+  try {
+    if (options.build !== false) {
+      await runCommand("npm", ["run", "build"], {
+        cwd: projectRoot,
+        env: {
+          ...process.env,
+          MARKET_SNAPSHOT_PATH: snapshotPath,
+          MARKET_MONTHLY_INDEX_PATH:
+            temporaryMonthlyIndex ?? monthlyIndexPath,
+          WRANGLER_LOG_PATH: ".wrangler/wrangler.log",
+        },
+      });
+    }
+  } finally {
+    if (temporaryMonthlyIndex !== undefined) {
+      await rm(temporaryMonthlyIndex, { force: true });
+    }
+  }
+
+  const clientDirectory = resolve(projectRoot, "dist/client");
+  const serverPath = resolve(projectRoot, "dist/server/index.js");
   await Promise.all([
     assertDirectoryTreeSafe(clientDirectory),
     assertRegularFile(serverPath, "built Vinext server"),
-    assertRegularFile(monthlyIndexPath, "monthly archive index"),
   ]);
-  const monthlyIndex: unknown = JSON.parse(
-    await readFile(monthlyIndexPath, "utf8"),
-  );
-  const monthlyArchives = parseMonthlyArchiveIndex(monthlyIndex);
+  const monthlyArchives = parseMonthlyArchiveIndex(exportMonthlyIndex);
   const archiveMonths = monthlyArchives.map(
     ({ archive }) => archive.month,
   );
@@ -274,6 +374,46 @@ export async function exportPages(
       [...archive.sourceIds].sort(),
     ]),
   );
+  const sourceBundles = buildSourceBundles(snapshot);
+  const expectedBrief = buildMarketBrief(snapshot);
+  const routeIdentities: Record<string, RouteVerificationIdentity> = {
+    ...Object.fromEntries(
+      CURRENT_ROUTES.map((route) => [
+        route,
+        {
+          kind: "current" as const,
+          runId: snapshot.runId,
+          dataCutoff: snapshot.dataCutoff,
+          sourceIds: sourceBundles[route].sources
+            .map((source) => source.id)
+            .sort(),
+        },
+      ]),
+    ),
+    "/archive": {
+      kind: "archive-index",
+      archiveMonths,
+    },
+    ...Object.fromEntries(
+      monthlyArchives.map(({ archive }) => [
+        `/archive/${archive.month}`,
+        {
+          kind: "archive-detail" as const,
+          archiveMonth: archive.month,
+          runId: archive.runId,
+          dataCutoff: archive.dataCutoff,
+          sourceIds: [...archive.sourceIds].sort(),
+        },
+      ]),
+    ),
+    "/market-brief/": {
+      kind: "market-brief",
+      runId: expectedBrief.runId,
+      dataCutoff: expectedBrief.dataCutoff,
+      sourceIds: [...expectedBrief.sourceIds].sort(),
+      payloadSha256: hashCandidate(expectedBrief),
+    },
+  };
   const renderedRoutes = [
     ...CURRENT_ROUTES,
     "/archive",
@@ -294,6 +434,23 @@ export async function exportPages(
       force: false,
       errorOnExist: true,
     });
+    const copiedBriefData: unknown = JSON.parse(
+      await readFile(join(temporary, "market-brief", "data.json"), "utf8"),
+    );
+    const copiedBriefHtml = await readFile(
+      join(temporary, "market-brief", "index.html"),
+      "utf8",
+    );
+    assertMarketBriefIdentity(
+      copiedBriefData,
+      expectedBrief,
+      "copied data.json",
+    );
+    assertMarketBriefIdentity(
+      parseEmbeddedMarketBrief(copiedBriefHtml),
+      expectedBrief,
+      "copied embedded JSON",
+    );
     const workerUrl = pathToFileURL(serverPath);
     workerUrl.searchParams.set("export", randomUUID());
     const worker = (await import(workerUrl.href)) as WorkerModule;
@@ -359,6 +516,8 @@ export async function exportPages(
       archiveMonths,
       sourceIds,
       archiveSourceIds,
+      candidateSha256,
+      routeIdentities,
     };
     await writeFile(
       join(temporary, ".market-deployment.json"),
@@ -379,6 +538,8 @@ export async function exportPages(
     archiveMonths,
     sourceIds,
     archiveSourceIds,
+    candidateSha256,
+    routeIdentities,
   };
 }
 

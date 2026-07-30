@@ -18,7 +18,7 @@ export type FakeDependencies = PublishDependencies & {
   deployments: Array<{ directory: string; branch: string }>;
   promoteCount: number;
   snapshotRestored: boolean;
-  verifications: Array<{ baseUrl: string; routes: string[] }>;
+  verifications: Array<{ baseUrl: string; directory: string }>;
 };
 
 const promotion: PromotionResult = {
@@ -75,8 +75,8 @@ export function fakeDependencies(options: FakeOptions = {}): FakeDependencies {
       if (result instanceof Error) throw result;
       return result;
     },
-    async verify(baseUrl, routes) {
-      verifications.push({ baseUrl, routes: [...routes] });
+    async verify(baseUrl, directory) {
+      verifications.push({ baseUrl, directory });
       actions.push(`verify:${baseUrl}`);
       const result = options.verificationResults?.[verificationIndex++];
       if (result instanceof Error) throw result;

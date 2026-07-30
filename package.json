@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "imports": {
-    "#market-snapshot": "./data/market/current.json"
+    "#market-snapshot": "./data/market/current.json",
+    "#market-monthly-index": "./data/market/monthly/index.json"
   },
   "engines": {
     "node": ">=22.13.0"

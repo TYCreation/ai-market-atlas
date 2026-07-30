@@ -1,4 +1,4 @@
-import archiveIndexJson from "../data/market/monthly/index.json" with { type: "json" };
+import archiveIndexJson from "#market-monthly-index" with { type: "json" };
 import {
   assertMonthlyArchiveRecord,
   isLegacyMonthlyArchiveProvenance,

@@ -52,6 +52,59 @@ test("redeploys last-known-good assets when production verification fails", asyn
   assert.deepEqual(deps.copies, []);
 });
 
+test("verifies rollback with the last-good manifest context instead of candidate routes", async () => {
+  const options = await authorizedOptions();
+  options.routes = [...options.routes, "/archive/2026-08"];
+  const deps = fakeDependencies({
+    verificationResults: [
+      undefined,
+      new Error("candidate production mismatch"),
+      undefined,
+    ],
+  });
+
+  await assert.rejects(() => publishWithRestore(deps, options));
+
+  assert.deepEqual(deps.verifications, [
+    {
+      baseUrl:
+        "https://market-update-2026-08-01-saturday.ai-market-atlas.pages.dev",
+      directory: "work/pages-candidate",
+    },
+    {
+      baseUrl: "https://aimarket.tycreation.online",
+      directory: "work/pages-candidate",
+    },
+    {
+      baseUrl: "https://aimarket.tycreation.online",
+      directory: "work/pages-last-good",
+    },
+  ]);
+});
+
+test("reports a true last-good verification failure without claiming site restoration", async () => {
+  const options = await authorizedOptions();
+  const deps = fakeDependencies({
+    verificationResults: [
+      undefined,
+      new Error("candidate production mismatch"),
+      new Error("last-good manifest mismatch"),
+    ],
+  });
+
+  await assert.rejects(
+    () => publishWithRestore(deps, options),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /snapshot restoration succeeded/i);
+      assert.match(error.message, /site restoration failed/i);
+      assert.match(error.message, /last-good manifest mismatch/i);
+      assert.doesNotMatch(error.message, /site restoration succeeded/i);
+      return true;
+    },
+  );
+});
+
 test("restores snapshot and last-good assets when production deployment fails", async () => {
   const options = await authorizedOptions();
   const deps = fakeDependencies({
@@ -151,6 +204,94 @@ test("rejects an unapproved candidate before the first dependency call", async (
   });
 });
 
+test("rejects every forged persisted review invariant before any dependency call", async (t) => {
+  const forgeries: Array<{
+    name: string;
+    mutate(review: Record<string, unknown>): void;
+  }> = [
+    {
+      name: "invalid reviewedAt timestamp",
+      mutate: (review) => {
+        review.reviewedAt = "tomorrow";
+      },
+    },
+    {
+      name: "unsupported check status",
+      mutate: (review) => {
+        const checks = review.checks as Array<Record<string, unknown>>;
+        checks[0].status = "passed";
+      },
+    },
+    {
+      name: "duplicate check replacing a required check",
+      mutate: (review) => {
+        const checks = review.checks as Array<Record<string, unknown>>;
+        checks[8] = structuredClone(checks[0]);
+      },
+    },
+    {
+      name: "warning issue missing its canonical check binding",
+      mutate: (review) => {
+        review.issues = [
+          {
+            code: "SOURCE_UNREACHABLE",
+            severity: "warn",
+            message: "source temporarily unavailable",
+            sourceIds: ["atlas-model"],
+          },
+        ];
+      },
+    },
+    {
+      name: "wrong reviewed metric count",
+      mutate: (review) => {
+        review.reviewedMetricCount =
+          Number(review.reviewedMetricCount) + 1;
+      },
+    },
+    {
+      name: "forged auto-publish decision",
+      mutate: (review) => {
+        review.decision = "manual_review";
+      },
+    },
+  ];
+
+  for (const forgery of forgeries) {
+    await t.test(forgery.name, async () => {
+      const paths = await makeFixtureWorkspace();
+      const review = JSON.parse(
+        await readFile(paths.reviewPath, "utf8"),
+      ) as Record<string, unknown>;
+      forgery.mutate(review);
+      await writeFile(paths.reviewPath, `${JSON.stringify(review)}\n`);
+      const deps = fakeDependencies();
+
+      await assert.rejects(() =>
+        publishWithRestore(deps, {
+          ...publishOptions,
+          candidatePath: paths.candidatePath,
+          reviewPath: paths.reviewPath,
+        }),
+      );
+      assert.deepEqual(deps.actions, []);
+    });
+  }
+});
+
+test("immediate pre-deploy revalidation rejects a candidate that differs from the exported manifest hash", async () => {
+  const options = await authorizedOptions();
+  const deps = fakeDependencies();
+
+  await assert.rejects(() =>
+    publishWithRestore(deps, {
+      ...options,
+      expectedCandidateSha256: "0".repeat(64),
+    }),
+  );
+  assert.deepEqual(deps.actions, []);
+});
+
 test("aggregates snapshot and site restoration failures without claiming recovery", async () => {
   const options = await authorizedOptions();
   const deps = fakeDependencies({
@@ -206,7 +347,38 @@ const verificationExpectation = {
   archiveMonths: ["2026-07"],
   sourceIds: ["atlas-model"],
   archiveSourceIds: { "2026-07": ["atlas-model"] },
+  routeIdentities: {
+    "/": {
+      kind: "current" as const,
+      runId: "2026-08-01-saturday",
+      dataCutoff: "2026-08-01T01:00:00.000Z",
+      sourceIds: ["atlas-model"],
+    },
+    "/archive/2026-07": {
+      kind: "archive-detail" as const,
+      archiveMonth: "2026-07",
+      runId: "2026-07-25-saturday",
+      dataCutoff: "2026-07-25T01:00:00.000Z",
+      sourceIds: ["atlas-model"],
+    },
+    "/market-brief/": {
+      kind: "market-brief" as const,
+      runId: "2026-08-01-saturday",
+      dataCutoff: "2026-08-01T01:00:00.000Z",
+      sourceIds: ["atlas-model"],
+    },
+  },
 };
+
+function marketBriefHtml(
+  runId = "2026-08-01-saturday",
+  dataCutoff = "2026-08-01T01:00:00.000Z",
+  sourceIds = ["atlas-model"],
+) {
+  return `AI MARKET ATLAS <script id="embedded-market-brief" type="application/json">${JSON.stringify(
+    { runId, dataCutoff, sourceIds },
+  )}</script>`;
+}
 
 test("verification follows redirects and checks route-specific publication markers", async () => {
   const server = createServer((request, response) => {
@@ -220,16 +392,18 @@ test("verification follows redirects and checks route-specific publication marke
     response.setHeader("content-type", "text/html; charset=utf-8");
     if (request.url === "/landing") {
       response.end(
-        "2026-08-01-saturday 資料截止 · 2026-08-01T01:00:00.000Z source-atlas-model",
+        '2026-08-01-saturday 資料截止 · 2026-08-01T01:00:00.000Z <article id="source-atlas-model"></article>',
       );
       return;
     }
     if (request.url === "/archive/2026-07") {
-      response.end("2026-07 月市場封存 source-atlas-model");
+      response.end(
+        '2026-07 月市場封存 2026-07-25-saturday 2026-07-25T01:00:00.000Z <article id="archive-source-atlas-model"></article>',
+      );
       return;
     }
     if (request.url === "/market-brief/") {
-      response.end("AI MARKET ATLAS");
+      response.end(marketBriefHtml());
       return;
     }
     response.statusCode = 404;
@@ -262,7 +436,7 @@ test("verification retries only temporary network failures at most twice", async
       attempts += 1;
       if (attempts < 3) throw new TypeError("temporary connection reset");
       return new Response(
-        "2026-08-01-saturday 資料截止 2026-08-01T01:00:00.000Z source-atlas-model",
+        '2026-08-01-saturday 資料截止 2026-08-01T01:00:00.000Z <article id="source-atlas-model"></article>',
         { status: 200 },
       );
     },
@@ -288,16 +462,75 @@ test("verification does not retry non-network fetcher failures", async () => {
   assert.equal(attempts, 1);
 });
 
+test("verification rejects incomplete exact current/archive sources and a stale market brief immediately", async (t) => {
+  const exactExpectation = {
+    ...verificationExpectation,
+    sourceIds: ["atlas-model", "required-current-source"],
+    archiveSourceIds: {
+      "2026-07": ["atlas-model", "required-archive-source"],
+    },
+    routeIdentities: {
+      ...verificationExpectation.routeIdentities,
+      "/": {
+        ...verificationExpectation.routeIdentities["/"],
+        sourceIds: ["atlas-model", "required-current-source"],
+      },
+      "/archive/2026-07": {
+        ...verificationExpectation.routeIdentities["/archive/2026-07"],
+        sourceIds: ["atlas-model", "required-archive-source"],
+      },
+    },
+  };
+  const cases: Array<[string, string, string]> = [
+    [
+      "incomplete current sources",
+      "2026-08-01-saturday 資料截止 2026-08-01T01:00:00.000Z <article id=\"source-atlas-model\"></article>",
+      "/",
+    ],
+    [
+      "incomplete archive sources",
+      "2026-07 2026-07-26-month-end 2026-07-26T01:00:00.000Z <article id=\"archive-source-atlas-model\"></article>",
+      "/archive/2026-07",
+    ],
+    [
+      "stale market brief",
+      marketBriefHtml(
+        "2026-07-25-saturday",
+        "2026-07-25T01:00:00.000Z",
+      ),
+      "/market-brief/",
+    ],
+  ];
+
+  for (const [name, body, route] of cases) {
+    await t.test(name, async () => {
+      let attempts = 0;
+      await assert.rejects(() =>
+        verifyDeployment(
+          "https://preview.pages.dev",
+          [route],
+          exactExpectation,
+          async () => {
+            attempts += 1;
+            return new Response(body, { status: 200 });
+          },
+        ),
+      );
+      assert.equal(attempts, 1);
+    });
+  }
+});
+
 test("verification fails content mismatches immediately without retrying", async (t) => {
   const cases: Array<[string, string, string]> = [
     [
       "runId",
-      "2026-07-25-saturday 資料截止 2026-08-01T01:00:00.000Z source-atlas-model",
+      '2026-07-25-saturday 資料截止 2026-08-01T01:00:00.000Z <article id="source-atlas-model"></article>',
       "/",
     ],
     [
       "cutoff",
-      "2026-08-01-saturday 資料截止 2026-07-25T01:00:00.000Z source-atlas-model",
+      '2026-08-01-saturday 資料截止 2026-07-25T01:00:00.000Z <article id="source-atlas-model"></article>',
       "/",
     ],
     [
@@ -305,8 +538,21 @@ test("verification fails content mismatches immediately without retrying", async
       "2026-08-01-saturday 資料截止 2026-08-01T01:00:00.000Z",
       "/",
     ],
-    ["archive month", "2026-06 月市場封存 source-atlas-model", "/archive/2026-07"],
-    ["source", "2026-07 月市場封存 source-wrong-source", "/archive/2026-07"],
+    [
+      "archive month",
+      '2026-06 月市場封存 2026-07-25-saturday 2026-07-25T01:00:00.000Z <article id="archive-source-atlas-model"></article>',
+      "/archive/2026-07",
+    ],
+    [
+      "cutoff",
+      '2026-07 月市場封存 2026-07-25-saturday 2026-07-25T02:00:00.000Z <article id="archive-source-atlas-model"></article>',
+      "/archive/2026-07",
+    ],
+    [
+      "source",
+      '2026-07 月市場封存 2026-07-25-saturday 2026-07-25T01:00:00.000Z <article id="archive-source-wrong-source"></article>',
+      "/archive/2026-07",
+    ],
     ["market brief", "WEEKLY BRIEF", "/market-brief/"],
   ];
 

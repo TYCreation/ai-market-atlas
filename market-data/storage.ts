@@ -168,7 +168,10 @@ function monthFor(snapshot: MarketSnapshot): string {
   return match[1];
 }
 
-function monthlyRecord(snapshot: MarketSnapshot, review: AutomatedReview): MonthlyArchiveRecord {
+export function projectMonthlyArchive(
+  snapshot: MarketSnapshot,
+  review: AutomatedReview,
+): MonthlyArchiveRecord {
   const root = snapshot.pages["/"];
   const sources: SourceRecord[] = Object.values(snapshot.sources)
     .sort((left, right) => left.id.localeCompare(right.id))
@@ -254,7 +257,7 @@ export async function promoteCandidate(paths: StoragePaths): Promise<PromotionRe
     if (monthlyArchiveMonth !== undefined) {
       await writeMonthlyIndex(paths.monthlyIndexPath, {
         ...monthlyIndex,
-        [monthlyArchiveMonth]: monthlyRecord(normalized, review),
+        [monthlyArchiveMonth]: projectMonthlyArchive(normalized, review),
       });
     }
   } catch (error) {

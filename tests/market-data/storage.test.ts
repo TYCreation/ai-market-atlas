@@ -145,6 +145,29 @@ test("archives month-end snapshots once and rollback removes only its record", a
   assert.deepEqual(JSON.parse(await readFile(paths.monthlyIndexPath, "utf8")), {});
 });
 
+test("month-end promotion persists exactly the pure prospective archive projection", async () => {
+  const paths = await makeFixtureWorkspace();
+  const candidate = JSON.parse(
+    await readFile(paths.candidatePath, "utf8"),
+  ) as MarketSnapshot;
+  candidate.runId = "2026-08-29-month-end";
+  candidate.cadence = "month-end";
+  await writeFile(paths.candidatePath, `${JSON.stringify(candidate)}\n`);
+  paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
+  await writePublishableReview(paths.candidatePath, paths.reviewPath);
+  const review = JSON.parse(await readFile(paths.reviewPath, "utf8"));
+  const storage = await import("../../market-data/storage.ts");
+
+  assert.equal(typeof storage.projectMonthlyArchive, "function");
+  const projected = storage.projectMonthlyArchive(candidate, review);
+  await promoteCandidate(paths);
+  const index = JSON.parse(
+    await readFile(paths.monthlyIndexPath, "utf8"),
+  ) as Record<string, unknown>;
+
+  assert.deepEqual(index["2026-08"], projected);
+});
+
 test("refuses rollback unless current is the promotion that produced the archive", async () => {
   const paths = await makeFixtureWorkspace();
   const promotion = await promoteCandidate(paths);
