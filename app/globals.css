@@ -14,7 +14,7 @@
   --muted: #8fa7b4;
   --green: #8be0b0;
   --red: #ff9876;
-  --font-sans: var(--font-geist-sans), Arial, sans-serif;
+  --font-sans: var(--font-geist-sans), "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
   --font-mono: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
 }
 
@@ -161,10 +161,63 @@ button {
   width: 7px;
 }
 
+.topbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 15px;
+  justify-self: end;
+}
+
+.language-switch {
+  align-items: center;
+  background: rgba(115, 225, 230, 0.08);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--cyan);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 650;
+  gap: 7px;
+  letter-spacing: 0.08em;
+  padding: 8px 11px 8px 8px;
+  transition: 160ms ease;
+  white-space: nowrap;
+}
+
+.language-switch span {
+  align-items: center;
+  background: var(--cyan);
+  border-radius: 50%;
+  color: var(--ink);
+  display: inline-flex;
+  font-family: var(--font-sans);
+  height: 21px;
+  justify-content: center;
+  width: 21px;
+}
+
+.language-switch:hover,
+.language-switch:focus-visible {
+  background: rgba(115, 225, 230, 0.16);
+  border-color: var(--cyan);
+  color: var(--ivory);
+  outline: none;
+}
+
 @keyframes pulse {
   50% {
     opacity: 0.45;
   }
+}
+
+html[lang="zh-Hant"] h1,
+html[lang="zh-Hant"] h2,
+html[lang="zh-Hant"] .brief-panel h3,
+html[lang="zh-Hant"] .watch-card h3 {
+  font-family: "Songti TC", "Noto Serif TC", "PMingLiU", Georgia, serif;
+  letter-spacing: -0.045em;
 }
 
 .main {
@@ -833,6 +886,10 @@ h2 {
   .brand span:last-child,
   .status {
     display: none;
+  }
+
+  .topbar-actions {
+    justify-self: end;
   }
 
   .main {

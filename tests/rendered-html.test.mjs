@@ -23,10 +23,10 @@ async function render(pathname = "/") {
 }
 
 for (const [pathname, heading] of [
-  ["/", "Markets move. Signals remain."],
-  ["/compute", "Compute is abundant—until it isn’t."],
-  ["/energy", "The AI race has entered the grid."],
-  ["/models", "Models are cheaper. Outcomes are not."],
+  ["/", "市場變動，信號留存。"],
+  ["/compute", "算力看似充足，直到它突然不足。"],
+  ["/energy", "AI 競賽已進入電網。"],
+  ["/models", "模型更便宜，成果並沒有。"],
 ]) {
   test(`server-renders ${pathname}`, async () => {
     const response = await render(pathname);
@@ -36,7 +36,8 @@ for (const [pathname, heading] of [
     const html = await response.text();
     assert.match(html, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     assert.match(html, /AI Market Atlas/i);
-    assert.match(html, /illustrative July 2026 dataset/i);
+    assert.match(html, /中文 \/ EN/);
+    assert.match(html, /2026 年 7 月的示意數據/);
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });
 }
