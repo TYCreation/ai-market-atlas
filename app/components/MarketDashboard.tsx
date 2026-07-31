@@ -104,6 +104,15 @@ function getStoredLocale(): Locale {
   return saved === "en" ? "en" : "zh";
 }
 
+function formatEditionDate(value: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "zh" ? "zh-TW" : "en-US", {
+    day: "2-digit",
+    month: locale === "zh" ? "2-digit" : "short",
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 export function MarketDashboard({
   config,
   chineseConfig,
@@ -157,7 +166,7 @@ export function MarketDashboard({
         <div className="topbar-actions">
           <div className="status" aria-label={ui.statusLabel}>
             <span className="status-dot" aria-hidden="true" />
-            {edition[locale].cadenceLabel} · {edition[locale].dataCutoff.slice(0, 10)}
+            {edition[locale].cadenceLabel} · {formatEditionDate(edition[locale].dataCutoff, locale)}
           </div>
           <button
             className="language-switch"
@@ -178,16 +187,22 @@ export function MarketDashboard({
             <h1>{activeConfig.title}</h1>
             <p className="masthead-summary">{activeConfig.summary}</p>
             <div className="masthead-meta">
-              <span className="signal-badge">{ui.signal} · {activeConfig.signal}</span>
-              <span className="edition">{edition[locale].runId}</span>
-              {activeConfig.slug === "/" ? (
-                <a className="brief-jump" href="#weekly-brief">
-                  {ui.weeklyBriefLink} <span aria-hidden="true">↘</span>
+              <div className="edition-lockup">
+                <span className="signal-badge">{ui.signal} · {activeConfig.signal}</span>
+                <span className="edition">
+                  {formatEditionDate(edition[locale].dataCutoff, locale)}
+                </span>
+              </div>
+              <div className="masthead-links">
+                {activeConfig.slug === "/" ? (
+                  <a className="brief-jump" href="#weekly-brief">
+                    {ui.weeklyBriefLink} <span aria-hidden="true">↘</span>
+                  </a>
+                ) : null}
+                <a className="source-jump" href="#sources">
+                  {ui.sourcesPublished} <span aria-hidden="true">↓</span>
                 </a>
-              ) : null}
-              <a className="source-jump" href="#sources">
-                {ui.sourcesPublished} <span aria-hidden="true">↓</span>
-              </a>
+              </div>
             </div>
             <EditionStatus locale={locale} edition={edition} page={pageEdition} />
           </div>

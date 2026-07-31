@@ -14,6 +14,18 @@ const copy = {
   },
 } as const;
 
+function formatDateTime(value: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "zh" ? "zh-TW" : "en-US", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: locale === "zh" ? "2-digit" : "short",
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 export type LocalizedEditionMeta = Record<Locale, EditionMeta>;
 export type LocalizedPageEdition = Record<
   Locale,
@@ -44,8 +56,8 @@ export function EditionStatus({
   return (
     <div className="edition-status" data-run-id={editionMeta.runId}>
       <span>{editionMeta.cadenceLabel}</span>
-      <span>{ui.cutoff} · {editionMeta.dataCutoff}</span>
-      <span>{ui.verified} · {pageMeta.verifiedAt}</span>
+      <span>{ui.cutoff} · {formatDateTime(editionMeta.dataCutoff, locale)}</span>
+      <span>{ui.verified} · {formatDateTime(pageMeta.verifiedAt, locale)}</span>
       {!pageMeta.changed ? <strong>{pageMeta.changeLabel}</strong> : null}
       <span className="edition-run">{editionMeta.runId}</span>
     </div>
