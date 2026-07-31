@@ -87,6 +87,25 @@ for (const [pathname, heading, metricIds] of [
   });
 }
 
+for (const [pathname, heading] of [
+  ["/en", "Weekly AI market intelligence"],
+  ["/en/stocks", "AI equity market weekly"],
+  ["/en/compute", "AI compute and semiconductor market weekly"],
+  ["/en/energy", "AI data center and energy market weekly"],
+  ["/en/models", "AI model economics and agents weekly"],
+  ["/en/sic", "SiC and AI data center power market weekly"],
+]) {
+  test(`server-renders English route ${pathname}`, async () => {
+    const response = await render(pathname);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    assert.match(html, new RegExp(`<h1[^>]*>${heading}</h1>`));
+    assert.match(html, /hrefLang="zh-Hant"/);
+    assert.match(html, /hrefLang="en"/);
+    assert.match(html, /href="\/en\/archive"/);
+  });
+}
+
 test("server-renders the monthly archive index", async () => {
   const response = await render("/archive");
   assert.equal(response.status, 200);

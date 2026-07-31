@@ -329,7 +329,7 @@ function assertVerificationContent(
   }
   if (identity.kind === "archive-index") {
     const archiveMonths = [
-      ...body.matchAll(/href=["']\/archive\/(\d{4}-(?:0[1-9]|1[0-2]))["']/g),
+      ...body.matchAll(/href=["']\/(?:en\/)?archive\/(\d{4}-(?:0[1-9]|1[0-2]))["']/g),
     ].map((match) => match[1]);
     assertExactValues(
       archiveMonths,

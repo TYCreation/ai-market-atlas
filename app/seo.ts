@@ -42,6 +42,16 @@ export const pageSeo = {
   },
 } as const;
 
+export const pageSeoEn: Record<keyof typeof pageSeo, { title: string; description: string }> = {
+  "/": { title: "Weekly AI Market Intelligence", description: "A bilingual Wednesday and Saturday briefing on AI stocks, compute, data-center energy, model economics, enterprise agents, and SiC power semiconductors." },
+  "/stocks": { title: "AI Stocks Weekly Market Report", description: "Track weekly performance, catalysts, earnings signals, valuation, breadth, and risk across leading AI infrastructure and semiconductor stocks." },
+  "/compute": { title: "AI Compute & Semiconductor Market Report", description: "Weekly intelligence on GPUs, custom accelerators, advanced packaging, HBM, foundry capacity, and AI compute supply." },
+  "/energy": { title: "AI Data Center Energy Market Report", description: "Track data-center electricity demand, grid constraints, interconnection timelines, cooling density, and AI infrastructure power bottlenecks." },
+  "/models": { title: "AI Model Economics & Agents Report", description: "Weekly analysis of model pricing, inference economics, enterprise AI adoption, agent performance, and commercialization signals." },
+  "/sic": { title: "SiC & AI Data Center Power Market Report", description: "Weekly SiC intelligence covering suppliers, capacity, 800V power architecture, adoption, and AI data-center demand." },
+  "/archive": { title: "AI Market Intelligence Archive", description: "Browse permanent monthly AI market reports, theses, and public sources across stocks, compute, energy, models, and power semiconductors." },
+};
+
 export type DashboardPath =
   | "/"
   | "/stocks"
@@ -92,6 +102,13 @@ export function buildMetadata(
   return {
     title: { absolute: absoluteTitle },
     description,
+    alternates: {
+      languages: {
+        "zh-Hant": path,
+        en: path === "/" ? "/en" : `/en${path}`,
+        "x-default": path,
+      },
+    },
     openGraph: {
       title: absoluteTitle,
       description,
@@ -113,5 +130,28 @@ export function buildMetadata(
       description,
       images: [DEFAULT_OG_IMAGE],
     },
+  };
+}
+
+export function buildEnglishMetadata(
+  path: keyof typeof pageSeo,
+  options?: { title?: string; description?: string },
+): Metadata {
+  const seo = pageSeoEn[path];
+  const title = options?.title ?? seo.title;
+  const description = options?.description ?? seo.description;
+  const absoluteTitle = `${title} | ${SITE_NAME}`;
+  return {
+    title: { absolute: absoluteTitle },
+    description,
+    alternates: {
+      languages: {
+        "zh-Hant": path,
+        en: path === "/" ? "/en" : `/en${path}`,
+        "x-default": path,
+      },
+    },
+    openGraph: { title: absoluteTitle, description, type: "website", locale: "en_US", siteName: SITE_NAME, images: [{ url: DEFAULT_OG_IMAGE, width: 1774, height: 887, alt: `${SITE_NAME} ${title}` }] },
+    twitter: { card: "summary_large_image", title: absoluteTitle, description, images: [DEFAULT_OG_IMAGE] },
   };
 }

@@ -79,6 +79,9 @@ const CURRENT_ROUTES = [
   "/models",
   "/sic",
 ] as const;
+const EN_CURRENT_ROUTES = CURRENT_ROUTES.map((route) =>
+  route === "/" ? "/en" : `/en${route}`,
+);
 
 const SITE_ORIGIN = "https://aimarketatlas.net";
 
@@ -93,7 +96,10 @@ function injectCanonical(html: string, route: string): string {
   if (!html.includes("</head>")) {
     throw new Error(`export is missing a head element for ${route}`);
   }
-  return html.replace(
+  const localizedHtml = route === "/en" || route.startsWith("/en/")
+    ? html.replace('<html lang="zh-Hant">', '<html lang="en">')
+    : html;
+  return localizedHtml.replace(
     "</head>",
     `<link rel="canonical" href="${canonicalUrl(route)}"/></head>`,
   );
@@ -504,13 +510,40 @@ export async function exportPages(
         },
       ]),
     ),
+    ...Object.fromEntries(
+      EN_CURRENT_ROUTES.map((route, index) => {
+        const sourceRoute = CURRENT_ROUTES[index];
+        return [route, {
+          kind: "current" as const,
+          runId: snapshot.runId,
+          dataCutoff: snapshot.dataCutoff,
+          sourceIds: sourceBundles[sourceRoute].sources.map((source) => source.id).sort(),
+        }];
+      }),
+    ),
     "/archive": {
+      kind: "archive-index",
+      archiveMonths,
+    },
+    "/en/archive": {
       kind: "archive-index",
       archiveMonths,
     },
     ...Object.fromEntries(
       monthlyArchives.map(({ archive }) => [
         `/archive/${archive.month}`,
+        {
+          kind: "archive-detail" as const,
+          archiveMonth: archive.month,
+          runId: archive.runId,
+          dataCutoff: archive.dataCutoff,
+          sourceIds: [...archive.sourceIds].sort(),
+        },
+      ]),
+    ),
+    ...Object.fromEntries(
+      monthlyArchives.map(({ archive }) => [
+        `/en/archive/${archive.month}`,
         {
           kind: "archive-detail" as const,
           archiveMonth: archive.month,
@@ -530,8 +563,11 @@ export async function exportPages(
   };
   const renderedRoutes = [
     ...CURRENT_ROUTES,
+    ...EN_CURRENT_ROUTES,
     "/archive",
+    "/en/archive",
     ...archiveMonths.map((month) => `/archive/${month}`),
+    ...archiveMonths.map((month) => `/en/archive/${month}`),
   ];
   const routes = [...renderedRoutes, "/market-brief/"];
 

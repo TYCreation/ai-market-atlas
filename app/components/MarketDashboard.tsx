@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import type { DashboardConfig } from "../content";
 import type { SourceBundle } from "../sources";
 import { dashboardHeadings, type DashboardPath } from "../seo";
@@ -91,20 +91,9 @@ const copy = {
 } as const;
 
 const horizons = ["30D", "Q3", "2027"] as const;
-const localeEvent = "ai-atlas-locale-change";
-
-function subscribeLocale(listener: () => void) {
-  window.addEventListener("storage", listener);
-  window.addEventListener(localeEvent, listener);
-  return () => {
-    window.removeEventListener("storage", listener);
-    window.removeEventListener(localeEvent, listener);
-  };
-}
-
-function getStoredLocale(): Locale {
-  const saved = window.localStorage.getItem("ai-atlas-locale");
-  return saved === "en" ? "en" : "zh";
+function localizedPath(path: string, locale: Locale) {
+  if (locale === "zh") return path;
+  return path === "/" ? "/en" : `/en${path}`;
 }
 
 function formatEditionDate(value: string, locale: Locale) {
@@ -122,15 +111,17 @@ export function MarketDashboard({
   sourceBundle,
   edition,
   pageEdition,
+  initialLocale = "zh",
 }: {
   config: DashboardConfig;
   chineseConfig: DashboardConfig;
   sourceBundle: SourceBundle;
   edition: LocalizedEditionMeta;
   pageEdition: LocalizedPageEdition;
+  initialLocale?: Locale;
 }) {
   const [horizon, setHorizon] = useState<(typeof horizons)[number]>("Q3");
-  const locale = useSyncExternalStore(subscribeLocale, getStoredLocale, () => "zh");
+  const locale = initialLocale;
   const activeConfig = locale === "zh" ? chineseConfig : config;
   const ui = copy[locale];
   const searchHeading =
@@ -138,18 +129,21 @@ export function MarketDashboard({
 
   useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-Hant" : "en";
-  }, [locale]);
+    if (locale === "en") return;
+    const saved = window.localStorage.getItem("ai-atlas-locale");
+    const browserLanguage = window.navigator.languages?.[0] ?? window.navigator.language;
+    if (saved === "en" || (!saved && !browserLanguage.toLowerCase().startsWith("zh"))) {
+      window.location.replace(localizedPath(activeConfig.slug, "en"));
+    }
+  }, [activeConfig.slug, locale]);
 
-  function toggleLocale() {
-    const nextLocale: Locale = locale === "zh" ? "en" : "zh";
-    window.localStorage.setItem("ai-atlas-locale", nextLocale);
-    window.dispatchEvent(new Event(localeEvent));
-  }
+  const alternateLocale: Locale = locale === "zh" ? "en" : "zh";
+  const alternateHref = localizedPath(activeConfig.slug, alternateLocale);
 
   return (
     <div className="site-shell">
       <header className="topbar">
-        <Link className="brand" href="/" aria-label={ui.homeLabel}>
+        <Link className="brand" href={localizedPath("/", locale)} aria-label={ui.homeLabel}>
           <span className="brand-mark" aria-hidden="true" />
           <strong>AI / ATLAS</strong>
           <span>{ui.brandTag}</span>
@@ -159,7 +153,7 @@ export function MarketDashboard({
           {ui.nav.map((item) => (
             <Link
               className={`nav-link ${activeConfig.slug === item.href ? "active" : ""}`}
-              href={item.href}
+              href={localizedPath(item.href, locale)}
               key={item.href}
               aria-current={activeConfig.slug === item.href ? "page" : undefined}
             >
@@ -173,15 +167,15 @@ export function MarketDashboard({
             <span className="status-dot" aria-hidden="true" />
             {edition[locale].cadenceLabel} · {formatEditionDate(edition[locale].dataCutoff, locale)}
           </div>
-          <button
+          <Link
             className="language-switch"
-            type="button"
-            onClick={toggleLocale}
+            href={alternateHref}
+            onClick={() => window.localStorage.setItem("ai-atlas-locale", alternateLocale)}
             aria-label={ui.languageLabel}
           >
             <span aria-hidden="true">文</span>
             {ui.languageButton}
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -444,7 +438,7 @@ export function MarketDashboard({
           <p>
             <strong>{ui.methodLabel}</strong> {ui.method}
           </p>
-          <Link className="footer-archive" href="/archive">{ui.archiveLink} ↗</Link>
+          <Link className="footer-archive" href={localizedPath("/archive", locale)}>{ui.archiveLink} ↗</Link>
           <a className="footer-archive" href="#sources">{ui.methodologyLink} ↑</a>
           <span className="footer-edition">AI Market Atlas · {edition[locale].runId}</span>
         </footer>
