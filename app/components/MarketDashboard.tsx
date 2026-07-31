@@ -33,6 +33,7 @@ const copy = {
     languageButton: "中文 / EN",
     languageLabel: "切換為英文",
     signal: "市場信號",
+    weeklyBriefLink: "本週 30 秒快報",
     sourcesPublished: "資料來源已公開",
     headlineMetrics: "核心指標",
     sectionOneKicker: "01 · 高層摘要",
@@ -66,6 +67,7 @@ const copy = {
     languageButton: "中文",
     languageLabel: "切換為繁體中文",
     signal: "Signal",
+    weeklyBriefLink: "30-second weekly brief",
     sourcesPublished: "Sources published",
     headlineMetrics: "Headline metrics",
     sectionOneKicker: "01 · Executive synthesis",
@@ -178,6 +180,11 @@ export function MarketDashboard({
             <div className="masthead-meta">
               <span className="signal-badge">{ui.signal} · {activeConfig.signal}</span>
               <span className="edition">{edition[locale].runId}</span>
+              {activeConfig.slug === "/" ? (
+                <a className="brief-jump" href="#weekly-brief">
+                  {ui.weeklyBriefLink} <span aria-hidden="true">↘</span>
+                </a>
+              ) : null}
               <a className="source-jump" href="#sources">
                 {ui.sourcesPublished} <span aria-hidden="true">↓</span>
               </a>

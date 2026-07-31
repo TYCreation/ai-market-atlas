@@ -31,7 +31,7 @@ export function WeeklyMarketBrief({ locale }: { locale: Locale }) {
   const src = `/market-brief/index.html?lang=${locale}&embed=1&playback=${playback}`;
 
   return (
-    <section className="section market-film-section">
+    <section className="section market-film-section" id="weekly-brief">
       <div className="section-head market-film-head">
         <div>
           <p className="section-kicker">{ui.kicker}</p>
