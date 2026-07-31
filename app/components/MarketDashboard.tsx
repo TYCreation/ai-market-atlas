@@ -137,6 +137,43 @@ export function MarketDashboard({
     }
   }, [activeConfig.slug, locale]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const revealTargets = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        ".masthead-copy, .signal-orbit, .metric, .section-head, .panel, .signal-card, .table-panel, .watch-card, .source-card",
+      ),
+    );
+
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      revealTargets.forEach((target) => target.classList.add("is-visible"));
+      return;
+    }
+
+    root.classList.add("reveal-ready");
+    revealTargets.forEach((target, index) => {
+      target.style.setProperty("--reveal-delay", `${Math.min(index % 4, 3) * 55}ms`);
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          (entry.target as HTMLElement).classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
+    );
+
+    revealTargets.forEach((target) => observer.observe(target));
+    return () => {
+      observer.disconnect();
+      root.classList.remove("reveal-ready");
+    };
+  }, [activeConfig.slug]);
+
   const alternateLocale: Locale = locale === "zh" ? "en" : "zh";
   const alternateHref = localizedPath(activeConfig.slug, alternateLocale);
 
