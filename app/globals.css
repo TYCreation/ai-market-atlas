@@ -290,6 +290,27 @@ h1 {
   max-width: 980px;
 }
 
+.search-heading {
+  color: var(--cyan-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.editorial-headline {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(58px, 7vw, 112px);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 0.88;
+  margin: 0;
+  max-width: 980px;
+}
+
 .masthead-summary {
   color: #b8c8ce;
   font-size: 17px;
@@ -1871,7 +1892,7 @@ h2 {
   border-top: 1px solid var(--line);
   display: grid;
   gap: 40px;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   margin-top: 88px;
   padding: 27px 0 10px;
 }
@@ -2277,6 +2298,11 @@ h2 {
     line-height: 0.94;
   }
 
+  .editorial-headline {
+    font-size: clamp(48px, 12vw, 76px);
+    line-height: 0.94;
+  }
+
   .masthead-summary {
     margin: 23px 0 24px;
   }
@@ -2391,6 +2417,10 @@ h2 {
 
 @media (max-width: 520px) {
   h1 {
+    font-size: clamp(44px, 13.5vw, 58px);
+  }
+
+  .editorial-headline {
     font-size: clamp(44px, 13.5vw, 58px);
   }
 

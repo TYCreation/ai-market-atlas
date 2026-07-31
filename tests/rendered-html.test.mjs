@@ -138,3 +138,31 @@ test("rendered publication exposes route, source, brief, and archive markers", a
   assert.match(archiveDetail, /source-nvidia-q1-fy27/);
   assert.match(archiveDetail, /完整公開來源/);
 });
+
+test("every indexable report exposes distinct search metadata and structured data", async () => {
+  const expected = new Map([
+    ["/", ["AI 市場情報週報", "每週 AI 市場情報與產業趨勢"]],
+    ["/stocks", ["AI 股票市場週報", "AI 股票市場週報"]],
+    ["/compute", ["AI 算力與半導體市場週報", "AI 算力與半導體市場週報"]],
+    ["/energy", ["AI 資料中心能源市場週報", "AI 資料中心與能源市場週報"]],
+    ["/models", ["AI 模型經濟與代理市場週報", "AI 模型經濟與代理市場週報"]],
+    ["/sic", ["SiC 與 AI 資料中心功率市場週報", "SiC 與 AI 資料中心功率市場週報"]],
+    ["/archive", ["AI 市場情報月度封存", "AI 市場情報：月度市場封存"]],
+    ["/archive/2026-07", ["2026 年 7 月 AI 市場報告", "2026 年 7 月市場封存"]],
+  ]);
+  const titles = new Set();
+
+  for (const [pathname, [title, heading]] of expected) {
+    const response = await render(pathname);
+    assert.equal(response.status, 200, pathname);
+    const html = await response.text();
+    assert.match(html, new RegExp(`<title>${title}｜AI Market Atlas</title>`));
+    assert.match(html, /<meta name="description" content="[^"]+"/);
+    assert.match(html, new RegExp(`<h1[^>]*>${heading}</h1>`));
+    assert.match(html, /application\/ld\+json/);
+    assert.match(html, /https:\/\/schema\.org/);
+    titles.add(title);
+  }
+
+  assert.equal(titles.size, expected.size);
+});

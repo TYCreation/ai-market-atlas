@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { DashboardConfig } from "../content";
 import type { SourceBundle } from "../sources";
+import { dashboardHeadings, type DashboardPath } from "../seo";
 import { EquityMarketDeepDive } from "./EquityMarketDeepDive";
 import {
   EditionStatus,
@@ -48,6 +49,7 @@ const copy = {
     sectionFourTitle: "會議室裡的三個問題",
     methodLabel: "方法說明。",
     archiveLink: "月度封存",
+    methodologyLink: "資料與審查方法",
     method:
       "本頁使用已驗證並發布的市場快照。模型數字用於方向性比較，並非經稽核財務資料或投資建議。",
   },
@@ -82,6 +84,7 @@ const copy = {
     sectionFourTitle: "Three questions for the room",
     methodLabel: "Method note.",
     archiveLink: "Monthly archive",
+    methodologyLink: "Sources & review method",
     method:
       "This page uses a validated, promoted market snapshot. Modeled figures are for directional comparison, not audited financial data or investment advice.",
   },
@@ -130,6 +133,8 @@ export function MarketDashboard({
   const locale = useSyncExternalStore(subscribeLocale, getStoredLocale, () => "zh");
   const activeConfig = locale === "zh" ? chineseConfig : config;
   const ui = copy[locale];
+  const searchHeading =
+    dashboardHeadings[activeConfig.slug as DashboardPath][locale];
 
   useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-Hant" : "en";
@@ -184,7 +189,8 @@ export function MarketDashboard({
         <section className="masthead">
           <div className="masthead-copy">
             <p className="eyebrow">{activeConfig.eyebrow}</p>
-            <h1>{activeConfig.title}</h1>
+            <h1 className="search-heading">{searchHeading}</h1>
+            <p className="editorial-headline">{activeConfig.title}</p>
             <p className="masthead-summary">{activeConfig.summary}</p>
             <div className="masthead-meta">
               <div className="edition-lockup">
@@ -439,6 +445,7 @@ export function MarketDashboard({
             <strong>{ui.methodLabel}</strong> {ui.method}
           </p>
           <Link className="footer-archive" href="/archive">{ui.archiveLink} ↗</Link>
+          <a className="footer-archive" href="#sources">{ui.methodologyLink} ↑</a>
           <span className="footer-edition">AI Market Atlas · {edition[locale].runId}</span>
         </footer>
       </main>

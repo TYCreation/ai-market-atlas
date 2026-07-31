@@ -9,6 +9,7 @@ const copy = {
     reviewed: "最後查閱",
     primary: "原始來源優先",
     model: "模型數字明確標示",
+    review: "自動審查後發布",
     open: "開啟原始資料",
     kinds: {
       atlas: "ATLAS 模型",
@@ -21,6 +22,8 @@ const copy = {
     metricSources: "來源",
     method:
       "頁面上的市場溫度、綜合指數、追蹤籃子與部分預測為編輯模型；它們用來比較方向，不是即時行情、官方統計或投資建議。",
+    reviewMethod:
+      "每週三與週六的候選資料都會接受自動化審查，檢查來源可用性、數值範圍、雙語完整性與內容追溯。只有審查結果為可自動發布，且內容雜湊與候選資料一致時，才會進入正式網站；來源衝突或異常變動會轉交人工確認。",
   },
   en: {
     kicker: "09 · Sources & methodology",
@@ -30,6 +33,7 @@ const copy = {
     reviewed: "Last reviewed",
     primary: "Primary sources first",
     model: "Modeled figures labeled",
+    review: "Published after automated review",
     open: "Open original source",
     kinds: {
       atlas: "ATLAS model",
@@ -42,6 +46,8 @@ const copy = {
     metricSources: "Sources",
     method:
       "Market heat, composite indices, tracking baskets, and selected forecasts are editorial models for directional comparison—not live prices, official statistics, or investment advice.",
+    reviewMethod:
+      "Every Wednesday and Saturday candidate passes automated checks for source availability, value ranges, bilingual completeness, and traceability. Publication proceeds only after an auto-publish decision bound to the exact candidate; source conflicts and anomalous changes are escalated for human review.",
   },
 } as const;
 
@@ -155,6 +161,7 @@ export function SourcePanel({
         <div>
           <span>✓ {ui.primary}</span>
           <span>✓ {ui.model}</span>
+          <span>✓ {ui.review}</span>
         </div>
       </div>
 
@@ -172,6 +179,10 @@ export function SourcePanel({
       <p className="source-method">
         <strong>{locale === "zh" ? "模型說明。" : "Model note."}</strong>{" "}
         {ui.method}
+      </p>
+      <p className="source-method">
+        <strong>{locale === "zh" ? "發布審查。" : "Publication review."}</strong>{" "}
+        {ui.reviewMethod}
       </p>
     </section>
   );
