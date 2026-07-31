@@ -109,6 +109,29 @@ function sitemapXml(routes: string[], lastModified: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
 }
 
+function redirectWorker(): string {
+  return `const PRIMARY_ORIGIN = "${SITE_ORIGIN}";
+const REDIRECT_HOSTS = new Set([
+  "aimarket.tycreation.online",
+  "www.aimarketatlas.net",
+  "ai-market-atlas.pages.dev",
+]);
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (REDIRECT_HOSTS.has(url.hostname)) {
+      return Response.redirect(
+        PRIMARY_ORIGIN + url.pathname + url.search,
+        301,
+      );
+    }
+    return env.ASSETS.fetch(request);
+  },
+};
+`;
+}
+
 function isMissing(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -620,6 +643,9 @@ export async function exportPages(
         ].join("\n"),
         { flag: "wx" },
       ),
+      writeFile(join(temporary, "_worker.js"), redirectWorker(), {
+        flag: "wx",
+      }),
     ]);
     for (const htmlPath of await listHtmlFiles(temporary)) {
       if (/localhost|127\.0\.0\.1/i.test(await readFile(htmlPath, "utf8"))) {

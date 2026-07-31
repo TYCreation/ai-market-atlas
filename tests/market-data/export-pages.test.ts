@@ -97,6 +97,7 @@ test("exports every current/archive route and public asset without localhost met
       "robots.txt",
       "sitemap.xml",
       "_redirects",
+      "_worker.js",
       ".market-deployment.json",
       "favicon.svg",
       "og.png",
