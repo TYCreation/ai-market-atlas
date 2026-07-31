@@ -472,7 +472,7 @@ function assertProductionUrl(value: string): void {
   }
   if (
     url.protocol !== "https:" ||
-    url.hostname !== "aimarket.tycreation.online" ||
+    url.hostname !== "aimarketatlas.net" ||
     url.username ||
     url.password ||
     url.port ||

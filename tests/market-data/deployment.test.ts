@@ -80,11 +80,11 @@ test("verifies rollback with the last-good manifest context instead of candidate
       directory: "work/pages-candidate",
     },
     {
-      baseUrl: "https://aimarket.tycreation.online",
+      baseUrl: "https://aimarketatlas.net",
       directory: "work/pages-candidate",
     },
     {
-      baseUrl: "https://aimarket.tycreation.online",
+      baseUrl: "https://aimarketatlas.net",
       directory: "work/pages-last-good",
     },
   ]);
@@ -119,7 +119,7 @@ test("restores snapshot and last-good assets when production deployment fails", 
     deployResults: [
       "https://preview.pages.dev",
       new Error("Cloudflare upload failed"),
-      "https://aimarket.tycreation.online",
+      "https://aimarketatlas.net",
     ],
     verificationResults: [undefined, undefined],
   });
@@ -467,7 +467,7 @@ test("aggregates snapshot and site restoration failures without claiming recover
   const deps = fakeDependencies({
     deployResults: [
       "https://preview.pages.dev",
-      "https://aimarket.tycreation.online",
+      "https://aimarketatlas.net",
       new Error("last-good deploy failed"),
     ],
     restoreSnapshotError: new Error("archive restore failed"),
@@ -505,7 +505,7 @@ test("copies verified production assets to last-good only after success", async 
     "verify:https://market-update-2026-08-01-saturday.ai-market-atlas.pages.dev",
     "promote",
     "deploy:main:work/pages-candidate",
-    "verify:https://aimarket.tycreation.online",
+    "verify:https://aimarketatlas.net",
     "copy:work/pages-candidate:work/pages-last-good",
   ]);
   assert.equal(deps.snapshotRestored, false);

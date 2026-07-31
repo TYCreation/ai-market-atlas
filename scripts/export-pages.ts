@@ -80,6 +80,35 @@ const CURRENT_ROUTES = [
   "/sic",
 ] as const;
 
+const SITE_ORIGIN = "https://aimarketatlas.net";
+
+function canonicalUrl(route: string): string {
+  return new URL(route, SITE_ORIGIN).href;
+}
+
+function injectCanonical(html: string, route: string): string {
+  if (/<link\b[^>]*\brel=["']canonical["']/i.test(html)) {
+    throw new Error(`export already contains canonical metadata for ${route}`);
+  }
+  if (!html.includes("</head>")) {
+    throw new Error(`export is missing a head element for ${route}`);
+  }
+  return html.replace(
+    "</head>",
+    `<link rel="canonical" href="${canonicalUrl(route)}"/></head>`,
+  );
+}
+
+function sitemapXml(routes: string[], lastModified: string): string {
+  const entries = routes
+    .map(
+      (route) =>
+        `  <url><loc>${canonicalUrl(route)}</loc><lastmod>${lastModified}</lastmod></url>`,
+    )
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
+}
+
 function isMissing(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -501,10 +530,8 @@ export async function exportPages(
     const copiedBriefData: unknown = JSON.parse(
       await readFile(join(temporary, "market-brief", "data.json"), "utf8"),
     );
-    const copiedBriefHtml = await readFile(
-      join(temporary, "market-brief", "index.html"),
-      "utf8",
-    );
+    const copiedBriefHtmlPath = join(temporary, "market-brief", "index.html");
+    const copiedBriefHtml = await readFile(copiedBriefHtmlPath, "utf8");
     assertMarketBriefIdentity(
       copiedBriefData,
       canonicalBrief,
@@ -514,6 +541,10 @@ export async function exportPages(
       parseEmbeddedMarketBrief(copiedBriefHtml),
       canonicalBrief,
       "copied embedded JSON",
+    );
+    await writeFile(
+      copiedBriefHtmlPath,
+      injectCanonical(copiedBriefHtml, "/market-brief/"),
     );
     const workerUrl = pathToFileURL(serverPath);
     workerUrl.searchParams.set("export", randomUUID());
@@ -544,10 +575,10 @@ export async function exportPages(
     };
     for (const route of renderedRoutes) {
       const response = await worker.default.fetch(
-        new Request(`https://aimarket.tycreation.online${route}`, {
+        new Request(`${SITE_ORIGIN}${route}`, {
           headers: {
             accept: "text/html",
-            "x-forwarded-host": "aimarket.tycreation.online",
+            "x-forwarded-host": "aimarketatlas.net",
             "x-forwarded-proto": "https",
           },
         }),
@@ -560,7 +591,7 @@ export async function exportPages(
       if (response.status !== 200) {
         throw new Error(`Vinext export returned HTTP ${response.status} for ${route}`);
       }
-      const html = await response.text();
+      const html = injectCanonical(await response.text(), route);
       if (/localhost|127\.0\.0\.1/i.test(html)) {
         throw new Error(`Vinext export contains localhost metadata for ${route}`);
       }
@@ -568,6 +599,28 @@ export async function exportPages(
       await mkdir(dirname(destination), { recursive: true });
       await writeFile(destination, html, { flag: "wx" });
     }
+    await Promise.all([
+      writeFile(
+        join(temporary, "robots.txt"),
+        `User-agent: *\nAllow: /\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`,
+        { flag: "wx" },
+      ),
+      writeFile(
+        join(temporary, "sitemap.xml"),
+        sitemapXml(routes, snapshot.dataCutoff),
+        { flag: "wx" },
+      ),
+      writeFile(
+        join(temporary, "_redirects"),
+        [
+          `https://aimarket.tycreation.online/* ${SITE_ORIGIN}/:splat 301`,
+          `https://www.aimarketatlas.net/* ${SITE_ORIGIN}/:splat 301`,
+          `https://ai-market-atlas.pages.dev/* ${SITE_ORIGIN}/:splat 301`,
+          "",
+        ].join("\n"),
+        { flag: "wx" },
+      ),
+    ]);
     for (const htmlPath of await listHtmlFiles(temporary)) {
       if (/localhost|127\.0\.0\.1/i.test(await readFile(htmlPath, "utf8"))) {
         throw new Error(`export contains localhost metadata: ${htmlPath}`);

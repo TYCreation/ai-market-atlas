@@ -94,6 +94,9 @@ test("exports every current/archive route and public asset without localhost met
       "archive/2026-07/index.html",
       "market-brief/index.html",
       "market-brief/data.json",
+      "robots.txt",
+      "sitemap.xml",
+      "_redirects",
       ".market-deployment.json",
       "favicon.svg",
       "og.png",
@@ -112,7 +115,15 @@ test("exports every current/archive route and public asset without localhost met
     const html = (
       await Promise.all(routeFiles.map((path) => readFile(path, "utf8")))
     ).join("\n");
-    assert.match(html, /https:\/\/aimarket\.tycreation\.online/);
+    assert.match(html, /https:\/\/aimarketatlas\.net/);
+    assert.match(
+      await readFile(join(outputDirectory, "sitemap.xml"), "utf8"),
+      /https:\/\/aimarketatlas\.net\/stocks/,
+    );
+    assert.match(
+      await readFile(join(outputDirectory, "robots.txt"), "utf8"),
+      /Sitemap: https:\/\/aimarketatlas\.net\/sitemap\.xml/,
+    );
     assert.doesNotMatch(html, /localhost|127\.0\.0\.1/i);
     assert.deepEqual(
       JSON.parse(

@@ -37,7 +37,7 @@ import {
 } from "./export-pages.ts";
 
 const PROJECT_NAME = "ai-market-atlas";
-const PRODUCTION_BASE_URL = "https://aimarket.tycreation.online";
+const PRODUCTION_BASE_URL = "https://aimarketatlas.net";
 
 export type CommandRunner = (
   command: string,

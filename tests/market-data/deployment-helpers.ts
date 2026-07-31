@@ -36,7 +36,7 @@ export const publishOptions: PublishOptions = {
   reviewPath: "data/market/reviews/2026-08-01-saturday.json",
   candidateDirectory: "work/pages-candidate",
   lastGoodDirectory: "work/pages-last-good",
-  productionBaseUrl: "https://aimarket.tycreation.online",
+  productionBaseUrl: "https://aimarketatlas.net",
   routes: [
     "/",
     "/stocks",
