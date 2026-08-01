@@ -11,7 +11,7 @@
 <style>
 :root{
   --bg:#07121D; --bg-2:#050D16; --panel:#0C1B29; --panel-2:#0E2033; --line:#1B2F42; --line-soft:#132434;
-  --cyan:#73E1E6; --cyan-dim:rgba(115,225,230,.14); --orange:#FF8A5C; --ivory:#F4EFE4;
+  --cyan:#73E1E6; --orange:#FF8A5C; --ivory:#F4EFE4;
   --ink-dim:#8FA3B5; --ink-faint:#5C7185; --mono:'Geist Mono',ui-monospace,monospace;
   --sans:'Geist',system-ui,sans-serif;
   --ease:cubic-bezier(.22,1,.36,1);
@@ -25,49 +25,62 @@ a{color:inherit}
 button{cursor:pointer}
 
 /* film grain */
-body::after{content:"";position:fixed;inset:-100%;z-index:100;pointer-events:none;opacity:.05;
+body::after{content:"";position:fixed;inset:-100%;z-index:100;pointer-events:none;opacity:.045;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 9s steps(6) infinite}
 @keyframes grain{0%,100%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-5%)}60%{transform:translate(-5%,-2%)}80%{transform:translate(4%,4%)}}
 @media (prefers-reduced-motion:reduce){body::after{animation:none}}
 
+/* mouse-follow ambient */
+#glow{position:fixed;width:640px;height:640px;border-radius:50%;pointer-events:none;z-index:0;
+  background:radial-gradient(circle,rgba(115,225,230,.055),transparent 60%);transform:translate(-50%,-50%);
+  transition:opacity .6s;left:-999px}
+@media (prefers-reduced-motion:reduce){#glow{display:none}}
+
 /* reveal on scroll */
-.rv{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.rv{opacity:0;transform:translateY(30px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}
 
 /* ------- top bar ------- */
 header{position:fixed;inset:0 0 auto 0;z-index:50;display:flex;align-items:center;
-  justify-content:space-between;padding:18px clamp(20px,4vw,56px);
-  background:linear-gradient(rgba(7,18,29,.92),rgba(7,18,29,0));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  justify-content:space-between;padding:16px clamp(20px,4vw,56px);
+  background:linear-gradient(rgba(7,18,29,.92),rgba(7,18,29,0));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand .glyph{width:26px;height:26px;flex:0 0 26px;border:1.5px solid var(--cyan);border-radius:6px;position:relative;overflow:hidden}
 .brand .glyph::before{content:"";position:absolute;inset:5px;background:linear-gradient(135deg,var(--cyan),transparent 70%);border-radius:2px}
 .brand b{font-weight:700;font-size:15px;letter-spacing:.02em}
 .brand mark{background:none;color:var(--ink-faint);font-family:var(--mono);font-size:10px;letter-spacing:.22em}
+nav.chapters{display:flex;gap:4px;border:1px solid var(--line);border-radius:999px;background:rgba(12,27,41,.65);padding:4px}
+nav.chapters a{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;
+  color:var(--ink-dim);padding:6px 14px;border-radius:999px;transition:.3s var(--ease)}
+nav.chapters a:hover{color:var(--ivory)}
+nav.chapters a.active{background:var(--cyan);color:var(--bg);font-weight:600}
 .lang-toggle{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(12,27,41,.8)}
 .lang-toggle button{appearance:none;border:0;background:transparent;color:var(--ink-dim);
   font-family:var(--mono);font-size:11px;letter-spacing:.12em;padding:8px 16px;transition:.25s}
 .lang-toggle button[aria-pressed="true"]{background:var(--cyan);color:var(--bg);font-weight:600}
 .lang-toggle button:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+@media (max-width:900px){nav.chapters{display:none}}
 
 /* ------- hero ------- */
 .hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;
-  padding:130px clamp(20px,6vw,72px) 72px;position:relative;overflow:hidden}
+  padding:130px clamp(20px,6vw,72px) 72px;position:relative;overflow:clip}
 .hero::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:
-    linear-gradient(rgba(27,47,66,.35) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(27,47,66,.35) 1px,transparent 1px);
+    linear-gradient(rgba(27,47,66,.3) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(27,47,66,.3) 1px,transparent 1px);
   background-size:72px 72px;
   mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,black 30%,transparent 75%);
   -webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,black 30%,transparent 75%)}
+#atlas-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.85}
 .hero-glow{position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(1000px 480px at 78% 12%,rgba(115,225,230,.10),transparent 62%),
              radial-gradient(760px 420px at 8% 92%,rgba(255,138,92,.08),transparent 60%);
   animation:breathe 9s ease-in-out infinite alternate}
 @keyframes breathe{from{opacity:.7}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.hero-glow{animation:none}}
-.hero > *{position:relative}
+.hero > *:not(.hero-glow):not(#atlas-canvas){position:relative}
 .kicker{font-family:var(--mono);font-size:12px;color:var(--cyan);letter-spacing:.24em;text-transform:uppercase;margin-bottom:30px;display:flex;align-items:center;gap:16px}
 .kicker::after{content:"";flex:0 0 80px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent)}
 .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:pulse 2.4s infinite}
@@ -81,6 +94,7 @@ h1 .word > span{display:inline-block;transform:translateY(110%);animation:rise 1
 h1 .word:nth-child(1)>span{animation-delay:.05s}h1 .word:nth-child(2)>span{animation-delay:.12s}
 h1 .word:nth-child(3)>span{animation-delay:.19s}h1 .word:nth-child(4)>span{animation-delay:.26s}
 h1 .word:nth-child(5)>span{animation-delay:.33s}h1 .word:nth-child(6)>span{animation-delay:.40s}
+h1 .word:nth-child(7)>span{animation-delay:.47s}
 @keyframes rise{to{transform:none}}
 @media (prefers-reduced-motion:reduce){h1 .word>span{animation:none;transform:none}}
 .sub{margin-top:30px;max-width:56ch;color:var(--ink-dim);font-size:clamp(15px,1.4vw,18px);font-weight:300}
@@ -91,7 +105,7 @@ h1 .word:nth-child(5)>span{animation-delay:.33s}h1 .word:nth-child(6)>span{anima
 .hero-cta{margin-top:50px;display:flex;gap:16px;flex-wrap:wrap}
 .btn{appearance:none;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:.02em;
   padding:15px 28px;border-radius:8px;display:inline-flex;align-items:center;gap:10px;transition:.3s var(--ease)}
-.btn.primary{background:var(--cyan);color:var(--bg);box-shadow:0 0 0 0 rgba(115,225,230,.3)}
+.btn.primary{background:var(--cyan);color:var(--bg)}
 .btn.primary:hover{background:var(--ivory);transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(115,225,230,.35)}
 .btn.ghost{border:1px solid var(--line);color:var(--ivory)}
 .btn.ghost:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-2px)}
@@ -117,7 +131,10 @@ h1 .word:nth-child(5)>span{animation-delay:.33s}h1 .word:nth-child(6)>span{anima
 .ticker-sep{color:var(--line);font-size:9px;align-self:center}
 
 /* ------- sections ------- */
-section{padding:clamp(72px,9vw,140px) clamp(20px,6vw,72px);max-width:1440px;margin:0 auto}
+section{padding:clamp(72px,9vw,140px) clamp(20px,6vw,72px);max-width:1440px;margin:0 auto;position:relative}
+.ghost-no{position:absolute;top:clamp(30px,4vw,60px);right:clamp(8px,3vw,40px);font-family:var(--mono);
+  font-size:clamp(90px,14vw,190px);font-weight:600;line-height:1;color:transparent;
+  -webkit-text-stroke:1px rgba(115,225,230,.14);pointer-events:none;user-select:none;letter-spacing:-.04em}
 .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
   padding-bottom:22px;margin-bottom:clamp(36px,4vw,60px);position:relative}
 .section-head::after{content:"";position:absolute;left:0;bottom:0;height:1px;width:100%;
@@ -127,21 +144,31 @@ h2{font-size:clamp(26px,3.2vw,44px);font-weight:700;letter-spacing:-.02em}
 
 /* ------- signals ------- */
 .signals{display:flex;flex-direction:column}
-.signal{display:grid;grid-template-columns:64px 1fr minmax(150px,200px) auto;gap:clamp(16px,3vw,40px);
-  align-items:baseline;padding:30px 12px;border-bottom:1px solid var(--line-soft);transition:.3s var(--ease);position:relative}
+.signal{display:grid;grid-template-columns:56px 1fr 150px minmax(140px,190px) 210px;gap:clamp(14px,2.6vw,36px);
+  align-items:center;padding:30px 12px;border-bottom:1px solid var(--line-soft);transition:.3s var(--ease);position:relative}
 .signal::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);
   transform:scaleY(0);transition:transform .35s var(--ease);transform-origin:top}
 .signal:hover{background:linear-gradient(90deg,rgba(115,225,230,.045),transparent 65%)}
 .signal:hover::before{transform:scaleY(1)}
-.signal .idx{font-family:var(--mono);color:var(--ink-faint);font-size:12px}
-.signal .label{font-size:clamp(16px,2vw,22px);font-weight:500;letter-spacing:-.01em}
-.signal .value{font-family:var(--mono);font-size:clamp(24px,3.2vw,38px);font-weight:600;text-align:right;
-  color:transparent;background:linear-gradient(120deg,var(--cyan),#A8EFF2);-webkit-background-clip:text;background-clip:text;letter-spacing:-.02em}
-.signal .src{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.14em;text-align:right;max-width:220px}
+.signal .idx{font-family:var(--mono);color:var(--ink-faint);font-size:12px;align-self:start;padding-top:8px}
+.signal .label{font-size:clamp(15px,1.9vw,21px);font-weight:500;letter-spacing:-.01em}
+.signal .value{font-family:var(--mono);font-size:clamp(22px,3vw,36px);font-weight:600;text-align:right;
+  color:transparent;background:linear-gradient(120deg,var(--cyan),#A8EFF2);-webkit-background-clip:text;background-clip:text;letter-spacing:-.02em;
+  display:flex;align-items:baseline;justify-content:flex-end;gap:10px}
+.signal .dir{font-size:13px;color:var(--cyan);transform:translateY(-2px)}
+.signal .dir.down{color:var(--orange)}
+.signal .dir.flat{color:var(--ink-faint)}
+.signal .src{font-family:var(--mono);font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.14em;text-align:right;line-height:1.7}
 .badge{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
   border:1px solid var(--line);border-radius:999px;padding:3px 11px;margin-top:8px;color:var(--ink-dim);transition:.3s}
 .badge.verified{border-color:rgba(115,225,230,.5);color:var(--cyan);background:rgba(115,225,230,.06)}
 .badge.estimated,.badge.modeled{border-color:rgba(255,138,92,.5);color:var(--orange);background:rgba(255,138,92,.06)}
+.spark{width:100%;height:44px;display:block}
+.spark path.line{fill:none;stroke:var(--cyan);stroke-width:1.6;stroke-linecap:round}
+.spark path.area{fill:url(#sparkfill);opacity:.5}
+.spark.down path.line{stroke:var(--orange)}
+.spark circle.dot{fill:var(--cyan);filter:drop-shadow(0 0 4px var(--cyan))}
+.spark.down circle.dot{fill:var(--orange)}
 
 /* ------- pages grid ------- */
 .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -152,6 +179,8 @@ h2{font-size:clamp(26px,3.2vw,44px);font-weight:700;letter-spacing:-.02em}
 .pillar:hover::after{opacity:1}
 .pillar::before{content:"";position:absolute;top:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent);transition:.45s var(--ease);z-index:1}
 .pillar:hover::before{width:100%}
+.pillar .pnum{position:absolute;right:18px;top:14px;font-family:var(--mono);font-size:44px;font-weight:600;
+  color:transparent;-webkit-text-stroke:1px rgba(143,163,181,.22);line-height:1}
 .pillar .tag{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--orange);text-transform:uppercase}
 .pillar h3{font-size:21px;font-weight:600;letter-spacing:-.015em}
 .pillar p{color:var(--ink-dim);font-size:14px;font-weight:300;flex:1}
@@ -160,23 +189,28 @@ h2{font-size:clamp(26px,3.2vw,44px);font-weight:700;letter-spacing:-.02em}
 .pillar:hover .go::after{transform:translateX(5px)}
 
 /* ------- method ------- */
-.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(30px,4vw,56px)}
-.method-grid li{list-style:none;padding:26px 24px;border:1px solid var(--line-soft);border-radius:12px;
-  color:var(--ink-dim);font-size:15px;font-weight:300;background:linear-gradient(160deg,rgba(12,27,41,.5),transparent);transition:.35s var(--ease)}
+.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(24px,3vw,44px)}
+.method-grid li{list-style:none;padding:28px 26px;border:1px solid var(--line-soft);border-radius:12px;
+  color:var(--ink-dim);font-size:15px;font-weight:300;background:linear-gradient(160deg,rgba(12,27,41,.5),transparent);transition:.35s var(--ease);position:relative}
 .method-grid li:hover{border-color:rgba(115,225,230,.35);transform:translateY(-3px)}
 .method-grid li b{color:var(--ivory);display:flex;align-items:center;gap:10px;font-weight:600;margin-bottom:10px;font-size:16px;letter-spacing:-.01em}
 .method-grid li b::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--cyan);flex:0 0 8px;box-shadow:0 0 10px rgba(115,225,230,.5)}
 .method-grid li:nth-child(even) b::before{background:var(--orange);box-shadow:0 0 10px rgba(255,138,92,.5)}
+.method-grid li .mno{position:absolute;top:16px;right:20px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.18em}
 
 /* ------- footer ------- */
-footer{border-top:1px solid var(--line);padding:52px clamp(20px,6vw,72px);display:flex;
+footer{border-top:1px solid var(--line);padding:52px clamp(20px,6vw,72px) 0;display:flex;
   flex-direction:column;gap:22px;background:linear-gradient(var(--bg-2),var(--panel));position:relative;overflow:hidden}
 footer::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(700px 220px at 85% 0%,rgba(115,225,230,.05),transparent 65%)}
 footer > *{position:relative}
 .disclaimer{font-size:13px;color:var(--ink-dim);max-width:72ch;font-weight:300}
 .foot-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;
-  font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase}
+  font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase;padding-bottom:36px}
+.watermark{font-weight:800;font-size:clamp(52px,11.5vw,180px);letter-spacing:-.03em;line-height:.86;
+  color:transparent;-webkit-text-stroke:1px rgba(115,225,230,.13);text-align:center;user-select:none;
+  transform:translateY(18%);white-space:nowrap}
+.watermark b{font-weight:800;color:rgba(115,225,230,.06);-webkit-text-stroke:0}
 
 [lang-zh]{display:none}
 html[lang="zh-Hant"] [lang-en]{display:none}
@@ -186,18 +220,38 @@ html[lang="zh-Hant"] h1[lang-zh],html[lang="zh-Hant"] h2[lang-zh],
 html[lang="zh-Hant"] h3[lang-zh],html[lang="zh-Hant"] span[lang-zh]{display:block}
 html[lang="zh-Hant"] span[lang-zh].inline{display:inline}
 
-@media (max-width:720px){
-  .signal{grid-template-columns:1fr auto;grid-template-rows:auto auto;padding:24px 8px}
+@media (max-width:1020px){
+  .signal{grid-template-columns:1fr minmax(120px,160px);grid-template-rows:auto auto auto}
   .signal .idx{display:none}
-  .signal .src{grid-column:2;text-align:right}
+  .signal .label-wrap{grid-column:1}
+  .signal .value{grid-column:2;grid-row:1}
+  .signal .spark-wrap{grid-column:1;grid-row:2;max-width:180px}
+  .signal .src{grid-column:2;grid-row:2;align-self:end}
+}
+@media (max-width:720px){
   .scroll-hint{display:none}
+  .signal .src{max-width:150px}
 }
 </style>
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="sparkfill" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#73E1E6" stop-opacity=".25"/>
+    <stop offset="100%" stop-color="#73E1E6" stop-opacity="0"/>
+  </linearGradient>
+</defs></svg>
+
+<div id="glow"></div>
+
 <header>
   <a class="brand" href="#"><span class="glyph"></span><b>AI Market Atlas</b><mark>AI MARKET ATLAS</mark></a>
+  <nav class="chapters" aria-label="Sections">
+    <a href="#signals" data-sec="signals"><span lang-en class="inline">Signals</span><span lang-zh class="inline" style="display:none">訊號</span></a>
+    <a href="#coverage" data-sec="coverage"><span lang-en class="inline">Coverage</span><span lang-zh class="inline" style="display:none">範圍</span></a>
+    <a href="#method" data-sec="method"><span lang-en class="inline">Method</span><span lang-zh class="inline" style="display:none">方法</span></a>
+  </nav>
   <div class="lang-toggle" role="group" aria-label="Language">
     <button id="btn-en" aria-pressed="true">EN</button>
     <button id="btn-zh" aria-pressed="false">繁中</button>
@@ -206,7 +260,8 @@ html[lang="zh-Hant"] span[lang-zh].inline{display:inline}
 
 <main>
   <!-- HERO -->
-  <div class="hero">
+  <div class="hero" id="top">
+    <canvas id="atlas-canvas"></canvas>
     <div class="hero-glow"></div>
     <div class="kicker"><span class="dot"></span><span lang-en>Executive Market Pulse · Weekly</span><span lang-zh>高階市場脈動 · 每週</span></div>
     <h1 lang-en><span class="word"><span>The</span></span> <span class="word"><span>AI</span></span> <span class="word"><span>economy,</span></span><br><span class="word"><span><em>read</em></span></span> <span class="word"><span><em>once</em></span></span> <span class="word"><span><em>a</em></span></span> <span class="word"><span><em>week.</em></span></span></h1>
@@ -233,6 +288,7 @@ html[lang="zh-Hant"] span[lang-zh].inline{display:inline}
 
   <!-- SIGNALS -->
   <section id="signals">
+    <span class="ghost-no" aria-hidden="true">01</span>
     <div class="section-head rv">
       <h2 lang-en>This week's key signals</h2><h2 lang-zh style="display:none">本週關鍵訊號</h2>
       <span class="no">01 / SIGNALS</span>
@@ -242,6 +298,7 @@ html[lang="zh-Hant"] span[lang-zh].inline{display:inline}
 
   <!-- COVERAGE -->
   <section id="coverage">
+    <span class="ghost-no" aria-hidden="true">02</span>
     <div class="section-head rv">
       <h2 lang-en>Coverage map</h2><h2 lang-zh style="display:none">涵蓋範圍</h2>
       <span class="no">02 / PAGES</span>
@@ -251,15 +308,16 @@ html[lang="zh-Hant"] span[lang-zh].inline{display:inline}
 
   <!-- METHOD -->
   <section id="method">
+    <span class="ghost-no" aria-hidden="true">03</span>
     <div class="section-head rv">
       <h2 lang-en>One snapshot. No invented numbers.</h2><h2 lang-zh style="display:none">單一快照，絕不憑空造數。</h2>
       <span class="no">03 / METHOD</span>
     </div>
     <ul class="method-grid rv">
-      <li><b lang-en>Verified-first</b><b lang-zh style="display:none">驗證優先</b><span lang-en>Every public figure resolves to a source marker or a documented modeling method. If a free source is down, we show the last verified value with its original observation time.</span><span lang-zh style="display:none">每個數字皆可追溯至來源標記或明文記載的建模方法。若免費來源失效，我們顯示最後驗證值並保留原始觀測時間。</span></li>
-      <li><b lang-en>Status labels</b><b lang-zh style="display:none">狀態標記</b><span lang-en> verified · carried-forward · modeled · estimated · unavailable — the state of every metric is visible, never hidden inside a chart.</span><span lang-zh style="display:none"> verified · carried-forward · modeled · estimated · unavailable — 每項指標的狀態一律公開標示，不隱藏在圖表裡。</span></li>
-      <li><b lang-en>Same numbers, two tongues</b><b lang-zh style="display:none">一組數字，兩種語言</b><span lang-en>English and 繁中 render from the identical numeric records. Switching the language never changes a value.</span><span lang-zh style="display:none">英文與繁中渲染自同一組數值紀錄。切換語言永不改變數字。</span></li>
-      <li><b lang-en>Automated review</b><b lang-zh style="display:none">自動化審查</b><span lang-en>Each candidate is bound to a persisted review; only an auto_publish decision with a matching SHA may ship. Full details in the runbook.</span><span lang-zh style="display:none">每個候選版本綁定一份持久化審查紀錄；只有 SHA 相符的 auto_publish 決議才得以發布。詳見 runbook。</span></li>
+      <li><span class="mno">M-01</span><b lang-en>Verified-first</b><b lang-zh style="display:none">驗證優先</b><span lang-en>Every public figure resolves to a source marker or a documented modeling method. If a free source is down, we show the last verified value with its original observation time.</span><span lang-zh style="display:none">每個數字皆可追溯至來源標記或明文記載的建模方法。若免費來源失效，我們顯示最後驗證值並保留原始觀測時間。</span></li>
+      <li><span class="mno">M-02</span><b lang-en>Status labels</b><b lang-zh style="display:none">狀態標記</b><span lang-en> verified · carried-forward · modeled · estimated · unavailable — the state of every metric is visible, never hidden inside a chart.</span><span lang-zh style="display:none"> verified · carried-forward · modeled · estimated · unavailable — 每項指標的狀態一律公開標示，不隱藏在圖表裡。</span></li>
+      <li><span class="mno">M-03</span><b lang-en>Same numbers, two tongues</b><b lang-zh style="display:none">一組數字，兩種語言</b><span lang-en>English and 繁中 render from the identical numeric records. Switching the language never changes a value.</span><span lang-zh style="display:none">英文與繁中渲染自同一組數值紀錄。切換語言永不改變數字。</span></li>
+      <li><span class="mno">M-04</span><b lang-en>Automated review</b><b lang-zh style="display:none">自動化審查</b><span lang-en>Each candidate is bound to a persisted review; only an auto_publish decision with a matching SHA may ship. Full details in the runbook.</span><span lang-zh style="display:none">每個候選版本綁定一份持久化審查紀錄；只有 SHA 相符的 auto_publish 決議才得以發布。詳見 runbook。</span></li>
     </ul>
   </section>
 </main>
@@ -272,11 +330,13 @@ html[lang="zh-Hant"] span[lang-zh].inline{display:inline}
     <span id="foot-run"></span>
     <span><span lang-en>NOT INVESTMENT ADVICE</span><span lang-zh>非投資建議</span></span>
   </div>
+  <div class="watermark" aria-hidden="true">AI MARKET <b>ATLAS</b></div>
 </footer>
 
 <script>
 const $ = s=>document.querySelector(s);
 const SNAPSHOT_URL = 'market-snapshot.json';
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const PILLARS = [
   {tag:'STOCKS',  t_en:'AI Public Equities', t_zh:'AI 上市公司', d_en:'Direction, weekly & monthly returns, breadth, valuation, catalysts and risks across thematic baskets.', d_zh:'走勢、週/月報酬、市寬、估值、催化劑與風險，橫跨主題籃子。'},
@@ -285,6 +345,21 @@ const PILLARS = [
   {tag:'MODELS',  t_en:'Models & Agents',    t_zh:'模型與代理',  d_en:'Model pricing, managed tokens, enterprise agents, API deployment, software spend and outcome economics.', d_zh:'模型定價、託管 token、企業代理、API 部署、軟體支出與成果經濟。'},
   {tag:'SIC',     t_en:'SiC & Power Semi',   t_zh:'SiC 與功率半導體', d_en:'Wafer transitions, automotive exposure, high-power AI packaging, suppliers, risks and catalysts.', d_zh:'晶圓尺寸轉移、車用曝險、高功率 AI 封裝、供應商、風險與催化劑。'}
 ];
+
+/* ---- sparkline svg ---- */
+function sparkSVG(data, dir){
+  if(!data || data.length < 2) return '';
+  const w=100, h=30, min=Math.min(...data), max=Math.max(...data), rg=(max-min)||1;
+  const pts = data.map((v,i)=>[i/(data.length-1)*w, h-3-((v-min)/rg)*(h-8)]);
+  const line = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const area = line + ` L${w},${h} L0,${h} Z`;
+  const last = pts[pts.length-1];
+  const cls = dir==='down' ? 'spark down' : 'spark';
+  return `<svg class="${cls}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    <path class="area" d="${area}"/><path class="line" d="${line}"/>
+    <circle class="dot" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.4"/></svg>`;
+}
+const DIR_ICON = {up:'▲', down:'▼', flat:'◆'};
 
 let snap = null;
 async function load(){
@@ -295,9 +370,7 @@ async function load(){
   }catch{
     snap = {runId:'demo',dataCutoff:'—',schemaVersion:'1.0.0',signals:[],pages:[]};
   }
-  render();
-  bindLang();
-  reveal();
+  render(); bindLang(); reveal(); initCanvas(); initGlow(); initChapters();
 }
 
 function render(){
@@ -307,23 +380,27 @@ function render(){
   try{$('#meta-cutoff').textContent = new Date(snap.dataCutoff).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'})}catch{$('#meta-cutoff').textContent='—'}
   $('#meta-schema').textContent = snap.schemaVersion;
 
-  $('#signal-list').innerHTML = snap.signals.map((s,i)=>`
-    <div class="signal rv" style="transition-delay:${i*70}ms">
+  $('#signal-list').innerHTML = snap.signals.map((s,i)=>{
+    const dir = s.direction || 'flat';
+    return `<div class="signal rv" style="transition-delay:${i*70}ms">
       <span class="idx">0${i+1}</span>
-      <div>
+      <div class="label-wrap">
         <div class="label"><span lang-en>${s.label_en}</span><span lang-zh style="display:none">${s.label_zh}</span></div>
         <span class="badge ${s.status}">${s.status}</span>
       </div>
-      <div class="value">${s.value}</div>
+      <div class="spark-wrap">${sparkSVG(s.spark, dir)}</div>
+      <div class="value"><span class="dir ${dir}">${DIR_ICON[dir]}</span>${s.value}</div>
       <div class="src">${s.source}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   const items = snap.signals.map(s=>`
     <span class="ticker-item"><span class="k">${s.key}</span><span class="v ${s.status==='verified'?'':'warn'}">${s.value}</span></span>`).join('<span class="ticker-sep">◆</span>');
   $('#strip').innerHTML = items + '<span class="ticker-sep">◆</span>' + items;
 
-  $('#pillar-grid').innerHTML = PILLARS.map(p=>`
+  $('#pillar-grid').innerHTML = PILLARS.map((p,i)=>`
     <div class="pillar">
+      <span class="pnum">0${i+1}</span>
       <span class="tag">${p.tag}</span>
       <h3 lang-en>${p.t_en}</h3><h3 lang-zh style="display:none">${p.t_zh}</h3>
       <p lang-en>${p.d_en}</p><p lang-zh style="display:none">${p.d_zh}</p>
@@ -331,17 +408,116 @@ function render(){
     </div>`).join('');
 }
 
+/* ---- scroll reveal ---- */
 function reveal(){
   const els = [...document.querySelectorAll('.rv')];
   const io = new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.08,rootMargin:'0px 0px -4% 0px'});
   els.forEach(el=>io.observe(el));
-  // Fallback: reveal anything still hidden after 1.6s (missed callbacks, headless, fast scrolls)
   setTimeout(()=>els.forEach(el=>{
     const r = el.getBoundingClientRect();
     if(r.top < innerHeight*1.2) el.classList.add('in');
   }),1600);
 }
 
+/* ---- chapter nav active state ---- */
+function initChapters(){
+  const links = [...document.querySelectorAll('nav.chapters a')];
+  const secs = links.map(a=>document.getElementById(a.dataset.sec));
+  const io = new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(a=>a.classList.toggle('active', a.dataset.sec===e.target.id));
+    }
+  }),{rootMargin:'-40% 0px -50% 0px'});
+  secs.forEach(s=>s&&io.observe(s));
+}
+
+/* ---- mouse-follow glow ---- */
+function initGlow(){
+  if(REDUCED || !matchMedia('(pointer:fine)').matches) return;
+  const g = $('#glow');
+  let raf=null;
+  addEventListener('pointermove', e=>{
+    if(raf) return;
+    raf = requestAnimationFrame(()=>{ g.style.left=e.clientX+'px'; g.style.top=e.clientY+'px'; raf=null; });
+  },{passive:true});
+}
+
+/* ---- hero atlas canvas ---- */
+function initCanvas(){
+  const cv = $('#atlas-canvas');
+  const ctx = cv.getContext('2d');
+  let w,h,dpr, raf, t=0, mx=0, my=0;
+  const N = 42;
+  const nodes = Array.from({length:N},(_,i)=>({
+    x: Math.random(), y: Math.random(),
+    r: 1.2 + Math.random()*2.2,
+    sp: .00018 + Math.random()*.0004,
+    ph: Math.random()*Math.PI*2,
+    orb: .02 + Math.random()*.09
+  }));
+
+  function size(){
+    dpr = Math.min(devicePixelRatio||1, 2);
+    w = cv.clientWidth = cv.parentElement.clientWidth;
+    h = cv.clientHeight = cv.parentElement.clientHeight;
+    cv.width = w*dpr; cv.height = h*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  size(); addEventListener('resize', size);
+
+  if(matchMedia('(pointer:fine)').matches){
+    cv.parentElement.addEventListener('pointermove', e=>{
+      const b = cv.getBoundingClientRect();
+      mx = (e.clientX-b.left)/b.width - .5;
+      my = (e.clientY-b.top)/b.height - .5;
+    },{passive:true});
+  }
+
+  function frame(){
+    t++;
+    ctx.clearRect(0,0,w,h);
+    const pts = nodes.map(n=>{
+      const a = n.ph + t*n.sp*60;
+      return {
+        x: (n.x + Math.cos(a)*n.orb)*w + mx*26,
+        y: (n.y + Math.sin(a)*n.orb*.7)*h + my*26,
+        r: n.r
+      };
+    });
+    // links
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.hypot(dx,dy);
+        if(d<170){
+          ctx.strokeStyle = `rgba(115,225,230,${(1-d/170)*.12})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.stroke();
+        }
+      }
+    }
+    // nodes
+    pts.forEach((p,i)=>{
+      const warm = i%7===0;
+      ctx.fillStyle = warm ? 'rgba(255,138,92,.8)' : 'rgba(115,225,230,.7)';
+      ctx.shadowColor = warm ? 'rgba(255,138,92,.8)' : 'rgba(115,225,230,.8)';
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+    // one sweeping arc highlight
+    const sweep = (t*.004)%(Math.PI*2);
+    ctx.strokeStyle='rgba(115,225,230,.16)'; ctx.lineWidth=1.1;
+    ctx.beginPath(); ctx.arc(w*.72, h*.4, Math.min(w,h)*.3, sweep, sweep+1.1); ctx.stroke();
+    ctx.strokeStyle='rgba(255,138,92,.12)';
+    ctx.beginPath(); ctx.arc(w*.72, h*.4, Math.min(w,h)*.36, -sweep*.7, -sweep*.7+.8); ctx.stroke();
+
+    if(!REDUCED) raf = requestAnimationFrame(frame);
+  }
+  // draw once even under reduced motion
+  frame();
+}
+
+/* ---- language toggle ---- */
 function bindLang(){
   const setZh = on=>{
     document.documentElement.lang = on?'zh-Hant':'en';

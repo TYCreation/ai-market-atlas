@@ -1,14 +1,16 @@
 {
-  "schemaVersion": "1.0.0",
-  "runId": "2026-07-30-thursday",
+  "schemaVersion": "1.1.0",
+  "runId": "2026-08-01-saturday",
   "cadence": "saturday",
-  "generatedAt": "2026-07-30T09:00:00+08:00",
-  "dataCutoff": "2026-07-29T16:00:00-04:00",
+  "generatedAt": "2026-08-01T09:00:00+08:00",
+  "dataCutoff": "2026-07-31T16:00:00-04:00",
   "phase": "demo",
   "signals": [
     {
       "key": "ai-compute-demand",
       "value": "+18.4%",
+      "direction": "up",
+      "spark": [9.2, 9.8, 10.4, 10.1, 11.2, 12.6, 13.8, 15.1, 15.9, 18.4],
       "status": "verified",
       "label_en": "AI accelerator revenue (top 4 fabless, QoQ)",
       "label_zh": "AI 加速器營收（前四無晶圓廠，季增）",
@@ -17,6 +19,8 @@
     {
       "key": "dc-power-committed",
       "value": "61 GW",
+      "direction": "up",
+      "spark": [38, 41, 44, 43, 47, 50, 54, 55, 58, 61],
       "status": "estimated",
       "label_en": "Announced data-center power (committed, global)",
       "label_zh": "已公告資料中心電力（已承諾，全球）",
@@ -25,6 +29,8 @@
     {
       "key": "frontier-model-price",
       "value": "-37%",
+      "direction": "down",
+      "spark": [100, 96, 91, 88, 82, 79, 74, 70, 66, 63],
       "status": "verified",
       "label_en": "Frontier model input price (per 1M tokens, 6-mo chg)",
       "label_zh": "前沿模型輸入價格（每百萬 tokens，六個月變動）",
@@ -33,6 +39,8 @@
     {
       "key": "sic-wafer-transition",
       "value": "8-inch",
+      "direction": "flat",
+      "spark": [6, 6, 6, 8, 8, 8, 8, 8, 8, 8],
       "status": "modeled",
       "label_en": "Dominant SiC wafer size for new capacity announcements",
       "label_zh": "新 SiC 產能公告之主流晶圓尺寸",
@@ -41,10 +49,12 @@
     {
       "key": "ai-basket-weekly",
       "value": "+2.1%",
+      "direction": "up",
+      "spark": [1.8, 2.4, 1.1, -0.4, 0.8, 1.9, 3.2, 2.6, 1.7, 2.1],
       "status": "carried-forward",
       "label_en": "AI equities basket, weekly return (equal weight)",
       "label_zh": "AI 股票籃子，週報酬（等權重）",
-      "source": "Market close 2026-07-25"
+      "source": "Market close 2026-07-31"
     }
   ],
   "pages": ["stocks", "compute", "energy", "models", "sic"]
