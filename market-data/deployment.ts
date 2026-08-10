@@ -35,7 +35,12 @@ export type PublishOptions = {
   expectedCandidateSha256?: string;
   expectedArtifactTreeSha256?: string;
   expectedManifestSha256?: string;
+  snapshotAlreadyCurrent?: boolean;
 };
+
+export type PublicationResult =
+  | PromotionResult
+  | { published: true; promoted: false; runId: string };
 
 export type VerificationExpectation = {
   runId: string;
@@ -87,6 +92,18 @@ export type AuthorizedCandidatePublication = {
   review: AutomatedReview;
   candidateSha256: string;
 };
+
+export function previewBranchForRunId(runId: string): string {
+  if (!isSafeMarketRunId(runId)) {
+    throw new Error("publication runId is unsafe");
+  }
+  const cadence = runId.endsWith("-wednesday")
+    ? "wed"
+    : runId.endsWith("-saturday")
+      ? "sat"
+      : "mon";
+  return `market-update-${runId.slice(0, 10)}-${cadence}`;
+}
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -542,7 +559,7 @@ async function authorize(options: PublishOptions): Promise<void> {
 export async function publishWithRestore(
   dependencies: PublishDependencies,
   options: PublishOptions,
-): Promise<PromotionResult> {
+): Promise<PublicationResult> {
   await authorize(options);
   if (options.expectedCandidateSha256 === undefined) {
     throw new Error("authorized candidate hash is required");
@@ -559,7 +576,7 @@ export async function publishWithRestore(
   ) {
     throw new Error("deployment manifest hash is required");
   }
-  const branch = `market-update-${options.runId}`;
+  const branch = previewBranchForRunId(options.runId);
 
   try {
     await dependencies.revalidate();
@@ -573,13 +590,22 @@ export async function publishWithRestore(
     throw new Error(`Preview publication failed: ${errorMessage(error)}`);
   }
 
-  const promotion = await dependencies.promote(options.expectedCandidateSha256);
-  if (promotion.promotedSha256 !== options.expectedCandidateSha256) {
-    let snapshotOutcome = "snapshot restoration succeeded";
-    try {
-      await dependencies.restoreSnapshot(promotion);
-    } catch (restoreError) {
-      snapshotOutcome = `snapshot restoration failed: ${errorMessage(restoreError)}`;
+  const promotion = options.snapshotAlreadyCurrent
+    ? undefined
+    : await dependencies.promote(options.expectedCandidateSha256);
+  if (
+    promotion !== undefined &&
+    promotion.promotedSha256 !== options.expectedCandidateSha256
+  ) {
+    let snapshotOutcome = promotion
+      ? "snapshot restoration succeeded"
+      : "snapshot restoration not required";
+    if (promotion) {
+      try {
+        await dependencies.restoreSnapshot(promotion);
+      } catch (restoreError) {
+        snapshotOutcome = `snapshot restoration failed: ${errorMessage(restoreError)}`;
+      }
     }
     throw new Error(
       `Promotion result does not match the authorized candidate hash; ${snapshotOutcome}`,
@@ -603,14 +629,18 @@ export async function publishWithRestore(
       options.expectedManifestSha256,
     );
   } catch (candidateError) {
-    let snapshotOutcome = "snapshot restoration succeeded";
+    let snapshotOutcome = promotion
+      ? "snapshot restoration succeeded"
+      : "snapshot restoration not required";
     let siteOutcome = mainTouched
       ? "site restoration succeeded"
       : "site restoration not required";
-    try {
-      await dependencies.restoreSnapshot(promotion);
-    } catch (restoreError) {
-      snapshotOutcome = `snapshot restoration failed: ${errorMessage(restoreError)}`;
+    if (promotion) {
+      try {
+        await dependencies.restoreSnapshot(promotion);
+      } catch (restoreError) {
+        snapshotOutcome = `snapshot restoration failed: ${errorMessage(restoreError)}`;
+      }
     }
     if (mainTouched) {
       try {
@@ -628,5 +658,11 @@ export async function publishWithRestore(
     );
   }
 
-  return promotion;
+  return (
+    promotion ?? {
+      published: true,
+      promoted: false,
+      runId: options.runId,
+    }
+  );
 }

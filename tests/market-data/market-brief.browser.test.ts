@@ -149,7 +149,7 @@ test("uses the repository-pinned Playwright Chromium runtime", async () => {
 test("actual market-brief composition passes its browser behavior matrix", async (t) => {
   const [canonicalHtml, snapshot] = await Promise.all([
     readFile(new URL("index.html", compositionRoot), "utf8"),
-    readFile(new URL("data/market/current.json", projectRoot), "utf8").then(
+    readFile(new URL("tests/fixtures/market/valid-candidate.json", projectRoot), "utf8").then(
       (value) => JSON.parse(value) as MarketSnapshot,
     ),
   ]);
@@ -533,12 +533,12 @@ test("actual market-brief composition passes its browser behavior matrix", async
         query: "lang=en&embed=1",
       });
       await page.waitForTimeout(350);
-      const state = await page.evaluate(() => ({
+      const state = await page.evaluate((expectedRunId) => ({
         runId: document
           .querySelector("#embedded-market-brief")
-          ?.textContent?.includes("2026-07-25-saturday"),
+          ?.textContent?.includes(expectedRunId),
         time: window.__timelines["weekly-ai-market-brief"].time(),
-      }));
+      }), saturdayBrief.runId);
       assert.equal(state.runId, true);
       assert.ok(state.time > 0.1);
       await context.close();

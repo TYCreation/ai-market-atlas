@@ -130,13 +130,7 @@ export function buildSourceBundles(snapshot: MarketSnapshot): Record<PageSlug, S
           published: source.publishedAt,
           scope: source.scope,
         }));
-      const reviewed = sources.reduce(
-        (latest, source) => {
-          const retrievedAt = snapshot.sources[source.id].retrievedAt;
-          return retrievedAt > latest ? retrievedAt : latest;
-        },
-        "",
-      ) || snapshot.pages[slug].verifiedAt;
+      const reviewed = snapshot.pages[slug].verifiedAt;
       return [slug, { reviewed, sources, kpiSources }];
     }),
   ) as Record<PageSlug, SourceBundle>;

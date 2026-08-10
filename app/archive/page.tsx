@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listMonthlyArchives } from "../../market-data/monthly.ts";
 import { CollectionStructuredData } from "../components/StructuredData";
+import { SiteCredit } from "../components/SiteCredit";
 import { buildMetadata, pageSeo } from "../seo";
 
 export const metadata: Metadata = buildMetadata("/archive");
@@ -35,6 +36,7 @@ export default function ArchiveIndexPage() {
             </Link>
           ))}
         </section>
+        <SiteCredit />
       </main>
     </>
   );

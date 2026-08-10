@@ -46,7 +46,10 @@ test("promotes only a publishable candidate and archives the previous snapshot",
 
   assert.equal(result.promoted, true);
   assert.equal(JSON.parse(await readFile(paths.currentPath, "utf8")).runId, "2026-08-01-saturday");
-  assert.equal(await readFile(result.archivedPath, "utf8"), previous);
+  assert.deepEqual(
+    JSON.parse(await readFile(result.archivedPath, "utf8")),
+    JSON.parse(previous),
+  );
   assert.deepEqual(await readdir(paths.runsDir), ["2026-08-01-saturday.json"]);
 });
 

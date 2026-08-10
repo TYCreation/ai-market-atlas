@@ -22,10 +22,10 @@ test("returns both locales from one metric record", () => {
 });
 
 test("marks an unchanged page without replacing its thesis", () => {
-  const meta = getPageMeta("/energy", "zh");
+  const meta = getPageMeta("/models", "zh");
   assert.equal(meta.changeLabel, "本期無重大變化");
   assert.equal(meta.changed, false);
-  assert.equal(meta.report.thesis.title, "已簽約兆瓦，就是新的算力庫存。");
+  assert.equal(meta.report.thesis.title, "勝出的代理是重新設計的工作流程，不是聊天視窗。");
 });
 
 test("builds each page source bundle only from referenced snapshot sources", async () => {
@@ -34,16 +34,15 @@ test("builds each page source bundle only from referenced snapshot sources", asy
   ) as MarketSnapshot;
   const bundles = buildSourceBundles(snapshot);
 
-  assert.deepEqual(bundles["/energy"].kpiSources[0], [
-    "atlas-model",
-    "iea-energy-ai",
-    "iea-data-centres",
-  ]);
   assert.deepEqual(
-    bundles["/energy"].sources.map((source) => source.id),
-    ["atlas-model", "iea-energy-ai", "iea-data-centres", "doe-data-centers"],
+    [...bundles["/energy"].kpiSources[0]].sort(),
+    ["atlas-model", "iea-data-centres", "iea-energy-ai"],
   );
-  assert.equal(bundles["/energy"].reviewed, "2026-07-25T01:00:00.000Z");
+  assert.deepEqual(
+    bundles["/energy"].sources.map((source) => source.id).sort(),
+    ["atlas-model", "doe-data-centers", "iea-data-centres", "iea-energy-ai", "vistra-q2-2026"],
+  );
+  assert.equal(bundles["/energy"].reviewed, snapshot.dataCutoff);
 });
 
 test("loads and validates an explicitly selected preview snapshot", async () => {

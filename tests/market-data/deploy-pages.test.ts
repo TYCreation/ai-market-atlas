@@ -100,7 +100,7 @@ test("wrangler deployment uses a fixed argument vector without shell interpolati
 
   await wranglerDeploy(
     "work/pages-candidate",
-    "market-update-2026-08-01-saturday",
+    "market-update-2026-08-01-sat",
     runner,
   );
 
@@ -115,7 +115,7 @@ test("wrangler deployment uses a fixed argument vector without shell interpolati
         "--project-name",
         "ai-market-atlas",
         "--branch",
-        "market-update-2026-08-01-saturday",
+        "market-update-2026-08-01-sat",
       ],
     },
   ]);

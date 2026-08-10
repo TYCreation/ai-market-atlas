@@ -8,6 +8,7 @@ import {
 } from "../seo";
 import { MarketDashboard } from "./MarketDashboard";
 import { ReportStructuredData } from "./StructuredData";
+import { normalizeTaiwanCopy } from "../taiwan-copy";
 
 export async function MarketDashboardPage({
   config,
@@ -29,6 +30,12 @@ export async function MarketDashboardPage({
   };
   const basePath = config.slug as DashboardPath;
   const path = locale === "en" ? (basePath === "/" ? "/en" : `/en${basePath}`) : basePath;
+  const hydratedChineseConfig = normalizeTaiwanCopy(
+    hydrateDashboard(chineseConfig, "zh", viewModel),
+  );
+  const localizedSourceBundle = normalizeTaiwanCopy(
+    viewModel.sourceBundles[config.slug],
+  );
 
   return (
     <>
@@ -40,8 +47,8 @@ export async function MarketDashboardPage({
       />
       <MarketDashboard
         config={hydrateDashboard(config, "en", viewModel)}
-        chineseConfig={hydrateDashboard(chineseConfig, "zh", viewModel)}
-        sourceBundle={viewModel.sourceBundles[config.slug]}
+        chineseConfig={hydratedChineseConfig}
+        sourceBundle={localizedSourceBundle}
         edition={edition}
         pageEdition={pageEdition}
         initialLocale={locale}

@@ -46,3 +46,5 @@ next-env.d.ts
 /data/market/reviews/
 /work/pages-candidate/
 /work/pages-last-good/
+/work/.pages-last-good-anchor.json
+/work/.pages-last-good-transition.json

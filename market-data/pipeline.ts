@@ -109,6 +109,15 @@ async function isolatedProject(): Promise<string> {
     join(root, "node_modules"),
     "dir",
   );
+  await writeFile(
+    join(root, "data", "market", "monthly", "index.json"),
+    "{}\n",
+  );
+  await rm(join(root, "data", "market", "runs"), {
+    recursive: true,
+    force: true,
+  });
+  await mkdir(join(root, "data", "market", "runs"), { recursive: true });
   return root;
 }
 

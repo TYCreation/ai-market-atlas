@@ -51,7 +51,7 @@ test("redeploys last-known-good assets when production verification fails", asyn
   assert.deepEqual(deployments, [
     {
       directory: "work/pages-candidate",
-      branch: "market-update-2026-08-01-saturday",
+      branch: "market-update-2026-08-01-sat",
     },
     { directory: "work/pages-candidate", branch: "main" },
     { directory: "work/pages-last-good", branch: "main" },
@@ -76,7 +76,7 @@ test("verifies rollback with the last-good manifest context instead of candidate
   assert.deepEqual(deps.verifications, [
     {
       baseUrl:
-        "https://market-update-2026-08-01-saturday.ai-market-atlas.pages.dev",
+        "https://market-update-2026-08-01-sat.ai-market-atlas.pages.dev",
       directory: "work/pages-candidate",
     },
     {
@@ -132,7 +132,7 @@ test("restores snapshot and last-good assets when production deployment fails", 
   assert.deepEqual(deps.deployments, [
     {
       directory: "work/pages-candidate",
-      branch: "market-update-2026-08-01-saturday",
+      branch: "market-update-2026-08-01-sat",
     },
     { directory: "work/pages-candidate", branch: "main" },
     { directory: "work/pages-last-good", branch: "main" },
@@ -155,7 +155,7 @@ test("preview failure never promotes or touches production and last-good", async
   assert.deepEqual(deps.deployments, [
     {
       directory: "work/pages-candidate",
-      branch: "market-update-2026-08-01-saturday",
+      branch: "market-update-2026-08-01-sat",
     },
   ]);
   assert.deepEqual(deps.copies, []);
@@ -198,7 +198,7 @@ test("candidate and replacement review mutation after preview verification canno
   assert.deepEqual(deps.deployments, [
     {
       directory: "work/pages-candidate",
-      branch: "market-update-2026-08-01-saturday",
+      branch: "market-update-2026-08-01-sat",
     },
   ]);
   assert.deepEqual(deps.copies, []);
@@ -232,7 +232,7 @@ test("promotion receives the authorized hash and a mismatched result cannot reac
   assert.deepEqual(deps.deployments, [
     {
       directory: "work/pages-candidate",
-      branch: "market-update-2026-08-01-saturday",
+      branch: "market-update-2026-08-01-sat",
     },
   ]);
   assert.deepEqual(deps.copies, []);
@@ -244,20 +244,20 @@ test("publication revalidates candidate, artifact, and manifest at every irrever
     {
       name: "after preview verification",
       failAt: 2,
-      deployBranches: ["market-update-2026-08-01-saturday"],
+      deployBranches: ["market-update-2026-08-01-sat"],
       promoted: 0,
     },
     {
       name: "before main",
       failAt: 3,
-      deployBranches: ["market-update-2026-08-01-saturday"],
+      deployBranches: ["market-update-2026-08-01-sat"],
       promoted: 1,
     },
     {
       name: "after main verification",
       failAt: 4,
       deployBranches: [
-        "market-update-2026-08-01-saturday",
+        "market-update-2026-08-01-sat",
         "main",
         "main",
       ],
@@ -267,7 +267,7 @@ test("publication revalidates candidate, artifact, and manifest at every irrever
       name: "before last-good copy",
       failAt: 5,
       deployBranches: [
-        "market-update-2026-08-01-saturday",
+        "market-update-2026-08-01-sat",
         "main",
         "main",
       ],
@@ -501,13 +501,61 @@ test("copies verified production assets to last-good only after success", async 
   await publishWithRestore(deps, options);
 
   assert.deepEqual(deps.actions, [
-    "deploy:market-update-2026-08-01-saturday:work/pages-candidate",
-    "verify:https://market-update-2026-08-01-saturday.ai-market-atlas.pages.dev",
+    "deploy:market-update-2026-08-01-sat:work/pages-candidate",
+    "verify:https://market-update-2026-08-01-sat.ai-market-atlas.pages.dev",
     "promote",
     "deploy:main:work/pages-candidate",
     "verify:https://aimarketatlas.net",
     "copy:work/pages-candidate:work/pages-last-good",
   ]);
+  assert.equal(deps.snapshotRestored, false);
+});
+
+test("redeploys an already-current snapshot without promoting or rewriting market storage", async () => {
+  const options = {
+    ...(await authorizedOptions()),
+    snapshotAlreadyCurrent: true,
+  };
+  const deps = fakeDependencies({
+    verificationResults: [undefined, undefined],
+  });
+
+  const result = await publishWithRestore(deps, options);
+
+  assert.deepEqual(result, {
+    published: true,
+    promoted: false,
+    runId: options.runId,
+  });
+  assert.equal(deps.promoteCount, 0);
+  assert.equal(deps.snapshotRestored, false);
+  assert.deepEqual(deps.actions, [
+    "deploy:market-update-2026-08-01-sat:work/pages-candidate",
+    "verify:https://market-update-2026-08-01-sat.ai-market-atlas.pages.dev",
+    "deploy:main:work/pages-candidate",
+    "verify:https://aimarketatlas.net",
+    "copy:work/pages-candidate:work/pages-last-good",
+  ]);
+});
+
+test("site-only redeployment restores the last-good site but never restores the unchanged snapshot", async () => {
+  const options = {
+    ...(await authorizedOptions()),
+    snapshotAlreadyCurrent: true,
+  };
+  const deps = fakeDependencies({
+    verificationResults: [
+      undefined,
+      new Error("candidate production mismatch"),
+      undefined,
+    ],
+  });
+
+  await assert.rejects(
+    () => publishWithRestore(deps, options),
+    /snapshot restoration not required.*site restoration succeeded/is,
+  );
+  assert.equal(deps.promoteCount, 0);
   assert.equal(deps.snapshotRestored, false);
 });
 

@@ -26,7 +26,7 @@ export const marketPulseZh: DashboardConfig = {
     {
       label: "電力排隊容量",
       value: "36.2GW",
-      foot: "已公布的 AI 可用容量",
+      foot: "已公佈的 AI 可用容量",
       delta: "已承諾 12.8GW",
     },
     {
@@ -39,7 +39,7 @@ export const marketPulseZh: DashboardConfig = {
   thesis: {
     title: "制約堆疊正從矽晶片轉向電力。",
     body:
-      "加速器供應正不均衡地改善，但電網併網、發電合約與冷卻改造，現在決定已公布的 AI 容量能多快轉化為營收。在軟體層，Token 價格下降擴大採用，同時把差異化轉向工作流程所有權、專有情境與可衡量的任務完成率。",
+      "加速器供應正不均衡地改善，但電網併網、發電合約與冷卻改造，現在決定已公佈的 AI 容量能多快轉化為營收。在軟體層，Token 價格下降擴大採用，同時把差異化轉向工作流程所有權、專有情境與可衡量的任務完成率。",
     tags: ["算力供給", "電力取得", "代理經濟"],
   },
   chart: {
@@ -94,7 +94,7 @@ export const marketPulseZh: DashboardConfig = {
       priority: "01 · 最高",
       title: "電力可用性",
       body:
-        "追蹤已簽約的兆瓦，而不是已公布的園區。兩者之間的差距，正成為檢驗成長真實度的最佳指標。",
+        "追蹤已簽約的兆瓦，而不是已公佈的園區。兩者之間的差距，正成為檢驗成長真實度的最佳指標。",
       owner: "下一讀 · 公用事業排隊",
     },
     {
@@ -238,7 +238,7 @@ export const energyZh: DashboardConfig = {
   orbitLabel: "排隊壓力",
   kpis: [
     {
-      label: "已公布 AI 可用電力",
+      label: "已公佈 AI 可用電力",
       value: "36.2GW",
       foot: "追蹤中的全球管線",
       delta: "季增 ↑ 4.1GW",
@@ -272,7 +272,7 @@ export const energyZh: DashboardConfig = {
     label: "已承諾容量指數",
     values: [18, 22, 27, 25, 31, 39, 43, 49, 58, 63, 69, 76],
     caption: {
-      "30D": "已承諾電力的成長慢於已公布容量，可信度缺口持續擴大。",
+      "30D": "已承諾電力的成長慢於已公佈容量，可信度缺口持續擴大。",
       Q3: "公用事業標案與表後發電，是最重要的專案轉化信號。",
       "2027": "高電力密度地區取得更多市占，園區設計將圍繞彈性發電與冷卻重構。",
     },
@@ -318,7 +318,7 @@ export const energyZh: DashboardConfig = {
   watchlist: [
     {
       priority: "01 · 最高",
-      title: "已確定 vs. 已公布",
+      title: "已確定 vs. 已公佈",
       body:
         "只有在土地、電力、設備與客戶承諾同時到位後，才能把專案視為真實容量。",
       owner: "下一讀 · 專案轉化",
@@ -606,9 +606,9 @@ export const sicZh: DashboardConfig = {
       },
       {
         date: "2026-07-14",
-        title: "Bosch 加州 SiC 廠取得政策支持",
+        title: "Bosch 加州 SiC 廠取得政策支援",
         source: "electrive.com",
-        summary: "最高 2.25 億美元支持車用與功率市場的 SiC 晶片在地製造。",
+        summary: "最高 2.25 億美元支援車用與功率市場的 SiC 晶片在地製造。",
         tags: ["產業", "美國"],
       },
       {
@@ -705,7 +705,7 @@ export const sicZh: DashboardConfig = {
         body: "主流車款提供耐久需求底座，支撐新興 AI 機會。",
       },
       {
-        title: "政策支持在地供應",
+        title: "政策支援在地供應",
         body: "美國製造獎勵與國防計畫，提高本土 SiC 的策略價值。",
       },
     ],
@@ -837,7 +837,7 @@ export const stocksZh: DashboardConfig = {
       priority: "03 · 高",
       title: "資本支出轉化",
       body:
-        "當估值已反映成長時，已入帳營收、利用率與自由現金流，比公布的產能更重要。",
+        "當估值已反映成長時，已入帳營收、利用率與自由現金流，比公佈的產能更重要。",
       owner: "下一讀 · 現金轉化",
     },
   ],
@@ -1092,7 +1092,7 @@ export const stocksZh: DashboardConfig = {
         title: "資本支出消化",
         level: "medium",
         metric: "$2.8T 投資管線",
-        body: "已公布的基礎設施必須轉化為有利用率的產能，否則客戶報酬將承壓。",
+        body: "已公佈的基礎設施必須轉化為有利用率的產能，否則客戶報酬將承壓。",
       },
       {
         title: "政策與地緣政治",

@@ -14,7 +14,7 @@ import {
 } from "../../scripts/generate-market-brief.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
-const snapshotUrl = new URL("../../data/market/current.json", import.meta.url);
+const snapshotUrl = new URL("../fixtures/market/valid-candidate.json", import.meta.url);
 const canonicalHtmlUrl = new URL(
   "../../hyperframes/weekly-ai-market-brief/index.html",
   import.meta.url,

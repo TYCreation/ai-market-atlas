@@ -19,6 +19,7 @@ import {
 } from "../market-data/artifact-tree.ts";
 import {
   authorizeCandidatePublication,
+  previewBranchForRunId,
   publishWithRestore,
   verifyDeployment,
   type VerificationExpectation,
@@ -501,8 +502,9 @@ export async function wranglerDeploy(
   if (
     branch !== "main" &&
     !(
-      branch.startsWith("market-update-") &&
-      isSafeMarketRunId(branch.slice("market-update-".length))
+      /^market-(?:update|seed)-\d{4}-\d{2}-\d{2}-(?:wed|sat|mon)$/.test(
+        branch,
+      )
     )
   ) {
     throw new Error("Cloudflare Pages branch is invalid or unsafe");
@@ -941,13 +943,36 @@ async function readSnapshot(path: string, label: string) {
 export type DeployPagesRuntime = {
   exportPages: typeof exportPages;
   verifyDeployment: typeof verifyDeployment;
+  verifyProduction?: typeof verifyDeployment;
   publishWithRestore: typeof publishWithRestore;
+  bootstrapPreview?: (directory: string, branch: string) => Promise<string>;
 };
+
+async function verifyProductionAfterPropagation(
+  ...args: Parameters<typeof verifyDeployment>
+): Promise<void> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      await verifyDeployment(...args);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 5) break;
+      await new Promise((resolvePromise) =>
+        setTimeout(resolvePromise, (attempt + 1) * 2_000),
+      );
+    }
+  }
+  throw lastError;
+}
 
 const defaultRuntime: DeployPagesRuntime = {
   exportPages,
   verifyDeployment,
+  verifyProduction: verifyProductionAfterPropagation,
   publishWithRestore,
+  bootstrapPreview: wranglerDeploy,
 };
 
 async function runLockedDeployPagesAtProjectRoot(
@@ -997,8 +1022,17 @@ async function runLockedDeployPagesAtProjectRoot(
       outputDirectory: lastGoodDirectory,
     });
     try {
+      const bootstrapUrl = runtime.bootstrapPreview
+          ? await runtime.bootstrapPreview(
+              lastGoodDirectory,
+              previewBranchForRunId(current.runId).replace(
+                "market-update-",
+                "market-seed-",
+              ),
+            )
+        : PRODUCTION_BASE_URL;
       await runtime.verifyDeployment(
-        PRODUCTION_BASE_URL,
+        bootstrapUrl,
         currentExport.routes,
         {
           runId: current.runId,
@@ -1044,6 +1078,9 @@ async function runLockedDeployPagesAtProjectRoot(
         }
       : {}),
   });
+  const currentSnapshot = await readSnapshot(currentPath, "current snapshot");
+  const snapshotAlreadyCurrent =
+    hashCandidate(currentSnapshot) === candidateExport.candidateSha256;
   const activeDirectoryByUrl = new Map<
     string,
     {
@@ -1109,10 +1146,14 @@ async function runLockedDeployPagesAtProjectRoot(
         archiveSourceIds: manifest.archiveSourceIds,
         routeIdentities: manifest.routeIdentities,
       };
-      await runtime.verifyDeployment(baseUrl, manifest.routes, expectation);
+      const verifier =
+        baseUrl === PRODUCTION_BASE_URL && runtime.verifyProduction
+          ? runtime.verifyProduction
+          : runtime.verifyDeployment;
+      await verifier(baseUrl, manifest.routes, expectation);
     },
-    revalidate: () =>
-      revalidatePublicationState({
+    revalidate: async () => {
+      await revalidatePublicationState({
         runId: candidate.runId,
         candidatePath,
         reviewPath,
@@ -1120,7 +1161,14 @@ async function runLockedDeployPagesAtProjectRoot(
         expectedCandidateSha256: authorization.candidateSha256,
         expectedArtifactTreeSha256: candidateExport.artifactTreeSha256,
         expectedManifestSha256: candidateExport.manifestSha256,
-      }),
+      });
+      if (snapshotAlreadyCurrent) {
+        const current = await readSnapshot(currentPath, "current snapshot");
+        if (hashCandidate(current) !== candidateExport.candidateSha256) {
+          throw new Error("current snapshot changed during site-only redeployment");
+        }
+      }
+    },
     copyDirectory: async (
       from: string,
       to: string,
@@ -1165,6 +1213,7 @@ async function runLockedDeployPagesAtProjectRoot(
     expectedCandidateSha256: candidateExport.candidateSha256,
     expectedArtifactTreeSha256: candidateExport.artifactTreeSha256,
     expectedManifestSha256: candidateExport.manifestSha256,
+    snapshotAlreadyCurrent,
   });
   process.stdout.write(
     `${JSON.stringify({ published: true, runId: promotion.runId })}\n`,

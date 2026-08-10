@@ -26,10 +26,14 @@ export async function makeFixtureWorkspace() {
     mkdir(dirname(paths.monthlyIndexPath), { recursive: true }),
   ]);
   const candidateFixture = new URL("../fixtures/market/valid-candidate.json", import.meta.url);
-  const previousFixture = new URL("../../data/market/current.json", import.meta.url);
-  await Promise.all([cp(candidateFixture, paths.candidatePath), cp(previousFixture, paths.currentPath), writeFile(paths.monthlyIndexPath, "{}\n")]);
+  const previousFixture = new URL("../fixtures/market/previous-full.json", import.meta.url);
+  const previous = JSON.parse(await readFile(previousFixture, "utf8")) as MarketSnapshot;
+  await Promise.all([
+    cp(candidateFixture, paths.candidatePath),
+    writeFile(paths.currentPath, `${JSON.stringify(previous)}\n`),
+    writeFile(paths.monthlyIndexPath, "{}\n"),
+  ]);
   const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
-  const previous = JSON.parse(await readFile(paths.currentPath, "utf8")) as MarketSnapshot;
   await writeFile(paths.candidatePath, `${JSON.stringify(normalizeCandidate(candidate, previous, new Date(candidate.generatedAt)))}\n`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
   return paths;

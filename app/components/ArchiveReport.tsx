@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { MonthlyArchive } from "../../market-data/monthly.ts";
 import type { SourceRecord } from "../../market-data/types.ts";
+import { SiteCredit } from "./SiteCredit";
 
 function monthLabel(month: string, locale: "zh" | "en") {
   const [year, monthNumber] = month.split("-");
@@ -132,6 +133,7 @@ export function ArchiveReport({
           ))}
         </div>
       </section>
+      <SiteCredit />
     </main>
   );
 }

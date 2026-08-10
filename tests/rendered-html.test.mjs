@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
+
+const currentSnapshot = JSON.parse(
+  await readFile(new URL("../data/market/current.json", import.meta.url), "utf8"),
+);
 
 async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -68,10 +73,24 @@ for (const [pathname, heading, metricIds] of [
     const html = await response.text();
     assert.match(html, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     assert.match(html, /AI Market Atlas/i);
+    assert.match(
+      html,
+      /rel="icon" href="https:\/\/aimarketatlas\.net\/favicon\.svg" type="image\/svg\+xml"/,
+    );
+    assert.match(
+      html,
+      /rel="shortcut icon" href="https:\/\/aimarketatlas\.net\/favicon\.svg"/,
+    );
     assert.match(html, /中文 \/ EN/);
-    assert.match(html, /2026-07-25-saturday/);
+    assert.match(
+      html,
+      new RegExp(currentSnapshot.runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    );
     assert.match(html, /資料截止/);
-    assert.match(html, /本期無重大變化/);
+    assert.match(
+      html,
+      currentSnapshot.pages[pathname].changed ? /本期已更新/ : /本期無重大變化/,
+    );
     assert.doesNotMatch(html, /July 2026 illustrative dataset|2026 年 7 月的示意數據/i);
     assert.match(html, /資料來源與方法/);
     assert.match(html, /最後查閱/);
@@ -82,6 +101,10 @@ for (const [pathname, heading, metricIds] of [
     if (pathname === "/") {
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
+      assert.match(html, /report-evidence-grid evidence-count-1/);
+      assert.match(html, /支援、反向與催化信號/);
+      assert.match(html, /已公佈的 AI 可用容量/);
+      assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
     }
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });

@@ -22,7 +22,7 @@ test("fixture pipeline validates, promotes, builds, and exports without producti
   assert.equal(result.promotedRunId, "2026-08-01-saturday");
   assert.equal(result.deploymentAttempted, false);
   assert.ok(result.exportedRoutes.includes("/stocks"));
-  assert.ok(result.exportedRoutes.includes("/archive/2026-07"));
+  assert.ok(result.exportedRoutes.includes("/archive"));
   assert.ok(result.exportedRoutes.includes("/market-brief/"));
   assert.deepEqual(
     await Promise.all([

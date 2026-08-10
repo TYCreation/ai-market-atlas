@@ -6,6 +6,7 @@ import type { DashboardConfig } from "../content";
 import type { SourceBundle } from "../sources";
 import { dashboardHeadings, type DashboardPath } from "../seo";
 import { EquityMarketDeepDive } from "./EquityMarketDeepDive";
+import { AmbientPointerGlow, AtlasField } from "./AtlasField";
 import {
   EditionStatus,
   type LocalizedEditionMeta,
@@ -14,6 +15,7 @@ import {
 import { SiCDeepDive } from "./SiCDeepDive";
 import { WeeklyMarketBrief } from "./WeeklyMarketBrief";
 import { MetricSources, SourcePanel } from "./SourcePanel";
+import { SiteCredit } from "./SiteCredit";
 
 type Locale = "zh" | "en";
 
@@ -126,6 +128,25 @@ export function MarketDashboard({
   const ui = copy[locale];
   const searchHeading =
     dashboardHeadings[activeConfig.slug as DashboardPath][locale];
+  const evidenceItems = activeConfig.report
+    ? [
+        ...activeConfig.report.supportingEvidence.map((item) => ({
+          kind: locale === "zh" ? "支援證據" : "Supporting evidence",
+          text: item.text,
+          key: item.metricIds.join("-"),
+        })),
+        ...activeConfig.report.opposingEvidence.map((item) => ({
+          kind: locale === "zh" ? "反向證據" : "Opposing evidence",
+          text: item.text,
+          key: item.metricIds.join("-"),
+        })),
+        ...activeConfig.report.catalysts.map((text, index) => ({
+          kind: locale === "zh" ? "催化劑" : "Catalyst",
+          text,
+          key: `catalyst-${index}`,
+        })),
+      ]
+    : [];
 
   useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-Hant" : "en";
@@ -179,6 +200,7 @@ export function MarketDashboard({
 
   return (
     <div className="site-shell">
+      <AmbientPointerGlow />
       <header className="topbar">
         <Link className="brand" href={localizedPath("/", locale)} aria-label={ui.homeLabel}>
           <span className="brand-mark" aria-hidden="true" />
@@ -218,6 +240,7 @@ export function MarketDashboard({
 
       <main className="main">
         <section className="masthead">
+          <AtlasField />
           <div className="masthead-copy">
             <p className="eyebrow">{activeConfig.eyebrow}</p>
             <h1 className="search-heading">{searchHeading}</h1>
@@ -276,37 +299,20 @@ export function MarketDashboard({
           ))}
         </section>
 
-        {activeConfig.report &&
-        (activeConfig.report.supportingEvidence.length > 0 ||
-          activeConfig.report.opposingEvidence.length > 0 ||
-          activeConfig.report.catalysts.length > 0) ? (
+        {evidenceItems.length > 0 ? (
           <section className="section report-evidence">
             <div className="section-head">
               <div>
                 <p className="section-kicker">
                   {locale === "zh" ? "本期證據" : "Edition evidence"}
                 </p>
-                <h2>{locale === "zh" ? "支持、反向與催化信號" : "Supporting, opposing, and catalyst signals"}</h2>
+                <h2>{locale === "zh" ? "支援、反向與催化信號" : "Supporting, opposing, and catalyst signals"}</h2>
               </div>
             </div>
-            <div className="watch-grid">
-              {[
-                ...activeConfig.report.supportingEvidence.map((item) => ({
-                  kind: locale === "zh" ? "支持證據" : "Supporting evidence",
-                  text: item.text,
-                  key: item.metricIds.join("-"),
-                })),
-                ...activeConfig.report.opposingEvidence.map((item) => ({
-                  kind: locale === "zh" ? "反向證據" : "Opposing evidence",
-                  text: item.text,
-                  key: item.metricIds.join("-"),
-                })),
-                ...activeConfig.report.catalysts.map((text, index) => ({
-                  kind: locale === "zh" ? "催化劑" : "Catalyst",
-                  text,
-                  key: `catalyst-${index}`,
-                })),
-              ].map((item) => (
+            <div
+              className={`watch-grid report-evidence-grid evidence-count-${Math.min(evidenceItems.length, 3)}`}
+            >
+              {evidenceItems.map((item) => (
                 <article className="watch-card" key={`${item.kind}-${item.key}`}>
                   <div className="watch-priority"><span>{item.kind}</span><span>↗</span></div>
                   <p>{item.text}</p>
@@ -478,6 +484,7 @@ export function MarketDashboard({
           <Link className="footer-archive" href={localizedPath("/archive", locale)}>{ui.archiveLink} ↗</Link>
           <a className="footer-archive" href="#sources">{ui.methodologyLink} ↑</a>
           <span className="footer-edition">AI Market Atlas · {edition[locale].runId}</span>
+          <SiteCredit />
         </footer>
       </main>
     </div>

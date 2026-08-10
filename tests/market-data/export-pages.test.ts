@@ -59,16 +59,61 @@ async function isolatedExportProject(build: boolean): Promise<string> {
     join(isolatedRoot, "node_modules"),
     "dir",
   );
+  const julySnapshot = JSON.parse(
+    await readFile(
+      join(projectRoot, "tests", "fixtures", "market", "previous-full.json"),
+      "utf8",
+    ),
+  ) as MarketSnapshot;
+  await writeFile(
+    join(isolatedRoot, "data", "market", "current.json"),
+    `${JSON.stringify(julySnapshot)}\n`,
+  );
+  await generateMarketBriefAssets({
+    snapshotPath: join(isolatedRoot, "data", "market", "current.json"),
+    canonicalData: join(
+      isolatedRoot,
+      "hyperframes",
+      "weekly-ai-market-brief",
+      "data.json",
+    ),
+    publicData: join(isolatedRoot, "public", "market-brief", "data.json"),
+    canonicalHtml: join(
+      isolatedRoot,
+      "hyperframes",
+      "weekly-ai-market-brief",
+      "index.html",
+    ),
+    publicHtml: join(isolatedRoot, "public", "market-brief", "index.html"),
+  });
+  if (!build) {
+    await rm(join(isolatedRoot, "dist", "client", "market-brief"), {
+      recursive: true,
+      force: true,
+    });
+    await cp(
+      join(isolatedRoot, "public", "market-brief"),
+      join(isolatedRoot, "dist", "client", "market-brief"),
+      { recursive: true },
+    );
+  }
   return isolatedRoot;
 }
 
 test("exports every current/archive route and public asset without localhost metadata", async () => {
-  await rm(outputDirectory, { recursive: true, force: true });
+  const isolatedRoot = await isolatedExportProject(false);
+  const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
+  const isolatedSnapshot = join(
+    isolatedRoot,
+    "data",
+    "market",
+    "current.json",
+  );
   try {
     const result = await exportPages({
-      projectRoot,
-      snapshotPath,
-      outputDirectory,
+      projectRoot: isolatedRoot,
+      snapshotPath: isolatedSnapshot,
+      outputDirectory: isolatedOutput,
       build: false,
     });
 
@@ -79,8 +124,16 @@ test("exports every current/archive route and public asset without localhost met
       "/energy",
       "/models",
       "/sic",
+      "/en",
+      "/en/stocks",
+      "/en/compute",
+      "/en/energy",
+      "/en/models",
+      "/en/sic",
       "/archive",
+      "/en/archive",
       "/archive/2026-07",
+      "/en/archive/2026-07",
       "/market-brief/",
     ]);
     for (const path of [
@@ -102,34 +155,34 @@ test("exports every current/archive route and public asset without localhost met
       "favicon.svg",
       "og.png",
     ]) {
-      assert.equal((await lstat(join(outputDirectory, path))).isFile(), true, path);
+      assert.equal((await lstat(join(isolatedOutput, path))).isFile(), true, path);
     }
-    assert.ok((await readdir(join(outputDirectory, "assets"))).length > 0);
+    assert.ok((await readdir(join(isolatedOutput, "assets"))).length > 0);
 
     const routeFiles = result.routes
       .filter((route) => route !== "/market-brief/")
       .map((route) =>
         route === "/"
-          ? join(outputDirectory, "index.html")
-          : join(outputDirectory, route.slice(1), "index.html"),
+          ? join(isolatedOutput, "index.html")
+          : join(isolatedOutput, route.slice(1), "index.html"),
       );
     const html = (
       await Promise.all(routeFiles.map((path) => readFile(path, "utf8")))
     ).join("\n");
     assert.match(html, /https:\/\/aimarketatlas\.net/);
     assert.match(
-      await readFile(join(outputDirectory, "sitemap.xml"), "utf8"),
+      await readFile(join(isolatedOutput, "sitemap.xml"), "utf8"),
       /https:\/\/aimarketatlas\.net\/stocks/,
     );
     assert.match(
-      await readFile(join(outputDirectory, "robots.txt"), "utf8"),
+      await readFile(join(isolatedOutput, "robots.txt"), "utf8"),
       /Sitemap: https:\/\/aimarketatlas\.net\/sitemap\.xml/,
     );
     assert.doesNotMatch(html, /localhost|127\.0\.0\.1/i);
     assert.deepEqual(
       JSON.parse(
         await readFile(
-          join(outputDirectory, ".market-deployment.json"),
+          join(isolatedOutput, ".market-deployment.json"),
           "utf8",
         ),
       ),
@@ -152,7 +205,7 @@ test("exports every current/archive route and public asset without localhost met
       hashCandidate(
         JSON.parse(
           await readFile(
-            join(outputDirectory, ".market-deployment.json"),
+            join(isolatedOutput, ".market-deployment.json"),
             "utf8",
           ),
         ),
@@ -199,7 +252,7 @@ test("exports every current/archive route and public asset without localhost met
       payloadSha256: result.routeIdentities["/market-brief/"].payloadSha256,
     });
   } finally {
-    await rm(outputDirectory, { recursive: true, force: true });
+    await rm(isolatedRoot, { recursive: true, force: true });
   }
 });
 
@@ -228,17 +281,22 @@ test("rejects unsafe export paths before build or output mutation", async () => 
 });
 
 test("rejects an export whose snapshot no longer matches the authorized candidate hash", async () => {
-  await assert.rejects(
-    () =>
-      exportPages({
-        projectRoot,
-        snapshotPath,
-        outputDirectory,
-        build: false,
-        authorizedCandidateSha256: "0".repeat(64),
-      }),
-    /authorized candidate hash/i,
-  );
+  const isolatedRoot = await isolatedExportProject(false);
+  try {
+    await assert.rejects(
+      () =>
+        exportPages({
+          projectRoot: isolatedRoot,
+          snapshotPath: join(isolatedRoot, "data", "market", "current.json"),
+          outputDirectory: join(isolatedRoot, "work", "pages-candidate"),
+          build: false,
+          authorizedCandidateSha256: "0".repeat(64),
+        }),
+      /authorized candidate hash/i,
+    );
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
 });
 
 test("rejects stale copied market-brief JSON and embedded identities", async (t) => {
