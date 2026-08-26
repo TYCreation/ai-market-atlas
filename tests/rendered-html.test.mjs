@@ -101,7 +101,11 @@ for (const [pathname, heading, metricIds] of [
     if (pathname === "/") {
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
-      assert.match(html, /report-evidence-grid evidence-count-1/);
+      const evidenceClassCount = Math.min(
+        currentSnapshot.pages[pathname].report.supportingEvidence.length,
+        3,
+      );
+      assert.match(html, new RegExp(`report-evidence-grid evidence-count-${evidenceClassCount}`));
       assert.match(html, /支援、反向與催化信號/);
       assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
@@ -207,4 +211,46 @@ test("every indexable report exposes distinct search metadata and structured dat
   }
 
   assert.equal(titles.size, expected.size);
+});
+
+test("unknown paths render a noindexed 404 rather than the homepage", async () => {
+  const response = await render("/nonexistent-xyz");
+  assert.equal(response.status, 404);
+
+  const html = await response.text();
+  assert.match(html, /找不到這個頁面/);
+  assert.match(html, /Page not found/);
+  assert.match(html, /content="noindex"/);
+  assert.doesNotMatch(html, /rel="canonical"/);
+  // A layout-level robots directive would land here as a conflicting `index, follow`.
+  assert.doesNotMatch(html, /content="index, follow"/);
+});
+
+test("every rendered route declares one trailing-slash canonical in the React tree", async () => {
+  const expected = new Map([
+    ["/", "https://aimarketatlas.net/"],
+    ["/stocks", "https://aimarketatlas.net/stocks/"],
+    ["/archive", "https://aimarketatlas.net/archive/"],
+    ["/archive/2026-07", "https://aimarketatlas.net/archive/2026-07/"],
+    ["/en", "https://aimarketatlas.net/en/"],
+    ["/en/stocks", "https://aimarketatlas.net/en/stocks/"],
+    ["/en/archive/2026-07", "https://aimarketatlas.net/en/archive/2026-07/"],
+  ]);
+
+  for (const [pathname, canonical] of expected) {
+    const html = await (await render(pathname)).text();
+    const found = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/g) ?? [];
+    assert.equal(found.length, 1, pathname);
+    assert.match(found[0], new RegExp(`href="${canonical}"`), pathname);
+    assert.doesNotMatch(html, /hrefLang="[^"]+" href="[^"]*[^/]"/, pathname);
+  }
+});
+
+test("indexable routes carry a single Discover-eligible robots directive", async () => {
+  for (const pathname of ["/", "/stocks", "/archive", "/archive/2026-07", "/en", "/en/sic"]) {
+    const html = await (await render(pathname)).text();
+    assert.equal((html.match(/name="robots"/g) ?? []).length, 1, pathname);
+    assert.match(html, /<meta name="robots" content="index, follow"\/>/, pathname);
+    assert.match(html, /max-image-preview:large/, pathname);
+  }
 });

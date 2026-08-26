@@ -8,7 +8,7 @@ import { getMonthlyArchive, getMonthlyArchiveSources, listMonthlyArchives } from
 export function generateStaticParams() { return listMonthlyArchives().map(({ month }) => ({ month })); }
 export async function generateMetadata({ params }: { params: Promise<{ month: string }> }): Promise<Metadata> {
   const { month } = await params; const archive = getMonthlyArchive(month);
-  return archive ? buildEnglishMetadata("/archive", { title: `${month} AI Market Report`, description: archive.summary.en }) : {};
+  return archive ? buildEnglishMetadata("/archive", { title: `${month} AI Market Report`, description: archive.summary.en, route: `/archive/${month}` }) : {};
 }
 export default async function EnglishMonthlyArchivePage({ params }: { params: Promise<{ month: string }> }) {
   const { month } = await params; const archive = getMonthlyArchive(month); const sources = getMonthlyArchiveSources(month);

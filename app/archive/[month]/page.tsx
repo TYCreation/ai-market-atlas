@@ -30,6 +30,7 @@ export async function generateMetadata({
   return buildMetadata("/archive", {
     title: `${monthName(month)} AI 市場報告`,
     description: archive.summary.zh,
+    route: `/archive/${month}`,
   });
 }
 

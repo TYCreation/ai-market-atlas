@@ -90,24 +90,62 @@ export const dashboardHeadings: Record<
   },
 };
 
+/**
+ * `routeFile()` in the export writes `<route>/index.html`, so the server serves the
+ * trailing-slash form and 301-redirects the slashless one. Every canonical, hreflang
+ * and sitemap entry must name the address the server actually serves.
+ */
+function withTrailingSlash(path: string): string {
+  return path === "/" ? "/" : path.endsWith("/") ? path : `${path}/`;
+}
+
+function chinesePath(route: string): string {
+  return withTrailingSlash(route);
+}
+
+function englishPath(route: string): string {
+  return withTrailingSlash(route === "/" ? "/en" : `/en${route}`);
+}
+
+function languageAlternates(route: string) {
+  const zh = chinesePath(route);
+  return { "zh-Hant": zh, en: englishPath(route), "x-default": zh };
+}
+
+/**
+ * Applied per indexable page rather than in the root layout: vinext emits the layout's
+ * metadata alongside a page's own instead of merging them, so a layout-level `robots`
+ * would put a conflicting `index, follow` next to the not-found page's `noindex`.
+ */
+const INDEXABLE_ROBOTS = {
+  index: true,
+  follow: true,
+  googleBot: {
+    index: true,
+    follow: true,
+    "max-image-preview": "large",
+    "max-snippet": -1,
+    "max-video-preview": -1,
+  },
+} as const;
+
 export function buildMetadata(
   path: keyof typeof pageSeo,
-  options?: { title?: string; description?: string },
+  options?: { title?: string; description?: string; route?: string },
 ): Metadata {
   const seo = pageSeo[path];
   const title = options?.title ?? seo.title;
   const description = options?.description ?? seo.description;
   const absoluteTitle = `${title}｜${SITE_NAME}`;
+  const route = options?.route ?? path;
 
   return {
     title: { absolute: absoluteTitle },
     description,
+    robots: INDEXABLE_ROBOTS,
     alternates: {
-      languages: {
-        "zh-Hant": path,
-        en: path === "/" ? "/en" : `/en${path}`,
-        "x-default": path,
-      },
+      canonical: chinesePath(route),
+      languages: languageAlternates(route),
     },
     openGraph: {
       title: absoluteTitle,
@@ -135,21 +173,20 @@ export function buildMetadata(
 
 export function buildEnglishMetadata(
   path: keyof typeof pageSeo,
-  options?: { title?: string; description?: string },
+  options?: { title?: string; description?: string; route?: string },
 ): Metadata {
   const seo = pageSeoEn[path];
   const title = options?.title ?? seo.title;
   const description = options?.description ?? seo.description;
   const absoluteTitle = `${title} | ${SITE_NAME}`;
+  const route = options?.route ?? path;
   return {
     title: { absolute: absoluteTitle },
     description,
+    robots: INDEXABLE_ROBOTS,
     alternates: {
-      languages: {
-        "zh-Hant": path,
-        en: path === "/" ? "/en" : `/en${path}`,
-        "x-default": path,
-      },
+      canonical: englishPath(route),
+      languages: languageAlternates(route),
     },
     openGraph: { title: absoluteTitle, description, type: "website", locale: "en_US", siteName: SITE_NAME, images: [{ url: DEFAULT_OG_IMAGE, width: 1774, height: 887, alt: `${SITE_NAME} ${title}` }] },
     twitter: { card: "summary_large_image", title: absoluteTitle, description, images: [DEFAULT_OG_IMAGE] },
