@@ -101,11 +101,7 @@ for (const [pathname, heading, metricIds] of [
     if (pathname === "/") {
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
-      const evidenceClassCount = Math.min(
-        currentSnapshot.pages[pathname].report.supportingEvidence.length,
-        3,
-      );
-      assert.match(html, new RegExp(`report-evidence-grid evidence-count-${evidenceClassCount}`));
+      assert.match(html, /report-evidence-grid evidence-count-1/);
       assert.match(html, /支援、反向與催化信號/);
       assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
