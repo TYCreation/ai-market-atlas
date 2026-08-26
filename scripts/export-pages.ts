@@ -86,23 +86,50 @@ const EN_CURRENT_ROUTES = CURRENT_ROUTES.map((route) =>
 const SITE_ORIGIN = "https://aimarketatlas.net";
 
 function canonicalUrl(route: string): string {
-  return new URL(route, SITE_ORIGIN).href;
+  const normalized =
+    route === "/" ? "/" : route.endsWith("/") ? route : `${route}/`;
+  return new URL(normalized, SITE_ORIGIN).href;
 }
 
-function injectCanonical(html: string, route: string): string {
-  if (/<link\b[^>]*\brel=["']canonical["']/i.test(html)) {
+const CANONICAL_LINK = /<link\b[^>]*\brel=["']canonical["'][^>]*>/gi;
+
+/**
+ * Rendered routes declare their own canonical through Next's metadata API, so the
+ * export only has to assert that each one arrived exactly once. A canonical appended
+ * here would sit outside the React tree and be stripped during hydration.
+ */
+function assertSingleCanonical(html: string, route: string): void {
+  const found = html.match(CANONICAL_LINK) ?? [];
+  if (found.length !== 1) {
+    throw new Error(
+      `export must contain exactly one canonical for ${route}, found ${found.length}`,
+    );
+  }
+  const expected = `href="${canonicalUrl(route)}"`;
+  if (!found[0].includes(expected)) {
+    throw new Error(
+      `export canonical for ${route} does not name ${canonicalUrl(route)}`,
+    );
+  }
+}
+
+function localizeHtmlLang(html: string, route: string): string {
+  if (route !== "/en" && !route.startsWith("/en/")) return html;
+  return html.replace('<html lang="zh-Hant">', '<html lang="en">');
+}
+
+/**
+ * The HyperFrames deck under `public/market-brief/` is a static file rather than a
+ * Next route, so its head tags still have to be written in by hand.
+ */
+function injectBriefHead(html: string, route: string, tags: string): string {
+  if (html.match(CANONICAL_LINK)) {
     throw new Error(`export already contains canonical metadata for ${route}`);
   }
   if (!html.includes("</head>")) {
     throw new Error(`export is missing a head element for ${route}`);
   }
-  const localizedHtml = route === "/en" || route.startsWith("/en/")
-    ? html.replace('<html lang="zh-Hant">', '<html lang="en">')
-    : html;
-  return localizedHtml.replace(
-    "</head>",
-    `<link rel="canonical" href="${canonicalUrl(route)}"/></head>`,
-  );
+  return html.replace("</head>", `${tags}</head>`);
 }
 
 function sitemapXml(routes: string[], lastModified: string): string {
@@ -569,7 +596,12 @@ export async function exportPages(
     ...archiveMonths.map((month) => `/archive/${month}`),
     ...archiveMonths.map((month) => `/en/archive/${month}`),
   ];
+  // `routes` is the set the deploy verifier walks (see deploy-pages.ts, which calls
+  // the verifier with `manifest.routes`), so the HyperFrames deck stays in it and keeps
+  // its payload hash checked. It is deliberately absent from the sitemap: it is
+  // orphaned, thin and duplicative, and is served noindex.
   const routes = [...renderedRoutes, "/market-brief/"];
+  const sitemapRoutes = renderedRoutes;
 
   const workDirectory = dirname(outputDirectory);
   await mkdir(workDirectory, { recursive: true });
@@ -603,7 +635,12 @@ export async function exportPages(
     );
     await writeFile(
       copiedBriefHtmlPath,
-      injectCanonical(copiedBriefHtml, "/market-brief/"),
+      injectBriefHead(
+        copiedBriefHtml,
+        "/market-brief/",
+        `<meta name="robots" content="noindex, follow"/>` +
+          `<link rel="canonical" href="${canonicalUrl("/market-brief/")}"/>`,
+      ),
     );
     const workerUrl = pathToFileURL(serverPath);
     workerUrl.searchParams.set("export", randomUUID());
@@ -650,7 +687,9 @@ export async function exportPages(
       if (response.status !== 200) {
         throw new Error(`Vinext export returned HTTP ${response.status} for ${route}`);
       }
-      const html = injectCanonical(await response.text(), route);
+      const rendered = await response.text();
+      assertSingleCanonical(rendered, route);
+      const html = localizeHtmlLang(rendered, route);
       if (/localhost|127\.0\.0\.1/i.test(html)) {
         throw new Error(`Vinext export contains localhost metadata for ${route}`);
       }
@@ -658,15 +697,46 @@ export async function exportPages(
       await mkdir(dirname(destination), { recursive: true });
       await writeFile(destination, html, { flag: "wx" });
     }
+    const notFoundResponse = await worker.default.fetch(
+      new Request(`${SITE_ORIGIN}/${randomUUID()}`, {
+        headers: {
+          accept: "text/html",
+          "x-forwarded-host": "aimarketatlas.net",
+          "x-forwarded-proto": "https",
+        },
+      }),
+      { ASSETS: assets },
+      {
+        waitUntil() {},
+        passThroughOnException() {},
+      },
+    );
+    if (notFoundResponse.status !== 404) {
+      throw new Error(
+        `Vinext export returned HTTP ${notFoundResponse.status} for the not-found route`,
+      );
+    }
+    const notFoundHtml = await notFoundResponse.text();
+    if (/rel=["']canonical["']/i.test(notFoundHtml)) {
+      throw new Error("not-found export must not declare a canonical");
+    }
     await Promise.all([
+      writeFile(join(temporary, "404.html"), notFoundHtml, { flag: "wx" }),
       writeFile(
         join(temporary, "robots.txt"),
-        `User-agent: *\nAllow: /\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`,
+        [
+          "User-agent: *",
+          "Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference",
+          "Allow: /",
+          "",
+          `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
+          "",
+        ].join("\n"),
         { flag: "wx" },
       ),
       writeFile(
         join(temporary, "sitemap.xml"),
-        sitemapXml(routes, snapshot.dataCutoff),
+        sitemapXml(sitemapRoutes, snapshot.dataCutoff),
         { flag: "wx" },
       ),
       writeFile(

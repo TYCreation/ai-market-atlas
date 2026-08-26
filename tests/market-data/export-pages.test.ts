@@ -147,6 +147,7 @@ test("exports every current/archive route and public asset without localhost met
       "archive/2026-07/index.html",
       "market-brief/index.html",
       "market-brief/data.json",
+      "404.html",
       "robots.txt",
       "sitemap.xml",
       "_redirects",
@@ -174,9 +175,33 @@ test("exports every current/archive route and public asset without localhost met
       await readFile(join(isolatedOutput, "sitemap.xml"), "utf8"),
       /https:\/\/aimarketatlas\.net\/stocks/,
     );
+    const notFound = await readFile(join(isolatedOutput, "404.html"), "utf8");
+    assert.match(notFound, /content="noindex"/);
+    assert.doesNotMatch(notFound, /rel="canonical"/);
+
+    const sitemap = await readFile(join(isolatedOutput, "sitemap.xml"), "utf8");
+    assert.doesNotMatch(sitemap, /market-brief/);
+    assert.match(sitemap, /https:\/\/aimarketatlas\.net\/stocks\//);
+
+    const brief = await readFile(
+      join(isolatedOutput, "market-brief", "index.html"),
+      "utf8",
+    );
+    assert.match(brief, /name="robots" content="noindex, follow"/);
+    assert.match(
+      brief,
+      /<link rel="canonical" href="https:\/\/aimarketatlas\.net\/market-brief\/"\/>/,
+    );
     assert.match(
       await readFile(join(isolatedOutput, "robots.txt"), "utf8"),
       /Sitemap: https:\/\/aimarketatlas\.net\/sitemap\.xml/,
+    );
+    assert.equal(
+      await readFile(join(isolatedOutput, "robots.txt"), "utf8"),
+      "User-agent: *\n" +
+        "Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference\n" +
+        "Allow: /\n\n" +
+        "Sitemap: https://aimarketatlas.net/sitemap.xml\n",
     );
     assert.doesNotMatch(html, /localhost|127\.0\.0\.1/i);
     assert.deepEqual(
