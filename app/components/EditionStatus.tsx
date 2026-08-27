@@ -1,4 +1,4 @@
-import type { EditionMeta } from "../../market-data/view-model";
+import type { ReaderEditionMeta } from "../../market-data/view-model";
 import type { Locale, MetricStatus } from "../../market-data/types";
 import { TaipeiTime } from "./MetricProvenance";
 
@@ -15,7 +15,7 @@ const copy = {
   },
 } as const;
 
-export type LocalizedEditionMeta = Record<Locale, EditionMeta>;
+export type LocalizedEditionMeta = Record<Locale, ReaderEditionMeta>;
 export type LocalizedPageEdition = Record<
   Locale,
   { changed: boolean; changeLabel: string; verifiedAt: string }

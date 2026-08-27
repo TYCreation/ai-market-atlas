@@ -9,6 +9,16 @@ import {
 import { MarketDashboard } from "./MarketDashboard";
 import { ReportStructuredData } from "./StructuredData";
 import { normalizeTaiwanCopy } from "../taiwan-copy";
+import type { EditionMeta, ReaderEditionMeta } from "../../market-data/view-model";
+
+function toReaderEdition({
+  cadence,
+  cadenceLabel,
+  dataCutoff,
+  generatedAt,
+}: EditionMeta): ReaderEditionMeta {
+  return { cadence, cadenceLabel, dataCutoff, generatedAt };
+}
 
 export async function MarketDashboardPage({
   config,
@@ -21,8 +31,8 @@ export async function MarketDashboardPage({
 }) {
   const viewModel = await loadMarketViewModel();
   const edition = {
-    en: viewModel.getEditionMeta("en"),
-    zh: viewModel.getEditionMeta("zh"),
+    en: toReaderEdition(viewModel.getEditionMeta("en")),
+    zh: toReaderEdition(viewModel.getEditionMeta("zh")),
   };
   const pageEdition = {
     en: viewModel.getPageMeta(config.slug, "en"),

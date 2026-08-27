@@ -127,6 +127,10 @@ for (const [pathname, heading] of [
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, new RegExp(`<h1[^>]*>${heading}</h1>`));
+    assert.doesNotMatch(
+      html,
+      new RegExp(currentSnapshot.runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    );
     if (pathname === "/en/stocks") {
       assert.match(html, /Atlas model/);
       assert.match(html, /Market observation/);

@@ -63,6 +63,8 @@ export type EditionMeta = {
   generatedAt: string;
 };
 
+export type ReaderEditionMeta = Omit<EditionMeta, "runId">;
+
 const PAGE_SLUGS: PageSlug[] = ["/", "/stocks", "/compute", "/energy", "/models", "/sic"];
 const cadenceLabels: Record<RunCadence, Record<Locale, string>> = {
   wednesday: { en: "Wednesday update", zh: "週三更新" },
