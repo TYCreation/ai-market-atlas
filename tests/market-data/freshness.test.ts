@@ -25,6 +25,12 @@ test("a Friday US close remains current through Monday", () => {
   assert.equal(evaluateMetricFreshness(metric, "2026-08-05T20:00:00.000Z").state, "stale");
 });
 
+test("a market-close cutoff counts Wednesday only after the New York close", () => {
+  const metric = { ...snapshot.metrics["stocks.nvda.price"], asOf: "2026-07-31T20:00:00.000Z" };
+  assert.equal(evaluateMetricFreshness(metric, "2026-08-05T13:00:00.000Z").state, "current");
+  assert.equal(evaluateMetricFreshness(metric, "2026-08-05T20:00:00.000Z").state, "stale");
+});
+
 test("stock prices use the market-close policy for dotted listing symbols", () => {
   assert.equal(freshnessPolicyFor("stocks.2330.tw.price", "published").class, "market-close");
 });

@@ -47,9 +47,20 @@ function newYorkCalendarDate(timestamp: Date): Date {
   return new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day)));
 }
 
+function hasNewYorkMarketClosed(timestamp: Date): boolean {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(timestamp);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value);
+  return hour >= 16;
+}
+
 function completedUsTradingWeekdays(asOf: Date, dataCutoff: Date): number {
   const firstDay = newYorkCalendarDate(asOf);
   const cutoffDay = newYorkCalendarDate(dataCutoff);
+  if (!hasNewYorkMarketClosed(dataCutoff)) cutoffDay.setUTCDate(cutoffDay.getUTCDate() - 1);
   if (cutoffDay < firstDay) return 0;
 
   let completedDays = 0;
