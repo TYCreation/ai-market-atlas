@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extname, join, relative, resolve } from "node:path";
 
@@ -82,11 +83,7 @@ function toRequest(request) {
 async function sendResponse(response, nodeResponse) {
   nodeResponse.statusCode = response.status;
   for (const [name, value] of response.headers) nodeResponse.setHeader(name, value);
-  if (!response.body) {
-    nodeResponse.end();
-    return;
-  }
-  Readable.fromWeb(response.body).pipe(nodeResponse);
+  await pipeline(response.body ? Readable.fromWeb(response.body) : Readable.from([]), nodeResponse);
 }
 
 /**
@@ -116,8 +113,12 @@ export async function withBuiltSite(callback) {
       );
       await sendResponse(workerResponse, response);
     } catch (error) {
-      response.statusCode = 500;
-      response.end(error instanceof Error ? error.stack : "Internal Server Error");
+      if (response.headersSent) {
+        response.destroy(error instanceof Error ? error : undefined);
+      } else {
+        response.statusCode = 500;
+        response.end(error instanceof Error ? error.stack : "Internal Server Error");
+      }
     }
   });
 
