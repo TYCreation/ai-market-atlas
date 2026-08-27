@@ -108,11 +108,25 @@ contain one normalized bilingual record for every page and metric:
 - Every metric lists its source IDs and one observation per supporting source.
 - Public figures use first-party or free public sources whenever available.
 - Atlas-modeled values identify `atlas-model` and explain their method.
-- An unavailable free source carries forward the last verified value and its
-  status; missing data is never guessed.
+- If a free source is unavailable, retain the last observation only when it remains inside
+  its code-owned freshness window. Otherwise mark the metric waiting and stop publication
+  when it is required. Never present an expired or modeled replacement as current.
 - Wednesday marks only materially changed pages and supplies 3–5 key signals.
   Saturday checks all six pages and supplies 5–8 signals plus next-week
   observations.
+
+### Per-page editorial contract
+
+Before writing a candidate, the scheduled researcher re-examines every page thesis
+against the newly collected evidence, then restates, sharpens, or explicitly retains
+that thesis. Each page must include at least one cited `opposingEvidence` item with the
+metric IDs that support the observation. Each risk must state an observable,
+  falsifiable metric, event, or time-based condition that could disprove or materially
+  weaken the thesis; a risk that only gives methodological advice is not sufficient. Use a directional `thesisStance`
+only when the evidence supports it; retain `neutral` when the evidence does not support
+a directional conclusion. Mark a page `changed` when an evidenced thesis or stance
+revision occurs, with the applicable change reason; retain it as unchanged only when
+there is no such revision.
 
 Paid data can be added later by implementing the existing source-adapter
 boundary in `market-data/adapters/`. A paid adapter may collect candidate data,
@@ -136,6 +150,15 @@ SHA-256 matches the exact normalized candidate can proceed. `manual_review`
 means an operator must resolve the listed conflicts or evidence questions;
 `reject` means a required integrity, source, session, or schema rule failed.
 Both outcomes stop automatically—do not promote or bypass a failed check.
+
+The final run report must list the authoritative workspace path
+(`/Volumes/2TB_Micron/Claude/web/ai-market-atlas`), freshness failures (including
+`STALE_REQUIRED_METRIC` and `STALE_OPTIONAL_METRIC`), stagnation warnings (including
+`METRIC_STAGNATION` and `NARRATIVE_STAGNATION`), modeled-presentation failures
+(`MODELED_MARKET_PRESENTATION`), `opposingEvidence` coverage for every page, and
+changed versus retained theses and stances, alongside the existing cutoff,
+cadence, source, review, signal, preview, build, export, deployment, production,
+pruning, and restoration results.
 
 For a fully isolated no-deployment rehearsal, use
 `runFixturePipeline()` from `market-data/pipeline.ts`. It copies the application

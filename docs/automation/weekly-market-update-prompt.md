@@ -1,6 +1,6 @@
 # AI 市場週三／週六更新
 
-Use `/Users/tonyyang/.codex/.chatgpt-projects/g-p-6a6aa733e4848191980c8acbf4e1a671/ai-market-atlas`
+Use `/Volumes/2TB_Micron/Claude/web/ai-market-atlas`
 as the sole publication workspace. Start every run in that directory. Keep the
 existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
 
@@ -11,13 +11,25 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    creates exactly one permanent monthly archive.
 2. Research first-party sources and free public sources before editing data.
    Every required public number must resolve to a listed source or an explicitly
-   documented AI Market Atlas method. If a free source is unavailable, retain
-   the last verified value with its status and evidence; never invent a
-   replacement.
+   documented AI Market Atlas method.
+
+   If a free source is unavailable, retain the last observation only when it remains inside
+   its code-owned freshness window. Otherwise mark the metric waiting and stop publication
+   when it is required. Never present an expired or modeled replacement as current.
 3. Write only `data/market/candidate.json`. Include complete English and Chinese
    report fields, exact source metadata, and per-source metric observations. Do
    not change `current.json`, reviews, archives, generated brief assets, or
    deployment files by hand.
+   Every page must satisfy the editorial contract: re-examine its thesis against the
+   newly collected evidence; restate, sharpen, or explicitly retain it; and include at
+   least one cited `opposingEvidence` item with the metric IDs that support that item.
+   Each risk must name an observable metric, event, or time-based condition that could
+   disprove or materially weaken the thesis, rather than only giving methodological
+   advice. Use a
+   directional `thesisStance` only when the evidence supports it; a neutral stance is
+   valid when the evidence does not support a directional conclusion. Set `changed` when
+   an evidenced thesis or stance revision occurs, and include the applicable change
+   reason; retain it as unchanged only when no such revision is made.
 4. Run `npm run market:validate -- --candidate data/market/candidate.json`.
 5. Run
    `npm run market:review -- --candidate data/market/candidate.json --previous data/market/current.json --reviews-directory data/market/reviews`.
@@ -37,7 +49,12 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    review decision, checks, and issues; selected signals and next observations;
    preview state; test/build/export results; deployment and production
    verification state; pruning; and whether snapshot or site restoration was
-   required and verified.
+   required and verified. The final report must also list the authoritative workspace
+   path, freshness failures (including `STALE_REQUIRED_METRIC` and
+   `STALE_OPTIONAL_METRIC`), stagnation warnings (including `METRIC_STAGNATION` and
+   `NARRATIVE_STAGNATION`), modeled-presentation failures
+   (`MODELED_MARKET_PRESENTATION`), `opposingEvidence` coverage for every page, and
+   changed versus retained theses and stances.
 10. Never invent missing data, bypass a failed gate, expose credentials or
     private source details, weaken a hash/lock/anchor check, or claim that
     publication or restoration succeeded without its verification.
