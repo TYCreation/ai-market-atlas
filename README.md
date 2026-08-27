@@ -123,9 +123,8 @@ that thesis. Each page must include at least one cited `opposingEvidence` item w
 metric IDs that support the observation. Each risk must state an observable, falsifiable
 metric, event, or time-based condition that could disprove or materially weaken the
 thesis; a risk that only gives methodological advice is not sufficient. Use a directional
-`thesisStance`
-only when the evidence supports it; retain `neutral` when the evidence does not support
-a directional conclusion. Mark a page `changed` when an evidenced thesis or stance
+`thesisStance` only when the evidence supports it; retain `neutral` when the evidence does not
+support a directional conclusion. Mark a page `changed` when an evidenced thesis or stance
 revision occurs, with the applicable change reason; retain it as unchanged only when
 there is no such revision.
 

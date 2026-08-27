@@ -361,11 +361,18 @@ test("blocks a page without opposing evidence", () => {
 
 test("blocks a page when opposing evidence item lacks metric citation", () => {
   const uncited = structuredClone(valid);
-  uncited.pages["/compute"].report.opposingEvidence[0].metricIds = [];
+  const cited = structuredClone(uncited.pages["/compute"].report.opposingEvidence[0]);
+  uncited.pages["/compute"].report.opposingEvidence = [
+    cited,
+    { ...structuredClone(cited), metricIds: [] },
+  ];
 
-  assert.ok(evaluateQualityGate(uncited, previousSnapshot).issues.some(
-    (issue) => issue.code === "MISSING_OPPOSING_EVIDENCE" && issue.page === "/compute",
-  ));
+  const result = evaluateQualityGate(uncited, previousSnapshot);
+  const issue = result.issues.find(
+    (candidate) => candidate.code === "MISSING_OPPOSING_EVIDENCE" && candidate.page === "/compute",
+  );
+  assert.equal(issue?.severity, "block");
+  assert.equal(result.publishable, false);
 });
 
 test("warns when metrics and narratives are unchanged across three editions", () => {
