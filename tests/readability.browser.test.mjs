@@ -19,14 +19,17 @@ async function assertVisibleTextSize(page) {
       );
       if (directTextNodes.length === 0) return false;
 
+      const elementStyles = getComputedStyle(element);
+      if (elementStyles.visibility === "hidden" || elementStyles.visibility === "collapse") {
+        return false;
+      }
+
       for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
         const styles = getComputedStyle(ancestor);
         // Nested opacities multiply, so effective opacity reaches zero only
         // when at least one ancestor's computed opacity is zero.
         if (
           styles.display === "none" ||
-          styles.visibility === "hidden" ||
-          styles.visibility === "collapse" ||
           Number.parseFloat(styles.opacity) === 0
         ) {
           return false;
@@ -99,7 +102,18 @@ async function assertTextVisibilityCensusRegressions(page) {
     );
 
     await page.locator("#readability-census-probe").evaluate((probe) => {
+      probe.innerHTML = '<span style="font-size: 8px; visibility: visible">visibility-overridden text</span>';
+      probe.style.visibility = "hidden";
+    });
+    await assert.rejects(
+      () => assertVisibleTextSize(page),
+      /"fontSize":8/,
+      "the census must include text whose visibility overrides a hidden ancestor",
+    );
+
+    await page.locator("#readability-census-probe").evaluate((probe) => {
       probe.innerHTML = '<span style="font-size: 8px">opacity-hidden text</span>';
+      probe.style.visibility = "visible";
       probe.style.opacity = "0";
     });
     await assert.doesNotReject(
