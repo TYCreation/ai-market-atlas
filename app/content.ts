@@ -1,4 +1,4 @@
-import type { createMarketViewModel, LocalizedPageReport } from "../market-data/view-model";
+import type { createMarketViewModel, LocalizedPageReport, MetricView } from "../market-data/view-model";
 import type { Locale, MetricStatus, PageSlug } from "../market-data/types";
 
 type MarketViewModel = ReturnType<typeof createMarketViewModel>;
@@ -76,14 +76,19 @@ export type EquityDeepDiveConfig = {
     risk: string;
     stance: string;
     stockMetricIds?: {
-      price: string;
-      weekReturn: string;
-      monthReturn: string;
+      price?: string;
+      weekReturn?: string;
+      monthReturn?: string;
     };
     stockMetricStatuses?: {
-      price: MetricStatus;
-      weekReturn: MetricStatus;
-      monthReturn: MetricStatus;
+      price?: MetricStatus;
+      weekReturn?: MetricStatus;
+      monthReturn?: MetricStatus;
+    };
+    stockMetricViews?: {
+      price: MetricView | undefined;
+      weekReturn: MetricView | undefined;
+      monthReturn: MetricView | undefined;
     };
   }>;
   catalysts: Array<{
@@ -122,6 +127,7 @@ export type DashboardConfig = {
     delta: string;
     metricId?: string;
     status?: MetricStatus;
+    provenance?: MetricView;
   }>;
   thesis: {
     title: string;
@@ -173,18 +179,23 @@ export function hydrateDashboard(
           const monthReturn = viewModel.getStockMetric(equity.ticker, "monthReturn", locale);
           return {
             ...equity,
-            price: price.value,
-            week: weekReturn.value,
-            month: monthReturn.value,
+            price: price?.value ?? "—",
+            week: weekReturn?.value ?? "—",
+            month: monthReturn?.value ?? "—",
             stockMetricIds: {
-              price: price.metricId,
-              weekReturn: weekReturn.metricId,
-              monthReturn: monthReturn.metricId,
+              ...(price ? { price: price.metricId } : {}),
+              ...(weekReturn ? { weekReturn: weekReturn.metricId } : {}),
+              ...(monthReturn ? { monthReturn: monthReturn.metricId } : {}),
             },
             stockMetricStatuses: {
-              price: viewModel.getMetricStatus(price.metricId),
-              weekReturn: viewModel.getMetricStatus(weekReturn.metricId),
-              monthReturn: viewModel.getMetricStatus(monthReturn.metricId),
+              ...(price ? { price: viewModel.getMetricStatus(price.metricId) } : {}),
+              ...(weekReturn ? { weekReturn: viewModel.getMetricStatus(weekReturn.metricId) } : {}),
+              ...(monthReturn ? { monthReturn: viewModel.getMetricStatus(monthReturn.metricId) } : {}),
+            },
+            stockMetricViews: {
+              price,
+              weekReturn,
+              monthReturn,
             },
           };
         }),
@@ -205,6 +216,7 @@ export function hydrateDashboard(
         metricId: metric.metricId,
         value: metric.value,
         status: viewModel.getMetricStatus(metric.metricId),
+        provenance: metric,
       };
     }),
     watchlist: config.watchlist.map((item, index) => ({

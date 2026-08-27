@@ -2,10 +2,12 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import currentSnapshotJson from "#market-snapshot" with { type: "json" };
 import { KPI_CATALOG, stockMetricId, type StockMetricField } from "./catalog.ts";
+import { evaluateMetricFreshness } from "./freshness.ts";
 import { assertMarketSnapshot } from "./schema.ts";
 import type {
   Locale,
   MarketSnapshot,
+  MetricRecord,
   MetricStatus,
   PageReport,
   PageSlug,
@@ -25,11 +27,17 @@ export type LocalizedPageReport = {
   nextObservations: string[];
 };
 
-export type KpiView = {
+export type MetricView = {
   metricId: string;
   value: string;
   sourceIds: string[];
+  kind: "published-fact" | "market-observation" | "atlas-model";
+  freshness: "current" | "dated";
+  asOf: string;
+  direction: "up" | "down" | "flat" | "not-applicable";
 };
+
+export type KpiView = MetricView;
 
 export type SourceReference = {
   id: string;
@@ -94,18 +102,52 @@ function localizeReport(report: PageReport, locale: Locale): LocalizedPageReport
   };
 }
 
+function metricKind(metricKind: MetricRecord["kind"], policyClass: string): MetricView["kind"] {
+  if (policyClass === "market-close") return "market-observation";
+  if (metricKind === "modeled") return "atlas-model";
+  return "published-fact";
+}
+
+function metricView(snapshot: MarketSnapshot, metricId: string, locale: Locale): MetricView | undefined {
+  const metric = snapshot.metrics[metricId];
+  if (!metric) throw new Error(`Snapshot is missing metric ${metricId}`);
+
+  const freshness = evaluateMetricFreshness(metric, snapshot.dataCutoff);
+  if (freshness.state === "stale") {
+    if (metric.required) {
+      throw new Error(
+        `Required metric is stale and cannot be rendered: ${metric.id} (${freshness.policy.class} policy)`,
+      );
+    }
+    return undefined;
+  }
+
+  const direction = metric.previousNumericValue === undefined
+    ? "not-applicable"
+    : metric.numericValue > metric.previousNumericValue
+      ? "up"
+      : metric.numericValue < metric.previousNumericValue
+        ? "down"
+        : "flat";
+  return {
+    metricId: metric.id,
+    value: metric.display[locale],
+    sourceIds: [...metric.sourceIds],
+    kind: metricKind(metric.kind, freshness.policy.class),
+    freshness: freshness.state === "dated" ? "dated" : "current",
+    asOf: metric.asOf,
+    direction,
+  };
+}
+
 function kpiFor(snapshot: MarketSnapshot, slug: PageSlug, index: number, locale: Locale): KpiView {
   const catalog = KPI_CATALOG.find(
     ([page, kpiIndex]) => page === slug && kpiIndex === index,
   );
   if (!catalog) throw new Error(`No KPI mapping for ${slug} index ${index}`);
-  const metric = snapshot.metrics[catalog[2]];
-  if (!metric) throw new Error(`Snapshot is missing KPI metric ${catalog[2]}`);
-  return {
-    metricId: metric.id,
-    value: metric.display[locale],
-    sourceIds: metric.sourceIds,
-  };
+  const view = metricView(snapshot, catalog[2], locale);
+  if (!view) throw new Error(`Required KPI metric is stale: ${catalog[2]}`);
+  return view;
 }
 
 export function buildSourceBundles(snapshot: MarketSnapshot): Record<PageSlug, SourceBundle> {
@@ -144,15 +186,12 @@ export function createMarketViewModel(snapshot: MarketSnapshot) {
     getKpi(slug: PageSlug, index: number, locale: Locale) {
       return kpiFor(snapshot, slug, index, locale);
     },
-    getStockMetric(ticker: string, field: StockMetricField, locale: Locale): KpiView {
+    getMetric(metricId: string, locale: Locale): MetricView | undefined {
+      return metricView(snapshot, metricId, locale);
+    },
+    getStockMetric(ticker: string, field: StockMetricField, locale: Locale): MetricView | undefined {
       const metricId = stockMetricId(ticker, field);
-      const metric = snapshot.metrics[metricId];
-      if (!metric) throw new Error(`Snapshot is missing stock metric ${metricId}`);
-      return {
-        metricId,
-        value: metric.display[locale],
-        sourceIds: metric.sourceIds,
-      };
+      return metricView(snapshot, metricId, locale);
     },
     getMetricStatus(metricId: string): MetricStatus {
       const metric = snapshot.metrics[metricId];
@@ -192,6 +231,7 @@ export function createMarketViewModel(snapshot: MarketSnapshot) {
 const defaultViewModel = createMarketViewModel(currentSnapshot);
 
 export const getKpi = defaultViewModel.getKpi;
+export const getMetric = defaultViewModel.getMetric;
 export const getPageMeta = defaultViewModel.getPageMeta;
 export const getPageReport = defaultViewModel.getPageReport;
 export const getEditionMeta = defaultViewModel.getEditionMeta;

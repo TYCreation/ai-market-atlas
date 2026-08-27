@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,19 +7,25 @@ import test from "node:test";
 import {
   buildSourceBundles,
   createMarketViewModel,
-  getKpi,
   getPageMeta,
   loadMarketSnapshot,
 } from "../../market-data/view-model.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
 test("returns both locales from one metric record", () => {
-  assert.deepEqual(getKpi("/", 0, "en"), {
+  const snapshot = JSON.parse(
+    readFileSync(new URL("../../tests/fixtures/market/valid-candidate.json", import.meta.url), "utf8"),
+  ) as MarketSnapshot;
+  assert.deepEqual(createMarketViewModel(snapshot).getKpi("/", 0, "en"), {
     metricId: "pulse.infrastructure_spend",
     value: "$2.8T",
     sourceIds: ["atlas-model", "stanford-economy"],
+    kind: "atlas-model",
+    freshness: "current",
+    asOf: "2026-08-01T01:00:00.000Z",
+    direction: "not-applicable",
   });
-  assert.equal(getKpi("/", 0, "zh").metricId, "pulse.infrastructure_spend");
+  assert.equal(createMarketViewModel(snapshot).getKpi("/", 0, "zh").metricId, "pulse.infrastructure_spend");
 });
 
 test("marks an unchanged page without replacing its thesis", () => {
@@ -62,4 +69,25 @@ test("loads and validates an explicitly selected preview snapshot", async () => 
     () => loadMarketSnapshot(join(root, "..", "missing.json")),
     /snapshot path|ENOENT/i,
   );
+});
+
+test("exposes presentation-safe metric provenance", () => {
+  const snapshot = structuredClone(
+    JSON.parse(readFileSync(new URL("../../tests/fixtures/market/valid-candidate.json", import.meta.url), "utf8")) as MarketSnapshot,
+  );
+  const view = createMarketViewModel(snapshot).getKpi("/", 0, "zh");
+  assert.equal(view.kind, "atlas-model");
+  assert.equal(view.asOf, snapshot.metrics[view.metricId].asOf);
+  assert.equal(view.freshness, "current");
+  assert.deepEqual(view.sourceIds, snapshot.metrics[view.metricId].sourceIds);
+});
+
+test("omits an optional stale stock observation", () => {
+  const snapshot = structuredClone(
+    JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,
+  );
+  snapshot.metrics["stocks.nvda.price"].required = false;
+  snapshot.metrics["stocks.nvda.price"].asOf = "2026-07-01T20:00:00.000Z";
+  const view = createMarketViewModel(snapshot);
+  assert.equal(view.getStockMetric("NVDA", "price", "en"), undefined);
 });
