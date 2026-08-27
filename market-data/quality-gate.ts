@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from "node:util";
+import { evaluateMetricFreshness } from "./freshness.ts";
 import type { MarketSnapshot, MetricRecord, PageSlug, SourceRecord } from "./types.ts";
 
 export type GateIssue = {
@@ -12,7 +13,13 @@ export type GateIssue = {
     | "THESIS_REVERSAL"
     | "BILINGUAL_MISMATCH"
     | "MATERIAL_CHANGE_MISMATCH"
-    | "SOURCE_UNREACHABLE";
+    | "SOURCE_UNREACHABLE"
+    | "STALE_REQUIRED_METRIC"
+    | "STALE_OPTIONAL_METRIC"
+    | "METRIC_STAGNATION"
+    | "NARRATIVE_STAGNATION"
+    | "MISSING_OPPOSING_EVIDENCE"
+    | "MODELED_MARKET_PRESENTATION";
   severity: "block" | "warn";
   metricId?: string;
   page?: PageSlug;
@@ -178,6 +185,40 @@ export function evaluateQualityGate(
   const metrics = Object.values(current.metrics);
 
   for (const metric of metrics) {
+    const freshness = evaluateMetricFreshness(metric, current.dataCutoff);
+    if (metric.required && freshness.state === "stale") {
+      issues.push(issueForMetric(
+        "STALE_REQUIRED_METRIC",
+        "block",
+        metric,
+        `Required metric is stale under ${freshness.policy.class} policy.`,
+      ));
+    }
+    if (!metric.required && freshness.state === "stale") {
+      issues.push(issueForMetric(
+        "STALE_OPTIONAL_METRIC",
+        "warn",
+        metric,
+        `Optional metric is stale under ${freshness.policy.class} policy.`,
+      ));
+    }
+
+    const marketFurniture = [
+      metric.market,
+      metric.marketTimezone,
+      metric.primaryListing,
+      metric.securityType,
+      metric.sessionState,
+    ].some((value) => value !== undefined);
+    if (metric.kind === "modeled" && marketFurniture) {
+      issues.push(issueForMetric(
+        "MODELED_MARKET_PRESENTATION",
+        "block",
+        metric,
+        "Modeled metrics cannot carry exchange-market presentation fields.",
+      ));
+    }
+
     if (/\.price$/i.test(metric.id) && exceeds(sourceSpread(metric), 0.01)) {
       issues.push(issueForMetric(
         "SOURCE_CONFLICT",
@@ -274,6 +315,15 @@ export function evaluateQualityGate(
   }
 
   for (const [page, state] of Object.entries(current.pages) as Array<[PageSlug, MarketSnapshot["pages"][PageSlug]]>) {
+    if (state.report.opposingEvidence.length === 0) {
+      issues.push({
+        code: "MISSING_OPPOSING_EVIDENCE",
+        severity: "block",
+        page,
+        message: "Every page must cite opposing evidence.",
+        sourceIds: [],
+      });
+    }
     const priorStance = previous.pages?.[page]?.thesisStance ?? state.previousThesisStance;
     if (priorStance !== "neutral" && priorStance !== state.thesisStance) {
       issues.push({

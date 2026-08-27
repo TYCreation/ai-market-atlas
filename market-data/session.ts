@@ -48,6 +48,7 @@ export function marketSession(market: string | undefined): MarketSession | undef
 }
 
 function assertMarketMetadata(metric: MetricRecord): MarketSession | undefined {
+  if (!hasMarketMetadata(metric) && metric.kind === "modeled") return undefined;
   if (!hasMarketMetadata(metric) && !isIndividualStockMetric(metric)) return undefined;
   const session = marketSession(metric.market);
   if (!session || metric.marketTimezone !== session.timezone) {
@@ -117,6 +118,9 @@ export function assertCompletedSession(metric: MetricRecord, runStart: Date): vo
     failCompletedSession(metric);
   }
   if (metric.sessionState === "holiday" && asOf.getTime() >= runStart.getTime()) {
+    failCompletedSession(metric);
+  }
+  if (metric.kind === "published" && hasMarketMetadata(metric) && metric.sessionState === undefined) {
     failCompletedSession(metric);
   }
   const session = assertMarketMetadata(metric);

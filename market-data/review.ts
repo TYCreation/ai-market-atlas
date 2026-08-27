@@ -85,17 +85,36 @@ const GATE_ISSUE_CODES = new Set<GateIssue["code"]>([
   "BILINGUAL_MISMATCH",
   "MATERIAL_CHANGE_MISMATCH",
   "SOURCE_UNREACHABLE",
+  "STALE_REQUIRED_METRIC",
+  "STALE_OPTIONAL_METRIC",
+  "METRIC_STAGNATION",
+  "NARRATIVE_STAGNATION",
+  "MISSING_OPPOSING_EVIDENCE",
+  "MODELED_MARKET_PRESENTATION",
 ]);
 
 export const REVIEW_CHECK_CODES = {
   schema: [],
   "completed-session": [],
-  "required-data": ["MISSING_REQUIRED", "LOW_CONFIDENCE"],
+  "required-data": [
+    "MISSING_REQUIRED",
+    "LOW_CONFIDENCE",
+    "STALE_REQUIRED_METRIC",
+    "STALE_OPTIONAL_METRIC",
+    "MODELED_MARKET_PRESENTATION",
+  ],
   "source-health": ["SOURCE_UNREACHABLE"],
   "source-conflict": ["SOURCE_CONFLICT"],
-  anomaly: ["UNEXPLAINED_PRICE_MOVE", "FINANCIAL_DELTA", "FORECAST_DELTA", "THESIS_REVERSAL"],
+  anomaly: [
+    "UNEXPLAINED_PRICE_MOVE",
+    "FINANCIAL_DELTA",
+    "FORECAST_DELTA",
+    "THESIS_REVERSAL",
+    "METRIC_STAGNATION",
+    "NARRATIVE_STAGNATION",
+  ],
   bilingual: ["BILINGUAL_MISMATCH"],
-  "narrative-evidence": [],
+  "narrative-evidence": ["MISSING_OPPOSING_EVIDENCE"],
   "no-change-integrity": ["MATERIAL_CHANGE_MISMATCH"],
 } as const satisfies Record<CheckId, readonly GateIssue["code"][]>;
 
@@ -304,6 +323,9 @@ export async function reviewCandidate(
     ? evaluateQualityGate(snapshot, previous, sourceIssues).issues
     : [];
   const narrativeIssues = snapshot ? validateNarrativeEvidence(snapshot) : [];
+  const editorialIssues = gateIssues.filter(
+    (candidate) => candidate.code === "MISSING_OPPOSING_EVIDENCE",
+  );
   const issues = sortGateIssues([...schemaIssues, ...completedIssues, ...gateIssues, ...narrativeIssues]);
 
   const checks: AutomatedReview["checks"] = [
@@ -314,7 +336,7 @@ export async function reviewCandidate(
     checkFor("source-conflict", gateIssues),
     checkFor("anomaly", gateIssues),
     checkFor("bilingual", [...schemaIssues, ...gateIssues]),
-    directCheck("narrative-evidence", narrativeIssues),
+    directCheck("narrative-evidence", [...narrativeIssues, ...editorialIssues]),
     checkFor("no-change-integrity", gateIssues),
   ];
 

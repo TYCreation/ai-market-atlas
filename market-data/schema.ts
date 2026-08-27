@@ -136,7 +136,14 @@ function assertMetric(
     fail(`${id}.securityType is unsupported`);
   }
   requireIsoTimestamp(metric.asOf, `${id}.asOf`);
-  if (!SESSION_STATES.has(requireString(metric.sessionState, `${id}.sessionState`))) fail(`${id}.sessionState is unsupported`);
+  if (metric.sessionState !== undefined && !SESSION_STATES.has(requireString(metric.sessionState, `${id}.sessionState`))) {
+    fail(`${id}.sessionState is unsupported`);
+  }
+  const hasMarketFurniture = [metric.market, metric.marketTimezone, metric.primaryListing, metric.securityType]
+    .some((field) => field !== undefined);
+  if (metric.kind === "published" && hasMarketFurniture && metric.sessionState === undefined) {
+    fail(`${id}.sessionState is required for published market metrics`);
+  }
   const sourceIds = requireStringArray(metric.sourceIds, `${id}.sourceIds`);
   if (metric.required && sourceIds.length === 0) fail(`${id} must have at least one source`);
   for (const sourceId of sourceIds) {

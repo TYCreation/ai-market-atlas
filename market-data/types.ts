@@ -36,7 +36,7 @@ export type MetricRecord = {
   primaryListing?: string;
   securityType?: "primary" | "adr" | "not-applicable";
   asOf: string;
-  sessionState: SessionState;
+  sessionState?: SessionState;
   sourceIds: string[];
   observations: MetricObservation[];
   confidence: Confidence;

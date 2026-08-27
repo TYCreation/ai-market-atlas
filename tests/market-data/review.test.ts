@@ -29,10 +29,38 @@ function reviewableCandidate(): MarketSnapshot {
 }
 
 function withoutNumericNarrative(snapshot: MarketSnapshot): MarketSnapshot {
+  const redact = (text: { en: string; zh: string }) => ({
+    ...text,
+    en: text.en.replaceAll(/\d/g, "x"),
+    zh: text.zh.replaceAll(/\d/g, "x"),
+  });
   for (const page of Object.values(snapshot.pages)) {
-    page.report = JSON.parse(
-      JSON.stringify(page.report).replaceAll(/\d/g, "x"),
-    ) as typeof page.report;
+    page.report.eyebrow = redact(page.report.eyebrow);
+    page.report.title = redact(page.report.title);
+    page.report.summary = redact(page.report.summary);
+    page.report.signal = redact(page.report.signal);
+    page.report.thesis.title = redact(page.report.thesis.title);
+    page.report.thesis.body = redact(page.report.thesis.body);
+    page.report.thesis.tags = {
+      en: page.report.thesis.tags.en.map((tag) => tag.replaceAll(/\d/g, "x")),
+      zh: page.report.thesis.tags.zh.map((tag) => tag.replaceAll(/\d/g, "x")),
+    };
+    for (const collection of ["supportingEvidence", "opposingEvidence"] as const) {
+      page.report[collection] = page.report[collection].map((evidence) => ({
+        ...evidence,
+        text: redact(evidence.text),
+      }));
+    }
+    for (const collection of ["catalysts", "risks", "nextObservations"] as const) {
+      page.report[collection] = page.report[collection].map(redact);
+    }
+  }
+  return snapshot;
+}
+
+function withOpposingEvidence(snapshot: MarketSnapshot): MarketSnapshot {
+  for (const [page, state] of Object.entries(snapshot.pages) as Array<[keyof MarketSnapshot["pages"], MarketSnapshot["pages"][keyof MarketSnapshot["pages"]]]>) {
+    state.report.opposingEvidence = structuredClone(valid.pages[page].report.opposingEvidence);
   }
   return snapshot;
 }
@@ -87,12 +115,32 @@ test("rejects a review whose persisted identity was altered", async () => {
 });
 
 test("routes a source conflict to manual review", async () => {
-  const snapshot = withoutNumericNarrative(structuredClone(conflicting));
+  const snapshot = withoutNumericNarrative(withOpposingEvidence(structuredClone(conflicting)));
   snapshot.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
   const review = await reviewSnapshot(snapshot);
 
   assert.equal(review.decision, "manual_review");
   assert.ok(review.issues.some((issue) => issue.code === "SOURCE_CONFLICT"));
+});
+
+test("routes freshness, modeled-presentation, and balance gate issues through existing checks", async () => {
+  const stale = reviewableCandidate();
+  stale.dataCutoff = "2026-08-20T01:00:00.000Z";
+  stale.metrics["pulse.power_queue"].asOf = "2026-08-01T01:00:00.000Z";
+  stale.metrics["stocks.nvda.price"].market = "US";
+  stale.metrics["stocks.nvda.price"].sessionState = "closed";
+  stale.pages["/compute"].report.opposingEvidence = [];
+
+  const review = await reviewSnapshot(stale);
+
+  assert.deepEqual(
+    review.checks.find((check) => check.id === "required-data")?.issueCodes,
+    ["MODELED_MARKET_PRESENTATION", "STALE_REQUIRED_METRIC"],
+  );
+  assert.deepEqual(
+    review.checks.find((check) => check.id === "narrative-evidence")?.issueCodes,
+    ["MISSING_OPPOSING_EVIDENCE"],
+  );
 });
 
 test("rejects incomplete sessions and unreachable sources without backups", async () => {
@@ -180,7 +228,7 @@ test("persists the full review atomically and maps all CLI decision exit codes",
   assert.equal(accepted.exitCode, 0);
   assert.deepEqual(JSON.parse(await readFile(accepted.outputPath, "utf8")), accepted.review);
 
-  const manual = withoutNumericNarrative(structuredClone(conflicting));
+  const manual = withoutNumericNarrative(withOpposingEvidence(structuredClone(conflicting)));
   manual.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
   await writeFile(candidatePath, JSON.stringify(manual));
   assert.equal((await runMarketReview({

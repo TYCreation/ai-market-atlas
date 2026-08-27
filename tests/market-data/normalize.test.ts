@@ -13,6 +13,12 @@ const previousSnapshot = previous as unknown as MarketSnapshot;
 function marketMetric(overrides: Partial<MetricRecord>): MetricRecord {
   return {
     ...validCandidate.metrics["stocks.nvda.price"],
+    kind: "modeled",
+    market: "US",
+    marketTimezone: "America/New_York",
+    primaryListing: "NVDA",
+    securityType: "primary",
+    sessionState: "closed",
     ...overrides,
   };
 }
@@ -200,6 +206,19 @@ test("requires percentage return units for cross-market stock comparisons", () =
   );
 });
 
+test("modeled stock estimates do not require exchange-session metadata", () => {
+  const modeled = marketMetric({
+    kind: "modeled",
+    market: undefined,
+    marketTimezone: undefined,
+    primaryListing: undefined,
+    securityType: undefined,
+    sessionState: undefined,
+  });
+
+  assert.doesNotThrow(() => assertCompletedSession(modeled, runStart));
+});
+
 test("canonicalizes catalog unit aliases and rejects currency and unit mismatches", () => {
   const alias = structuredClone(validCandidate);
   alias.metrics["pulse.infrastructure_spend"].unit = "trillion-usd";
@@ -220,7 +239,7 @@ test("canonicalizes catalog unit aliases and rejects currency and unit mismatche
     alias.metrics["compute.accelerator_pool"].observations,
   );
   assert.equal(normalized.metrics["compute.accelerator_pool"].currency, "USD");
-  assert.equal(normalized.metrics["stocks.nvda.price"].currency, "USD");
+  assert.equal(normalized.metrics["stocks.nvda.price"].currency, undefined);
 
   const wrongCurrency = structuredClone(validCandidate);
   wrongCurrency.metrics["stocks.nvda.price"].currency = "TWD";

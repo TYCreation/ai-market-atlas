@@ -18,8 +18,9 @@ test("blocks prices that disagree by more than one percent", () => {
   const result = evaluateQualityGate(conflicting, previousSnapshot);
 
   assert.equal(result.publishable, false);
-  assert.equal(result.issues[0].code, "SOURCE_CONFLICT");
-  assert.equal(result.issues[0].metricId, "stocks.nvda.price");
+  assert.ok(result.issues.some(
+    (issue) => issue.code === "SOURCE_CONFLICT" && issue.metricId === "stocks.nvda.price",
+  ));
 });
 
 test("allows a price spread at exactly one percent", () => {
@@ -219,7 +220,7 @@ test("blocks a required low-confidence metric and a missing bilingual display", 
 
 test("reports non-required waiting metrics as warnings in deterministic order", () => {
   const snapshot = structuredClone(valid);
-  for (const id of ["optional.z", "optional.a"]) {
+  for (const id of ["compute.cisco_ai_infrastructure_orders", "compute.amd_data_center_revenue"]) {
     snapshot.metrics[id] = {
       ...structuredClone(snapshot.metrics["pulse.infrastructure_spend"]),
       id,
@@ -232,7 +233,10 @@ test("reports non-required waiting metrics as warnings in deterministic order", 
     (issue) => issue.code === "MISSING_REQUIRED" && issue.severity === "warn",
   );
 
-  assert.deepEqual(issues.map((issue) => issue.metricId), ["optional.a", "optional.z"]);
+  assert.deepEqual(issues.map((issue) => issue.metricId), [
+    "compute.amd_data_center_revenue",
+    "compute.cisco_ai_infrastructure_orders",
+  ]);
 });
 
 test("blocks rewritten unchanged-page narrative", () => {
@@ -316,5 +320,51 @@ test("does not accept a re-keyed identical first-party source as change evidence
 
   assert.ok(evaluateQualityGate(unsupported, prior).issues.some(
     (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/compute",
+  ));
+});
+
+test("blocks stale required current metrics", () => {
+  const stale = structuredClone(valid);
+  stale.dataCutoff = "2026-08-20T01:00:00.000Z";
+  stale.metrics["pulse.power_queue"].asOf = "2026-08-01T01:00:00.000Z";
+
+  assert.ok(evaluateQualityGate(stale, previousSnapshot).issues.some(
+    (issue) => issue.code === "STALE_REQUIRED_METRIC" && issue.metricId === "pulse.power_queue",
+  ));
+});
+
+test("warns without blocking on stale optional metrics", () => {
+  const stale = structuredClone(valid);
+  stale.dataCutoff = "2026-12-01T01:00:00.000Z";
+  const id = "compute.amd_data_center_revenue";
+  stale.metrics[id] = {
+    ...structuredClone(stale.metrics["compute.accelerator_pool"]),
+    id,
+    required: false,
+    asOf: "2026-08-01T01:00:00.000Z",
+  };
+
+  const issue = evaluateQualityGate(stale, previousSnapshot).issues.find(
+    (candidate) => candidate.code === "STALE_OPTIONAL_METRIC" && candidate.metricId === id,
+  );
+  assert.equal(issue?.severity, "warn");
+});
+
+test("blocks a page without opposing evidence", () => {
+  const oneSided = structuredClone(valid);
+  oneSided.pages["/compute"].report.opposingEvidence = [];
+
+  assert.ok(evaluateQualityGate(oneSided, previousSnapshot).issues.some(
+    (issue) => issue.code === "MISSING_OPPOSING_EVIDENCE" && issue.page === "/compute",
+  ));
+});
+
+test("blocks modeled metrics carrying quote furniture", () => {
+  const modeledQuote = structuredClone(valid);
+  modeledQuote.metrics["stocks.nvda.price"].market = "US";
+  modeledQuote.metrics["stocks.nvda.price"].sessionState = "closed";
+
+  assert.ok(evaluateQualityGate(modeledQuote, previousSnapshot).issues.some(
+    (issue) => issue.code === "MODELED_MARKET_PRESENTATION" && issue.metricId === "stocks.nvda.price",
   ));
 });
