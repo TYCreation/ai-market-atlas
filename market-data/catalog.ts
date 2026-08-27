@@ -44,3 +44,26 @@ export const REQUIRED_STOCK_METRIC_IDS = new Set(
     stockMetricId(ticker, "monthReturn"),
   ]),
 );
+
+export const QUARTERLY_PUBLISHED_METRIC_IDS = new Set([
+  "compute.amd_data_center_growth",
+  "compute.amd_data_center_revenue",
+  "compute.cisco_ai_infrastructure_orders",
+  "energy.vertiv_q2_revenue_growth",
+  "pulse.amd_data_center_revenue",
+  "pulse.cisco_ai_infrastructure_orders",
+  "sic.onsemi_q2_revenue",
+  "stocks.amd_q2_revenue_growth",
+]);
+
+export const EVENT_DRIVEN_PUBLISHED_METRIC_IDS = new Set([
+  "compute.openai_ports_capacity",
+  "compute.sharon_ai_contract_value",
+  "energy.openai_ports_capacity",
+  "energy.vistra_helix_commitment",
+  "models.openai_coding_token_efficiency",
+  "models.openai_monitoring_overhead",
+  "pulse.openai_coding_token_efficiency",
+  "pulse.openai_ports_capacity",
+  "pulse.sharon_ai_contract_value",
+]);
