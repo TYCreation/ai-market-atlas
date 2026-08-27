@@ -151,6 +151,54 @@ function sameMetricIdSet(left: string[], right: string[]): boolean {
   );
 }
 
+function addStagnationIssues(
+  current: MarketSnapshot,
+  previous: MarketSnapshot,
+  history: readonly MarketSnapshot[],
+  issues: GateIssue[],
+): void {
+  const older = history[0];
+  if (older === undefined) return;
+
+  for (const metric of Object.values(current.metrics)) {
+    const prior = previous.metrics?.[metric.id];
+    const oldest = older.metrics?.[metric.id];
+    if (prior === undefined || oldest === undefined) continue;
+    const policy = evaluateMetricFreshness(metric, current.dataCutoff).policy;
+    if (
+      ["market-close", "weekly", "atlas-model"].includes(policy.class) &&
+      metric.numericValue === prior.numericValue &&
+      metric.numericValue === oldest.numericValue
+    ) {
+      issues.push(issueForMetric(
+        "METRIC_STAGNATION",
+        "warn",
+        metric,
+        "Metric numeric value is unchanged across three consecutive editions.",
+      ));
+    }
+  }
+
+  for (const [page, state] of Object.entries(current.pages) as Array<[PageSlug, MarketSnapshot["pages"][PageSlug]]>) {
+    const prior = previous.pages?.[page];
+    const oldest = older.pages?.[page];
+    if (
+      prior !== undefined &&
+      oldest !== undefined &&
+      isDeepStrictEqual(state.report, prior.report) &&
+      isDeepStrictEqual(state.report, oldest.report)
+    ) {
+      issues.push({
+        code: "NARRATIVE_STAGNATION",
+        severity: "warn",
+        page,
+        message: "Thesis and report language is unchanged across three consecutive editions.",
+        sourceIds: state.thesisMetricIds.flatMap((id) => current.metrics[id]?.sourceIds ?? []).sort(),
+      });
+    }
+  }
+}
+
 function hasPageChangeEvidence(
   current: MarketSnapshot,
   previous: MarketSnapshot,
@@ -180,6 +228,7 @@ export function evaluateQualityGate(
   current: MarketSnapshot,
   previous: MarketSnapshot,
   externalIssues: GateIssue[] = [],
+  history: readonly MarketSnapshot[] = [],
 ): GateResult {
   const issues: GateIssue[] = [...externalIssues];
   const metrics = Object.values(current.metrics);
@@ -374,6 +423,8 @@ export function evaluateQualityGate(
       });
     }
   }
+
+  addStagnationIssues(current, previous, history, issues);
 
   const sorted = sortGateIssues(issues);
   return { publishable: !sorted.some((issue) => issue.severity === "block"), issues: sorted };

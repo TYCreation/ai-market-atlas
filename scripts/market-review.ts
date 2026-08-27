@@ -7,6 +7,7 @@ import {
   reviewCandidate,
   type AutomatedReview,
 } from "../market-data/review.ts";
+import { loadRecentSnapshots } from "../market-data/history.ts";
 import { normalizeCandidate } from "../market-data/normalize.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import {
@@ -81,7 +82,28 @@ export async function runMarketReview(options: MarketReviewOptions): Promise<{
   } catch {
     // reviewCandidate records the canonical rejection for malformed or unpublishable input.
   }
-  const review = await reviewCandidate(candidate, previous, options.fetcher, options.resolver);
+  let history: MarketSnapshot[] = [];
+  if (typeof previous.dataCutoff === "string") {
+    try {
+      const loaded = await loadRecentSnapshots(
+        resolve(dirname(options.previousPath), "runs"),
+        previous.dataCutoff,
+        3,
+      );
+      const candidateRunId =
+        candidate !== null && typeof candidate === "object" && typeof (candidate as Record<string, unknown>).runId === "string"
+          ? (candidate as Record<string, string>).runId
+          : undefined;
+      history = loaded
+        .filter((snapshot) => snapshot.runId !== previous.runId && snapshot.runId !== candidateRunId)
+        .slice(0, 1);
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT")) {
+        throw error;
+      }
+    }
+  }
+  const review = await reviewCandidate(candidate, previous, options.fetcher, options.resolver, history);
   const reviewsDirectory = resolve(options.reviewsDirectory);
   const filename = isSafeMarketRunId(review.runId)
     ? `${review.runId}.json`

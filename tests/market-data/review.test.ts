@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -141,6 +141,62 @@ test("routes freshness, modeled-presentation, and balance gate issues through ex
     review.checks.find((check) => check.id === "narrative-evidence")?.issueCodes,
     ["MISSING_OPPOSING_EVIDENCE"],
   );
+});
+
+test("threads history into warning-only three-edition stagnation checks", async () => {
+  const snapshot = reviewableCandidate();
+  const prior = structuredClone(snapshot);
+  const older = structuredClone(snapshot);
+  prior.runId = "2026-07-29-wednesday";
+  prior.dataCutoff = "2026-07-29T01:00:00.000Z";
+  older.runId = "2026-07-25-saturday";
+  older.dataCutoff = "2026-07-25T01:00:00.000Z";
+
+  const review = await reviewSnapshot(snapshot, prior, reachableFetcher);
+  const withHistory = await reviewCandidate(snapshot, prior, reachableFetcher, publicResolver, [older]);
+
+  assert.equal(review.issues.some((issue) => issue.code === "METRIC_STAGNATION"), false);
+  assert.ok(withHistory.issues.some((issue) => issue.code === "METRIC_STAGNATION" && issue.severity === "warn"));
+  assert.ok(withHistory.issues.some((issue) => issue.code === "NARRATIVE_STAGNATION" && issue.severity === "warn"));
+  assert.ok(withHistory.checks.find((check) => check.id === "anomaly")?.issueCodes.includes("METRIC_STAGNATION"));
+  assert.ok(withHistory.checks.find((check) => check.id === "anomaly")?.issueCodes.includes("NARRATIVE_STAGNATION"));
+  assert.notEqual(withHistory.decision, "reject");
+});
+
+test("CLI loads one older run from the sibling runs directory", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-review-history-"));
+  try {
+    const candidatePath = join(root, "candidate.json");
+    const previousPath = join(root, "current.json");
+    const reviewsDirectory = join(root, "reviews");
+    const snapshot = reviewableCandidate();
+    snapshot.dataCutoff = "2026-08-01T01:00:00.000Z";
+    snapshot.generatedAt = snapshot.dataCutoff;
+    const prior = structuredClone(snapshot);
+    prior.runId = "2026-07-29-wednesday";
+    prior.dataCutoff = "2026-07-29T01:00:00.000Z";
+    prior.generatedAt = prior.dataCutoff;
+    const older = structuredClone(snapshot);
+    older.runId = "2026-07-25-saturday";
+    older.dataCutoff = "2026-07-25T01:00:00.000Z";
+    older.generatedAt = older.dataCutoff;
+    await mkdir(join(root, "runs"));
+    await writeFile(candidatePath, JSON.stringify(snapshot));
+    await writeFile(previousPath, JSON.stringify(prior));
+    await writeFile(join(root, "runs", `${older.runId}.json`), JSON.stringify(older));
+
+    const result = await runMarketReview({
+      candidatePath,
+      previousPath,
+      reviewsDirectory,
+      fetcher: reachableFetcher,
+      resolver: publicResolver,
+    });
+    assert.ok(result.review.issues.some((issue) => issue.code === "METRIC_STAGNATION"));
+    assert.ok(result.review.issues.some((issue) => issue.code === "NARRATIVE_STAGNATION"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("rejects incomplete sessions and unreachable sources without backups", async () => {

@@ -359,6 +359,49 @@ test("blocks a page without opposing evidence", () => {
   ));
 });
 
+test("warns when metrics and narratives are unchanged across three editions", () => {
+  const prior = structuredClone(valid);
+  const older = structuredClone(valid);
+  prior.runId = "2026-07-29-wednesday";
+  prior.dataCutoff = "2026-07-29T01:00:00.000Z";
+  older.runId = "2026-07-25-saturday";
+  older.dataCutoff = "2026-07-25T01:00:00.000Z";
+
+  const issues = evaluateQualityGate(valid, prior, [], [older]).issues;
+
+  assert.ok(issues.some((issue) => issue.code === "METRIC_STAGNATION"));
+  assert.ok(issues.some((issue) => issue.code === "NARRATIVE_STAGNATION"));
+  assert.equal(issues.some((issue) =>
+    ["METRIC_STAGNATION", "NARRATIVE_STAGNATION"].includes(issue.code) && issue.severity === "block",
+  ), false);
+});
+
+test("does not warn on unchanged periodic or event-driven metrics", () => {
+  const current = structuredClone(valid);
+  const prior = structuredClone(valid);
+  const older = structuredClone(valid);
+  const periodic = "compute.amd_data_center_growth";
+  const eventDriven = "compute.openai_ports_capacity";
+  for (const snapshot of [current, prior, older]) {
+    snapshot.metrics[periodic] = {
+      ...structuredClone(snapshot.metrics["compute.accelerator_pool"]),
+      id: periodic,
+      kind: "published",
+      required: false,
+    };
+    snapshot.metrics[eventDriven] = {
+      ...structuredClone(snapshot.metrics["compute.accelerator_pool"]),
+      id: eventDriven,
+      kind: "published",
+      required: false,
+    };
+  }
+
+  const issues = evaluateQualityGate(current, prior, [], [older]).issues;
+  assert.equal(issues.some((issue) => issue.code === "METRIC_STAGNATION" &&
+    [periodic, eventDriven].includes(issue.metricId ?? "")), false);
+});
+
 test("blocks modeled metrics carrying quote furniture", () => {
   const modeledQuote = structuredClone(valid);
   modeledQuote.metrics["stocks.nvda.price"].market = "US";

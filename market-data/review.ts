@@ -299,6 +299,7 @@ export async function reviewCandidate(
   previous: MarketSnapshot,
   fetcher: SourceFetcher,
   resolver: HostnameResolver = resolveHostname,
+  history: readonly MarketSnapshot[] = [],
 ): Promise<AutomatedReview> {
   const candidateSha256 = hashCandidate(candidate);
   const schemaIssues: GateIssue[] = [];
@@ -320,7 +321,7 @@ export async function reviewCandidate(
   const completedIssues = snapshot ? validateCompletedSessions(snapshot) : [];
   const sourceIssues = snapshot ? await checkSourceHealth(snapshot, fetcher, resolver) : [];
   const gateIssues = snapshot
-    ? evaluateQualityGate(snapshot, previous, sourceIssues).issues
+    ? evaluateQualityGate(snapshot, previous, sourceIssues, history).issues
     : [];
   const narrativeIssues = snapshot ? validateNarrativeEvidence(snapshot) : [];
   const editorialIssues = gateIssues.filter(
