@@ -158,7 +158,7 @@
               "zh": "若獲利轉化未能跟上市場預期，引用的估值信號仍可能承壓。"
             },
             "metricIds": [
-              "stocks.median_forward_pe"
+              "stocks.positive_breadth"
             ]
           }
         ],
@@ -252,7 +252,7 @@
               "zh": "當驗證或網路仍受限時，引用的供應指標未必能轉化為可部署的系統。"
             },
             "metricIds": [
-              "compute.accelerator_pool"
+              "compute.packaging_lead_weeks"
             ]
           }
         ],

@@ -57,7 +57,17 @@
           }
         },
         "supportingEvidence": [],
-        "opposingEvidence": [],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "Cited infrastructure indicators can still overstate usable capacity when delivery and interconnection schedules slip.",
+              "zh": "引用的基礎設施指標在交付與併網時程延後時，仍可能高估可用容量。"
+            },
+            "metricIds": [
+              "pulse.power_queue"
+            ]
+          }
+        ],
         "catalysts": [],
         "risks": [
           {
@@ -141,7 +151,17 @@
           }
         },
         "supportingEvidence": [],
-        "opposingEvidence": [],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "Cited valuation signals remain vulnerable if earnings conversion does not keep pace with market expectations.",
+              "zh": "若獲利轉化未能跟上市場預期，引用的估值信號仍可能承壓。"
+            },
+            "metricIds": [
+              "stocks.positive_breadth"
+            ]
+          }
+        ],
         "catalysts": [],
         "risks": [
           {
@@ -225,7 +245,17 @@
           }
         },
         "supportingEvidence": [],
-        "opposingEvidence": [],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "Cited supply indicators may not translate into deployable systems when qualification or networking remains constrained.",
+              "zh": "當驗證或網路仍受限時，引用的供應指標未必能轉化為可部署的系統。"
+            },
+            "metricIds": [
+              "compute.packaging_lead_weeks"
+            ]
+          }
+        ],
         "catalysts": [],
         "risks": [
           {
@@ -309,7 +339,17 @@
           }
         },
         "supportingEvidence": [],
-        "opposingEvidence": [],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "Cited power commitments can lag actual availability because permitting, construction, and grid upgrades remain execution risks.",
+              "zh": "許可、施工與電網升級仍是執行風險，引用的電力承諾可能落後於實際可用性。"
+            },
+            "metricIds": [
+              "energy.committed_power_gw"
+            ]
+          }
+        ],
         "catalysts": [],
         "risks": [
           {
@@ -393,7 +433,17 @@
           }
         },
         "supportingEvidence": [],
-        "opposingEvidence": [],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "Cited adoption signals can mask uneven production reliability and a continuing burden of human review.",
+              "zh": "引用的採用信號可能掩蓋正式環境可靠度不均與持續的人工作業負擔。"
+            },
+            "metricIds": [
+              "models.production_agents"
+            ]
+          }
+        ],
         "catalysts": [],
         "risks": [
           {
@@ -477,7 +527,17 @@
           }
         },
         "supportingEvidence": [],
-        "opposingEvidence": [],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "Cited silicon-carbide demand signals remain exposed to qualification delays and end-market inventory adjustments.",
+              "zh": "引用的碳化矽需求信號仍受驗證延遲與終端市場庫存調整影響。"
+            },
+            "metricIds": [
+              "sic.wafer_frontier_mm"
+            ]
+          }
+        ],
         "catalysts": [],
         "risks": [
           {
@@ -720,7 +780,6 @@
       "unit": "$B",
       "currency": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "stanford-economy"
@@ -753,7 +812,6 @@
       "unit": "$B",
       "currency": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "nvidia-q1-fy27"
@@ -785,7 +843,6 @@
       },
       "unit": "GW",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "iea-energy-ai",
@@ -823,7 +880,6 @@
       },
       "unit": "programs",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "stanford-economy"
@@ -855,7 +911,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -881,7 +936,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -907,7 +961,6 @@
       },
       "unit": "x",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "nvidia-q1-fy27",
@@ -951,7 +1004,6 @@
       },
       "unit": "events",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "nvidia-q1-fy27",
@@ -996,7 +1048,6 @@
       "unit": "$B",
       "currency": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "nvidia-q1-fy27",
@@ -1034,7 +1085,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "tsmc-q1-2026"
@@ -1066,7 +1116,6 @@
       },
       "unit": "weeks",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "tsmc-q1-2026"
@@ -1098,7 +1147,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "nvidia-q1-fy27"
@@ -1130,7 +1178,6 @@
       },
       "unit": "GW",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "iea-energy-ai",
@@ -1168,7 +1215,6 @@
       },
       "unit": "GW",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "iea-energy-ai"
@@ -1200,7 +1246,6 @@
       },
       "unit": "years",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "doe-data-centers"
@@ -1232,7 +1277,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "iea-data-centres"
@@ -1264,7 +1308,6 @@
       },
       "unit": "programs",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "stanford-economy"
@@ -1296,7 +1339,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "stanford-economy"
@@ -1328,7 +1370,6 @@
       },
       "unit": "T tokens",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "openai-pricing",
@@ -1366,7 +1407,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "stanford-economy"
@@ -1399,7 +1439,6 @@
       "unit": "$B",
       "currency": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "wolfspeed-ai",
@@ -1443,7 +1482,6 @@
       },
       "unit": "mm",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "wolfspeed-ai",
@@ -1481,7 +1519,6 @@
       },
       "unit": "W",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "wolfspeed-ai"
@@ -1513,7 +1550,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "onsemi-ai",
@@ -1551,7 +1587,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model",
         "nvidia-q1-fy27"
@@ -1569,11 +1604,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "NVDA",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.nvda.weekReturn": {
       "id": "stocks.nvda.weekReturn",
@@ -1587,7 +1618,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1599,11 +1629,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "NVDA",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.nvda.monthReturn": {
       "id": "stocks.nvda.monthReturn",
@@ -1617,7 +1643,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1629,11 +1654,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "NVDA",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.avgo.price": {
       "id": "stocks.avgo.price",
@@ -1647,7 +1668,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1659,11 +1679,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "AVGO",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.avgo.weekReturn": {
       "id": "stocks.avgo.weekReturn",
@@ -1677,7 +1693,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1689,11 +1704,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "AVGO",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.avgo.monthReturn": {
       "id": "stocks.avgo.monthReturn",
@@ -1707,7 +1718,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1719,11 +1729,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "AVGO",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.amd.price": {
       "id": "stocks.amd.price",
@@ -1737,7 +1743,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1749,11 +1754,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "AMD",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.amd.weekReturn": {
       "id": "stocks.amd.weekReturn",
@@ -1767,7 +1768,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1779,11 +1779,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "AMD",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.amd.monthReturn": {
       "id": "stocks.amd.monthReturn",
@@ -1797,7 +1793,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1809,11 +1804,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "AMD",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.tsm.price": {
       "id": "stocks.tsm.price",
@@ -1827,7 +1818,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1839,11 +1829,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "TSM",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.tsm.weekReturn": {
       "id": "stocks.tsm.weekReturn",
@@ -1857,7 +1843,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1869,11 +1854,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "TSM",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.tsm.monthReturn": {
       "id": "stocks.tsm.monthReturn",
@@ -1887,7 +1868,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1899,11 +1879,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "TSM",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.vrt.price": {
       "id": "stocks.vrt.price",
@@ -1917,7 +1893,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1929,11 +1904,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "VRT",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.vrt.weekReturn": {
       "id": "stocks.vrt.weekReturn",
@@ -1947,7 +1918,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1959,11 +1929,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "VRT",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.vrt.monthReturn": {
       "id": "stocks.vrt.monthReturn",
@@ -1977,7 +1943,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -1989,11 +1954,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "VRT",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.etn.price": {
       "id": "stocks.etn.price",
@@ -2007,7 +1968,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2019,11 +1979,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "ETN",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.etn.weekReturn": {
       "id": "stocks.etn.weekReturn",
@@ -2037,7 +1993,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2049,11 +2004,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "ETN",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.etn.monthReturn": {
       "id": "stocks.etn.monthReturn",
@@ -2067,7 +2018,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2079,11 +2029,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "ETN",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.ceg.price": {
       "id": "stocks.ceg.price",
@@ -2097,7 +2043,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2109,11 +2054,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "CEG",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.ceg.weekReturn": {
       "id": "stocks.ceg.weekReturn",
@@ -2127,7 +2068,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2139,11 +2079,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "CEG",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.ceg.monthReturn": {
       "id": "stocks.ceg.monthReturn",
@@ -2157,7 +2093,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2169,11 +2104,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "CEG",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.wolf.price": {
       "id": "stocks.wolf.price",
@@ -2187,7 +2118,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2199,11 +2129,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "WOLF",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.wolf.weekReturn": {
       "id": "stocks.wolf.weekReturn",
@@ -2217,7 +2143,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2229,11 +2154,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "WOLF",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.wolf.monthReturn": {
       "id": "stocks.wolf.monthReturn",
@@ -2247,7 +2168,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2259,11 +2179,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "WOLF",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.on.price": {
       "id": "stocks.on.price",
@@ -2277,7 +2193,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2289,11 +2204,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "ON",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.on.weekReturn": {
       "id": "stocks.on.weekReturn",
@@ -2307,7 +2218,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2319,11 +2229,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "ON",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.on.monthReturn": {
       "id": "stocks.on.monthReturn",
@@ -2337,7 +2243,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2349,11 +2254,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "ON",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.now.price": {
       "id": "stocks.now.price",
@@ -2367,7 +2268,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2379,11 +2279,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "NOW",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.now.weekReturn": {
       "id": "stocks.now.weekReturn",
@@ -2397,7 +2293,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2409,11 +2304,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "NOW",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.now.monthReturn": {
       "id": "stocks.now.monthReturn",
@@ -2427,7 +2318,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2439,11 +2329,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "NOW",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.pltr.price": {
       "id": "stocks.pltr.price",
@@ -2457,7 +2343,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2469,11 +2354,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "PLTR",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.pltr.weekReturn": {
       "id": "stocks.pltr.weekReturn",
@@ -2487,7 +2368,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2499,11 +2379,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "PLTR",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.pltr.monthReturn": {
       "id": "stocks.pltr.monthReturn",
@@ -2517,7 +2393,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2529,11 +2404,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "PLTR",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.crm.price": {
       "id": "stocks.crm.price",
@@ -2547,7 +2418,6 @@
       },
       "unit": "USD",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2559,11 +2429,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "CRM",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.crm.weekReturn": {
       "id": "stocks.crm.weekReturn",
@@ -2577,7 +2443,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2589,11 +2454,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "CRM",
-      "securityType": "primary"
+      "status": "verified"
     },
     "stocks.crm.monthReturn": {
       "id": "stocks.crm.monthReturn",
@@ -2607,7 +2468,6 @@
       },
       "unit": "%",
       "asOf": "2026-08-01T01:00:00.000Z",
-      "sessionState": "closed",
       "sourceIds": [
         "atlas-model"
       ],
@@ -2619,11 +2479,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "verified",
-      "market": "US",
-      "marketTimezone": "America/New_York",
-      "primaryListing": "CRM",
-      "securityType": "primary"
+      "status": "verified"
     }
   },
   "keySignalIds": [

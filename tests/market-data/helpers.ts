@@ -1,7 +1,11 @@
 import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { hashCandidate, type AutomatedReview } from "../../market-data/review.ts";
+import {
+  assertAutoPublishReview,
+  hashCandidate,
+  type AutomatedReview,
+} from "../../market-data/review.ts";
 import { normalizeCandidate } from "../../market-data/normalize.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
@@ -56,7 +60,7 @@ export async function makeBlockedFixtureWorkspace() {
 
 export function autoPublishReview(snapshot: MarketSnapshot): AutomatedReview {
   const candidateSha256 = hashCandidate(snapshot);
-  return {
+  const review: AutomatedReview = {
     schemaVersion: 1,
     reviewId: `${snapshot.runId}:${candidateSha256}`,
     runId: snapshot.runId,
@@ -78,6 +82,8 @@ export function autoPublishReview(snapshot: MarketSnapshot): AutomatedReview {
     reviewedMetricCount: Object.keys(snapshot.metrics).length,
     reviewedSourceCount: Object.keys(snapshot.sources).length,
   };
+  assertAutoPublishReview(review, snapshot);
+  return review;
 }
 
 export async function writePublishableReview(candidatePath: string, reviewPath: string): Promise<void> {
