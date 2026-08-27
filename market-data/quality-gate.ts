@@ -364,12 +364,15 @@ export function evaluateQualityGate(
   }
 
   for (const [page, state] of Object.entries(current.pages) as Array<[PageSlug, MarketSnapshot["pages"][PageSlug]]>) {
-    if (state.report.opposingEvidence.length === 0) {
+    if (
+      state.report.opposingEvidence.length === 0 ||
+      state.report.opposingEvidence.some((item) => item.metricIds.length === 0)
+    ) {
       issues.push({
         code: "MISSING_OPPOSING_EVIDENCE",
         severity: "block",
         page,
-        message: "Every page must cite opposing evidence.",
+        message: "Every page must cite opposing evidence with metric IDs.",
         sourceIds: [],
       });
     }

@@ -120,9 +120,10 @@ contain one normalized bilingual record for every page and metric:
 Before writing a candidate, the scheduled researcher re-examines every page thesis
 against the newly collected evidence, then restates, sharpens, or explicitly retains
 that thesis. Each page must include at least one cited `opposingEvidence` item with the
-metric IDs that support the observation. Each risk must state an observable,
-  falsifiable metric, event, or time-based condition that could disprove or materially
-  weaken the thesis; a risk that only gives methodological advice is not sufficient. Use a directional `thesisStance`
+metric IDs that support the observation. Each risk must state an observable, falsifiable
+metric, event, or time-based condition that could disprove or materially weaken the
+thesis; a risk that only gives methodological advice is not sufficient. Use a directional
+`thesisStance`
 only when the evidence supports it; retain `neutral` when the evidence does not support
 a directional conclusion. Mark a page `changed` when an evidenced thesis or stance
 revision occurs, with the applicable change reason; retain it as unchanged only when

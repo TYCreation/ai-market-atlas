@@ -359,6 +359,15 @@ test("blocks a page without opposing evidence", () => {
   ));
 });
 
+test("blocks a page when opposing evidence item lacks metric citation", () => {
+  const uncited = structuredClone(valid);
+  uncited.pages["/compute"].report.opposingEvidence[0].metricIds = [];
+
+  assert.ok(evaluateQualityGate(uncited, previousSnapshot).issues.some(
+    (issue) => issue.code === "MISSING_OPPOSING_EVIDENCE" && issue.page === "/compute",
+  ));
+});
+
 test("warns when metrics and narratives are unchanged across three editions", () => {
   const prior = structuredClone(valid);
   const older = structuredClone(valid);

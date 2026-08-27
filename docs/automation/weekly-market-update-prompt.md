@@ -20,13 +20,12 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    report fields, exact source metadata, and per-source metric observations. Do
    not change `current.json`, reviews, archives, generated brief assets, or
    deployment files by hand.
-   Every page must satisfy the editorial contract: re-examine its thesis against the
-   newly collected evidence; restate, sharpen, or explicitly retain it; and include at
-   least one cited `opposingEvidence` item with the metric IDs that support that item.
-   Each risk must name an observable metric, event, or time-based condition that could
-   disprove or materially weaken the thesis, rather than only giving methodological
-   advice. Use a
-   directional `thesisStance` only when the evidence supports it; a neutral stance is
+   Every page must satisfy the editorial contract: re-examine its thesis against the newly
+   collected evidence; restate, sharpen, or explicitly retain it; and include at least one
+   cited `opposingEvidence` item with the metric IDs that support that item. Each risk must
+   name an observable metric, event, or time-based condition that could disprove or materially
+   weaken the thesis, rather than only giving methodological advice. Use a directional
+   `thesisStance` only when the evidence supports it; a neutral stance is
    valid when the evidence does not support a directional conclusion. Set `changed` when
    an evidenced thesis or stance revision occurs, and include the applicable change
    reason; retain it as unchanged only when no such revision is made.
