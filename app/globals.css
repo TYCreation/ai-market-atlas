@@ -1,6 +1,14 @@
 @import "tailwindcss";
 
 :root {
+  --header-height: 78px;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: clamp(2rem, 5vw, 4.75rem);
   --ink: #07121d;
   --ink-2: #0c1b29;
   --panel: rgba(16, 37, 54, 0.76);
@@ -35,7 +43,21 @@ body {
     var(--ink);
   color: var(--ivory);
   font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.5;
   min-height: 100vh;
+}
+
+:lang(zh-Hant) body {
+  line-height: 1.75;
+}
+
+:lang(zh-Hant) .masthead-summary,
+:lang(zh-Hant) .panel p,
+:lang(zh-Hant) .watch-card p,
+:lang(zh-Hant) .source-card p {
+  font-size: var(--text-md);
+  line-height: 1.75;
 }
 
 a {
@@ -64,7 +86,7 @@ button {
   display: grid;
   gap: 24px;
   grid-template-columns: auto 1fr auto;
-  min-height: 74px;
+  min-height: var(--header-height);
   padding: 0 42px;
   position: sticky;
   top: 0;
@@ -107,7 +129,7 @@ button {
 .brand span:last-child {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -122,7 +144,7 @@ button {
   border: 1px solid transparent;
   border-radius: 999px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   padding: 9px 13px;
   transition: 160ms ease;
   white-space: nowrap;
@@ -132,7 +154,6 @@ button {
 .nav-link:focus-visible {
   border-color: var(--line);
   color: var(--ivory);
-  outline: none;
 }
 
 .nav-link.active {
@@ -146,7 +167,7 @@ button {
   color: var(--muted);
   display: flex;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   gap: 8px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -177,7 +198,7 @@ button {
   cursor: pointer;
   display: inline-flex;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 650;
   gap: 7px;
   letter-spacing: 0.08em;
@@ -203,7 +224,6 @@ button {
   background: rgba(115, 225, 230, 0.16);
   border-color: var(--cyan);
   color: var(--ivory);
-  outline: none;
 }
 
 @keyframes pulse {
@@ -233,11 +253,11 @@ html[lang="zh-Hant"] .risk-card h3 {
 }
 
 .masthead {
-  align-items: end;
+  align-items: start;
   display: grid;
   gap: 48px;
   grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
-  min-height: 440px;
+  min-height: 0;
   overflow: hidden;
   padding: 38px 0 58px;
   position: relative;
@@ -266,7 +286,7 @@ html[lang="zh-Hant"] .risk-card h3 {
   color: var(--cyan);
   display: flex;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
   gap: 10px;
   letter-spacing: 0.16em;
   margin: 0 0 24px;
@@ -293,7 +313,7 @@ h1 {
 .search-heading {
   color: var(--cyan-soft);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0.12em;
   line-height: 1.45;
@@ -313,7 +333,7 @@ h1 {
 
 .masthead-summary {
   color: #b8c8ce;
-  font-size: 17px;
+  font-size: var(--text-md);
   line-height: 1.65;
   margin: 30px 0 32px;
   max-width: 750px;
@@ -345,7 +365,7 @@ h1 {
 .edition {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -356,7 +376,7 @@ h1 {
   color: var(--cyan);
   display: inline-flex;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   gap: 7px;
   letter-spacing: 0.08em;
   padding-bottom: 3px;
@@ -372,7 +392,7 @@ h1 {
   color: var(--ink);
   display: inline-flex;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
   gap: 7px;
   letter-spacing: 0.08em;
@@ -386,7 +406,6 @@ h1 {
   background: var(--ivory);
   border-color: var(--ivory);
   color: var(--ink);
-  outline: none;
   transform: translateY(-1px);
 }
 
@@ -394,7 +413,6 @@ h1 {
 .source-jump:focus-visible {
   border-color: var(--ivory);
   color: var(--ivory);
-  outline: none;
 }
 
 .signal-badge {
@@ -404,7 +422,7 @@ h1 {
   color: var(--ink);
   display: inline-flex;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
   gap: 7px;
   letter-spacing: 0.08em;
@@ -478,7 +496,7 @@ h1 {
 .orbit-core span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -549,7 +567,7 @@ h1 {
 .metric-label {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -566,14 +584,14 @@ h1 {
   align-items: center;
   color: var(--muted);
   display: flex;
-  font-size: 11px;
+  font-size: var(--text-xs);
   justify-content: space-between;
 }
 
 .metric-delta {
   color: var(--green);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
 }
 
@@ -603,7 +621,7 @@ h1 {
 .metric-sources > span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   margin-right: 2px;
   text-transform: uppercase;
@@ -617,7 +635,7 @@ h1 {
   color: var(--cyan);
   display: inline-flex;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   height: 23px;
   justify-content: center;
   min-width: 29px;
@@ -629,7 +647,6 @@ h1 {
 .metric-sources a:focus-visible {
   background: var(--cyan);
   color: var(--ink);
-  outline: none;
 }
 
 .section {
@@ -646,7 +663,7 @@ h1 {
 .section-kicker {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.16em;
   margin: 0 0 12px;
   text-transform: uppercase;
@@ -676,7 +693,7 @@ h2 {
   color: var(--muted);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   padding: 8px 12px;
   text-transform: uppercase;
@@ -685,7 +702,6 @@ h2 {
 .horizon-selector button:hover,
 .horizon-selector button:focus-visible {
   color: var(--ivory);
-  outline: none;
 }
 
 .horizon-selector button.active {
@@ -716,7 +732,7 @@ h2 {
 .brief-number {
   color: var(--orange);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
@@ -733,7 +749,7 @@ h2 {
 
 .brief-panel p {
   color: #b8c8ce;
-  font-size: 15px;
+  font-size: var(--text-base);
   line-height: 1.75;
   margin: 0;
   max-width: 800px;
@@ -751,7 +767,7 @@ h2 {
   border-radius: 999px;
   color: var(--cyan-soft);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
   padding: 7px 9px;
   text-transform: uppercase;
@@ -767,7 +783,7 @@ h2 {
 .panel-label {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -798,7 +814,7 @@ h2 {
 
 .chart-caption {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-xs);
   line-height: 1.55;
   margin: 17px 0 0;
 }
@@ -841,7 +857,7 @@ h2 {
 .signal-index {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .signal-score {
@@ -855,14 +871,14 @@ h2 {
 }
 
 .signal-card h3 {
-  font-size: 16px;
+  font-size: var(--text-md);
   font-weight: 600;
   margin: 38px 0 12px;
 }
 
 .signal-card p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-base);
   line-height: 1.55;
   margin: 0;
 }
@@ -871,7 +887,7 @@ h2 {
   color: var(--cyan-soft);
   display: block;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   margin-top: 25px;
   text-transform: uppercase;
@@ -902,7 +918,7 @@ h2 {
 .market-table th {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -910,7 +926,7 @@ h2 {
 
 .market-table td {
   color: #c7d4d9;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .market-table td:first-child {
@@ -932,7 +948,7 @@ h2 {
   color: var(--cyan);
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   padding: 6px 8px;
   text-transform: uppercase;
 }
@@ -940,7 +956,7 @@ h2 {
 .deep-dive-updated {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -981,7 +997,7 @@ h2 {
 .sic-stock-head strong {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 17px;
+  font-size: var(--text-md);
   letter-spacing: 0.08em;
 }
 
@@ -989,7 +1005,7 @@ h2 {
 .sic-subhead span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1017,7 +1033,7 @@ h2 {
 .sic-stock-moves dt {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   margin-bottom: 7px;
   text-transform: uppercase;
@@ -1026,7 +1042,7 @@ h2 {
 .sic-stock-moves dd {
   color: #c7d4d9;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   margin: 0;
   white-space: nowrap;
 }
@@ -1086,7 +1102,7 @@ h2 {
 .forecast-year {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   white-space: nowrap;
 }
 
@@ -1186,7 +1202,7 @@ h2 {
   color: var(--cyan);
   content: "0" counter(thesis-case);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   left: 0;
   position: absolute;
   top: 24px;
@@ -1206,7 +1222,7 @@ h2 {
 
 .case-list p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-xs);
   line-height: 1.6;
   margin: 0;
 }
@@ -1229,7 +1245,7 @@ h2 {
   cursor: pointer;
   display: inline-flex;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   gap: 8px;
   letter-spacing: 0.08em;
   padding: 10px 13px;
@@ -1239,7 +1255,7 @@ h2 {
 
 .market-film-replay span {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: var(--text-md);
   line-height: 1;
 }
 
@@ -1248,7 +1264,6 @@ h2 {
   background: rgba(115, 225, 230, 0.16);
   border-color: var(--cyan);
   color: var(--ivory);
-  outline: none;
   transform: translateY(-1px);
 }
 
@@ -1286,7 +1301,7 @@ h2 {
 .market-film-note {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.04em;
   line-height: 1.65;
   margin: 14px 0 0;
@@ -1320,14 +1335,14 @@ h2 {
 }
 
 .equity-sector-top h3 {
-  font-size: 15px;
+  font-size: var(--text-base);
   margin: 0;
 }
 
 .equity-sector-top > span {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1349,7 +1364,7 @@ h2 {
 .basket-metrics span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1357,7 +1372,7 @@ h2 {
 .equity-sector-returns strong,
 .basket-metrics strong {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
@@ -1416,7 +1431,7 @@ h2 {
   color: var(--muted);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
   padding: 8px 10px;
   text-transform: uppercase;
@@ -1428,7 +1443,6 @@ h2 {
   background: rgba(115, 225, 230, 0.1);
   border-color: var(--line-strong);
   color: var(--cyan);
-  outline: none;
 }
 
 .equity-table-panel {
@@ -1441,7 +1455,7 @@ h2 {
 
 .equity-table td {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .equity-table :is(th, td):nth-child(2),
@@ -1462,14 +1476,14 @@ h2 {
 
 .equity-name strong {
   color: var(--cyan);
-  font-size: 12px;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
 }
 
 .equity-name span {
   color: var(--muted);
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 400;
 }
 
@@ -1521,13 +1535,13 @@ h2 {
 .catalyst-date span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .catalyst-date strong {
   color: var(--orange);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
 }
 
@@ -1549,7 +1563,7 @@ h2 {
   color: var(--cyan);
   display: block;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.07em;
   margin-bottom: 20px;
 }
@@ -1558,7 +1572,7 @@ h2 {
 .basket-card p,
 .risk-card p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-xs);
   line-height: 1.65;
   margin: 0;
 }
@@ -1581,7 +1595,7 @@ h2 {
 .basket-index {
   color: var(--orange);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .basket-card h3 {
@@ -1616,7 +1630,7 @@ h2 {
   border: 1px solid var(--line);
   color: var(--cyan-soft);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   padding: 6px 7px;
 }
 
@@ -1654,7 +1668,7 @@ h2 {
   border-radius: 999px;
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   padding: 5px 7px;
   text-transform: uppercase;
 }
@@ -1670,7 +1684,7 @@ h2 {
 .risk-card-top strong {
   color: var(--ivory);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-align: right;
 }
 
@@ -1709,7 +1723,7 @@ h2 {
   color: var(--muted);
   display: flex;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   justify-content: space-between;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1726,7 +1740,7 @@ h2 {
 
 .watch-card p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.65;
   margin: 0;
 }
@@ -1735,7 +1749,7 @@ h2 {
   color: var(--cyan);
   display: block;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   margin-top: 25px;
   text-transform: uppercase;
@@ -1752,7 +1766,7 @@ h2 {
 .source-reviewed {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1771,7 +1785,7 @@ h2 {
 
 .source-principles p {
   color: #b8c8ce;
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.65;
   margin: 0;
   max-width: 820px;
@@ -1790,7 +1804,7 @@ h2 {
   border-radius: 999px;
   color: var(--cyan-soft);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
   padding: 8px 10px;
   text-transform: uppercase;
@@ -1826,7 +1840,6 @@ h2 {
 .source-card > a:focus-visible {
   background: rgba(115, 225, 230, 0.05);
   box-shadow: inset 0 3px 0 var(--cyan);
-  outline: none;
 }
 
 .source-card-top {
@@ -1841,7 +1854,7 @@ h2 {
   border-radius: 999px;
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
   padding: 6px 8px;
   text-transform: uppercase;
@@ -1860,13 +1873,13 @@ h2 {
 .source-index {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .source-publisher {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
   margin: 30px 0 8px;
   text-transform: uppercase;
@@ -1883,7 +1896,7 @@ h2 {
 
 .source-scope {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-xs);
   line-height: 1.62;
   margin: 15px 0 22px;
 }
@@ -1894,7 +1907,7 @@ h2 {
   color: var(--muted);
   display: flex;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-xs);
   gap: 15px;
   justify-content: space-between;
   left: 24px;
@@ -1914,7 +1927,7 @@ h2 {
 
 .source-method {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.65;
   margin: 18px 0 0;
   max-width: 940px;
@@ -1936,7 +1949,7 @@ h2 {
 
 .footer p {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.65;
   margin: 0;
   max-width: 760px;
@@ -1949,7 +1962,7 @@ h2 {
 .footer-edition {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1960,7 +1973,7 @@ h2 {
   color: var(--muted);
   display: flex;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   grid-column: 1 / -1;
   justify-content: space-between;
   letter-spacing: 0.1em;
@@ -1978,7 +1991,7 @@ h2 {
 .archive-back {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;
@@ -2025,7 +2038,7 @@ h2 {
 
 .archive-title-en {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   letter-spacing: 0.09em;
   margin: 0;
   text-transform: uppercase;
@@ -2046,7 +2059,7 @@ h2 {
 .archive-meta {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   margin: 28px 0 0;
   text-transform: uppercase;
@@ -2067,7 +2080,7 @@ h2 {
 
 .archive-section-head p:not(.section-kicker) {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   margin: 0;
 }
 
@@ -2087,7 +2100,7 @@ h2 {
 .archive-source > span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -2103,7 +2116,7 @@ h2 {
 .archive-equity small {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .archive-equities {
@@ -2150,13 +2163,13 @@ h2 {
 .archive-change span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   margin: 0 0 8px;
 }
 
 .archive-change strong {
   display: block;
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 500;
 }
 
@@ -2212,7 +2225,7 @@ h2 {
 .archive-source p,
 .archive-source small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-xs);
   margin: 5px 0 0;
 }
 
@@ -2221,7 +2234,7 @@ h2 {
   align-self: start;
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-style: normal;
   text-decoration: none;
 }
@@ -2245,7 +2258,7 @@ h2 {
 .archive-index-card em {
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-style: normal;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2492,14 +2505,14 @@ h2 {
   }
 
   .masthead-summary {
-    font-size: 15px;
+    font-size: var(--text-base);
     line-height: 1.58;
   }
 
   .edition-status {
     border-top: 1px solid var(--line);
     display: grid;
-    font-size: 10px;
+    font-size: var(--text-xs);
     gap: 7px 12px;
     grid-template-columns: 1fr auto;
     line-height: 1.45;
@@ -2607,7 +2620,7 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-xs);
   gap: 7px 12px;
   letter-spacing: 0.04em;
   margin-top: 15px;
@@ -2628,7 +2641,7 @@ h2 {
   display: inline-flex;
   margin: 4px 0;
   color: #ffb45c;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2639,7 +2652,7 @@ h2 {
     border-left: 0;
     border-top: 1px solid var(--line);
     display: grid;
-    font-size: 9px;
+    font-size: var(--text-xs);
     gap: 7px 12px;
     grid-template-columns: 1fr auto;
     line-height: 1.45;
@@ -2664,7 +2677,7 @@ body {
     radial-gradient(circle at 76% -8%, rgba(67, 188, 199, 0.18), transparent 34rem),
     radial-gradient(circle at 8% 48%, rgba(16, 69, 91, 0.22), transparent 38rem),
     linear-gradient(180deg, #06111b 0%, var(--ink) 42%, #061019 100%);
-  font-size: 16px;
+  font-size: var(--text-md);
   overflow-x: hidden;
 }
 
@@ -2714,14 +2727,14 @@ body::before {
 }
 
 .brand strong {
-  font-size: 15px;
+  font-size: var(--text-base);
 }
 
 .brand span:last-child,
 .nav-link,
 .status,
 .language-switch {
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .nav-link {
@@ -2734,10 +2747,11 @@ body::before {
 }
 
 .masthead {
+  align-items: start;
   gap: 62px;
   grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
-  min-height: 500px;
-  padding: 46px 0 68px;
+  min-height: 0;
+  padding: 46px 0 58px;
 }
 
 .masthead::before {
@@ -2762,7 +2776,7 @@ body::before {
 
 .eyebrow,
 .search-heading {
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .editorial-headline {
@@ -2773,8 +2787,19 @@ body::before {
   text-wrap: balance;
 }
 
+.masthead-copy {
+  grid-column: 1;
+  max-width: 960px;
+}
+
+.signal-orbit {
+  align-self: start;
+  grid-column: 2;
+  margin-top: 34px;
+}
+
 .masthead-summary {
-  font-size: clamp(16px, 1.3vw, 18px);
+  font-size: var(--text-md);
   line-height: 1.72;
   max-width: 720px;
 }
@@ -2784,7 +2809,7 @@ body::before {
 .source-jump,
 .brief-jump,
 .edition-status {
-  font-size: 10.5px;
+  font-size: var(--text-xs);
 }
 
 .signal-orbit {
@@ -2865,7 +2890,7 @@ body::before {
 }
 
 .metric-label {
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .metric-value {
@@ -2879,7 +2904,7 @@ body::before {
 .chart-caption,
 .signal-card p,
 .market-table td {
-  font-size: 13px;
+  font-size: var(--text-base);
 }
 
 .metric-delta,
@@ -2896,7 +2921,7 @@ body::before {
 .table-pill,
 .market-film-replay,
 .market-film-note {
-  font-size: 10.5px;
+  font-size: var(--text-xs);
 }
 
 .metric-sources a {
@@ -2965,7 +2990,7 @@ h2 {
 .brief-panel p,
 .source-principles > p,
 .source-method {
-  font-size: 15px;
+  font-size: var(--text-base);
 }
 
 .signal-card {
@@ -3047,7 +3072,7 @@ h2 {
 
 .watch-card p,
 .source-scope {
-  font-size: 13px;
+  font-size: var(--text-base);
   line-height: 1.65;
 }
 
@@ -3113,7 +3138,7 @@ h2 {
 
 @media (max-width: 520px) {
   body {
-    font-size: 15px;
+    font-size: var(--text-base);
   }
 
   .editorial-headline {
@@ -3123,11 +3148,11 @@ h2 {
 
   .eyebrow,
   .search-heading {
-    font-size: 11px;
+    font-size: var(--text-xs);
   }
 
   .masthead-summary {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   .metric-value {
@@ -3144,7 +3169,7 @@ h2 {
   .market-table td,
   .watch-card p,
   .source-scope {
-    font-size: 12.5px;
+    font-size: var(--text-base);
   }
 }
 
@@ -3232,4 +3257,77 @@ h2 {
   .atlas-field {
     opacity: 0.48;
   }
+}
+
+/* Reader interaction and empty-state contracts */
+
+.section-head,
+#sources,
+#weekly-brief,
+[id^="source-"] {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+:where(a, button):focus {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.nav-link,
+.brand,
+.source-jump,
+.brief-jump,
+.footer-archive {
+  align-items: center;
+  display: inline-flex;
+  min-height: 24px;
+}
+
+.nav-link,
+.source-jump,
+.brief-jump {
+  transition-property: color, background-color, border-color, transform;
+}
+
+.catalyst-grid:empty,
+.archive-list:empty,
+.archive-source-list:empty,
+.archive-equities:empty,
+.archive-change-list:empty {
+  display: none;
+}
+
+.section:has(> .catalyst-grid:empty),
+.archive-section:has(> .archive-empty),
+.archive-section:has(> .archive-list:empty),
+.archive-section:has(> .archive-equities:empty),
+.archive-section:has(> .archive-change-list:empty),
+.archive-section:has(> .archive-source-list:empty) {
+  display: none;
+}
+
+.masthead-summary,
+.brief-panel p,
+.chart-caption,
+.signal-card p,
+.case-list p,
+.catalyst-card p,
+.basket-card p,
+.risk-card p,
+.watch-card p,
+.source-principles > p,
+.source-scope,
+.source-method,
+.footer p,
+.archive-summary,
+.archive-summary-en,
+.archive-empty,
+.archive-change strong,
+.archive-source p {
+  font-size: var(--text-base);
 }

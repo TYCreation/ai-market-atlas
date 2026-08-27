@@ -6,6 +6,23 @@ const currentSnapshot = JSON.parse(
   await readFile(new URL("../data/market/current.json", import.meta.url), "utf8"),
 );
 
+const globalsCss = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+test("reader stylesheet enforces the shared type and interaction contracts", () => {
+  assert.match(globalsCss, /--text-xs:\s*0\.75rem/);
+  assert.match(globalsCss, /--text-base:\s*0\.9375rem/);
+  assert.match(globalsCss, /--text-md:\s*1rem/);
+  assert.doesNotMatch(
+    globalsCss,
+    /font-size:\s*(?:(?:[0-9]|1[01])(?:\.[0-9]+)?|\.[0-9]+)px/,
+  );
+  assert.match(
+    globalsCss,
+    /\.section-head,[\s\S]*#sources,[\s\S]*#weekly-brief,[\s\S]*\[id\^="source-"\][\s\S]*scroll-margin-top:\s*calc\(var\(--header-height\) \+ 16px\)/,
+  );
+  assert.match(globalsCss, /:where\(a, button\):focus-visible\s*\{[\s\S]*outline:\s*2px solid var\(--cyan\)/);
+});
+
 async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
@@ -106,6 +123,9 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
       assert.match(html, /report-evidence-grid evidence-count-1/);
+      assert.match(html, /class="masthead-copy"/);
+      assert.match(html, /class="atlas-field"/);
+      assert.match(html, /href="#sources"/);
       assert.match(html, /支援、反向與催化信號/);
       assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
