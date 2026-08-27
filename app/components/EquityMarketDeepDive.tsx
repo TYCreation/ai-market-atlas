@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { EquityDeepDiveConfig } from "../content";
 import { EditionStatus } from "./EditionStatus";
+import { MarketDelta } from "./MarketDelta";
 import { MetricProvenance, TaipeiTime } from "./MetricProvenance";
 
 type Locale = "zh" | "en";
@@ -78,14 +79,6 @@ const copy = {
   },
 } as const;
 
-function trendClass(value: string) {
-  if (value.startsWith("+") || value.startsWith("▲")) return "positive";
-  if (value.startsWith("−") || value.startsWith("-") || value.startsWith("▼")) {
-    return "negative";
-  }
-  return "";
-}
-
 export function EquityMarketDeepDive({
   data,
   locale,
@@ -126,11 +119,11 @@ export function EquityMarketDeepDive({
               <div className="equity-sector-returns">
                 <div>
                   <span>{ui.week}</span>
-                  <strong className={trendClass(sector.week)}>{sector.week}</strong>
+                  <strong><MarketDelta value={sector.week} /></strong>
                 </div>
                 <div>
                   <span>{ui.month}</span>
-                  <strong className={trendClass(sector.month)}>{sector.month}</strong>
+                  <strong><MarketDelta value={sector.month} /></strong>
                 </div>
                 <div>
                   <span>{ui.breadth}</span>
@@ -195,13 +188,13 @@ export function EquityMarketDeepDive({
                       {equity.stockMetricViews?.price ? <MetricProvenance metric={equity.stockMetricViews.price} locale={locale} /> : null}
                       <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.price} />
                     </td>
-                    <td className={trendClass(equity.week)}>
-                      {equity.week}
+                    <td>
+                      <MarketDelta value={equity.week} />
                       {equity.stockMetricViews?.weekReturn ? <MetricProvenance metric={equity.stockMetricViews.weekReturn} locale={locale} /> : null}
                       <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.weekReturn} />
                     </td>
-                    <td className={trendClass(equity.month)}>
-                      {equity.month}
+                    <td>
+                      <MarketDelta value={equity.month} />
                       {equity.stockMetricViews?.monthReturn ? <MetricProvenance metric={equity.stockMetricViews.monthReturn} locale={locale} /> : null}
                       <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.monthReturn} />
                     </td>
@@ -214,9 +207,7 @@ export function EquityMarketDeepDive({
                       </div>
                     </td>
                     <td>{equity.forwardPe}</td>
-                    <td className={trendClass(equity.revenueGrowth)}>
-                      {equity.revenueGrowth}
-                    </td>
+                    <td><MarketDelta value={equity.revenueGrowth} /></td>
                     <td>{equity.catalyst}</td>
                     <td>{equity.risk}</td>
                     <td>
@@ -268,9 +259,7 @@ export function EquityMarketDeepDive({
               <div className="basket-metrics">
                 <div>
                   <span>{ui.performance}</span>
-                  <strong className={trendClass(basket.performance)}>
-                    {basket.performance}
-                  </strong>
+                  <strong><MarketDelta value={basket.performance} /></strong>
                 </div>
                 <div>
                   <span>{ui.risk}</span>

@@ -110,6 +110,16 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
     }
+    if (pathname === "/stocks") {
+      assert.match(
+        html,
+        /class="market-delta positive"[^>]*>[^<]*<span aria-hidden="true">▲<\/span>/,
+      );
+      assert.match(
+        html,
+        /class="market-delta negative"[^>]*>[^<]*<span aria-hidden="true">▼<\/span>/,
+      );
+    }
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });
 }

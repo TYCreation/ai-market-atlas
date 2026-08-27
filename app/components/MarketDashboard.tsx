@@ -16,6 +16,7 @@ import { SiCDeepDive } from "./SiCDeepDive";
 import { WeeklyMarketBrief } from "./WeeklyMarketBrief";
 import { MetricProvenance, TaipeiTime } from "./MetricProvenance";
 import { MetricSources, SourcePanel } from "./SourcePanel";
+import { MarketDelta } from "./MarketDelta";
 import { SiteCredit } from "./SiteCredit";
 
 type Locale = "zh" | "en";
@@ -275,12 +276,14 @@ export function MarketDashboard({
           {activeConfig.kpis.map((kpi, index) => (
             <article className="metric" key={kpi.label}>
               <span className="metric-label">{kpi.label}</span>
-              <div className="metric-value">{kpi.value}</div>
+              <div className="metric-value">
+                <MarketDelta value={kpi.value} />
+              </div>
               <EditionStatus locale={locale} metricStatus={kpi.status} />
               {kpi.provenance ? <MetricProvenance metric={kpi.provenance} locale={locale} /> : null}
               <div className="metric-foot">
                 <span>{kpi.foot}</span>
-                <span className="metric-delta">{kpi.delta}</span>
+                <MarketDelta value={kpi.delta} className="metric-delta" />
               </div>
               <MetricSources
                 bundle={sourceBundle}

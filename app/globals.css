@@ -13,7 +13,7 @@
   --ivory: #f4efe4;
   --muted: #8fa7b4;
   --green: #8be0b0;
-  --red: #ff9876;
+  --red: #e4778f;
   --font-sans: var(--font-geist-sans), "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
   --font-mono: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
 }
@@ -575,6 +575,22 @@ h1 {
   font-family: var(--font-mono);
   font-size: 9px;
   text-transform: uppercase;
+}
+
+.market-delta {
+  align-items: center;
+  display: inline-flex;
+  font-variant-numeric: tabular-nums lining-nums;
+  gap: 0.35em;
+  white-space: nowrap;
+}
+
+.market-delta.positive {
+  color: var(--green) !important;
+}
+
+.market-delta.negative {
+  color: var(--red) !important;
 }
 
 .metric-sources {
@@ -1426,6 +1442,15 @@ h2 {
 .equity-table td {
   font-family: var(--font-mono);
   font-size: 10px;
+}
+
+.equity-table :is(th, td):nth-child(2),
+.equity-table :is(th, td):nth-child(3),
+.equity-table :is(th, td):nth-child(4),
+.equity-table :is(th, td):nth-child(5),
+.equity-table :is(th, td):nth-child(6),
+.equity-table :is(th, td):nth-child(7) {
+  text-align: right;
 }
 
 .equity-name {
