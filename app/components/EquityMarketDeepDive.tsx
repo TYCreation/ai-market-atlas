@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { EquityDeepDiveConfig } from "../content";
 import { EditionStatus } from "./EditionStatus";
+import { MetricProvenance, TaipeiTime } from "./MetricProvenance";
 
 type Locale = "zh" | "en";
 type SectorKey = EquityDeepDiveConfig["sectors"][number]["key"];
@@ -108,7 +109,7 @@ export function EquityMarketDeepDive({
             <h2>{ui.marketTitle}</h2>
           </div>
           <span className="deep-dive-updated">
-            {ui.updated} · {data.updated}
+            {ui.updated} · <TaipeiTime value={data.updated} locale={locale} />
           </span>
         </div>
 
@@ -191,14 +192,17 @@ export function EquityMarketDeepDive({
                     </td>
                     <td>
                       {equity.price}
+                      {equity.stockMetricViews?.price ? <MetricProvenance metric={equity.stockMetricViews.price} locale={locale} /> : null}
                       <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.price} />
                     </td>
                     <td className={trendClass(equity.week)}>
                       {equity.week}
+                      {equity.stockMetricViews?.weekReturn ? <MetricProvenance metric={equity.stockMetricViews.weekReturn} locale={locale} /> : null}
                       <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.weekReturn} />
                     </td>
                     <td className={trendClass(equity.month)}>
                       {equity.month}
+                      {equity.stockMetricViews?.monthReturn ? <MetricProvenance metric={equity.stockMetricViews.monthReturn} locale={locale} /> : null}
                       <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.monthReturn} />
                     </td>
                     <td>

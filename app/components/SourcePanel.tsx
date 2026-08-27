@@ -1,4 +1,5 @@
 import type { Locale, SourceBundle, SourceReference } from "../sources";
+import { TaipeiTime } from "./MetricProvenance";
 
 const copy = {
   zh: {
@@ -116,7 +117,7 @@ function SourceCard({
       <h3>{source.title}</h3>
       <p className="source-scope">{source.scope[locale]}</p>
       <div className="source-card-foot">
-        <span>{source.published}</span>
+        <span><TaipeiTime value={source.published} locale={locale} /></span>
         {source.url ? <span>{ui.open} ↗</span> : null}
       </div>
     </>
@@ -151,9 +152,7 @@ export function SourcePanel({
           <p className="section-kicker">{ui.kicker}</p>
           <h2>{ui.title}</h2>
         </div>
-        <span className="source-reviewed">
-          {ui.reviewed} · {bundle.reviewed}
-        </span>
+        <span className="source-reviewed">{ui.reviewed} · <TaipeiTime value={bundle.reviewed} locale={locale} includeTime /></span>
       </div>
 
       <div className="source-principles">

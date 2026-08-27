@@ -14,6 +14,7 @@ import {
 } from "./EditionStatus";
 import { SiCDeepDive } from "./SiCDeepDive";
 import { WeeklyMarketBrief } from "./WeeklyMarketBrief";
+import { MetricProvenance, TaipeiTime } from "./MetricProvenance";
 import { MetricSources, SourcePanel } from "./SourcePanel";
 import { SiteCredit } from "./SiteCredit";
 
@@ -96,15 +97,6 @@ const horizons = ["30D", "Q3", "2027"] as const;
 function localizedPath(path: string, locale: Locale) {
   if (locale === "zh") return path;
   return path === "/" ? "/en" : `/en${path}`;
-}
-
-function formatEditionDate(value: string, locale: Locale) {
-  return new Intl.DateTimeFormat(locale === "zh" ? "zh-TW" : "en-US", {
-    day: "2-digit",
-    month: locale === "zh" ? "2-digit" : "short",
-    timeZone: "Asia/Taipei",
-    year: "numeric",
-  }).format(new Date(value));
 }
 
 export function MarketDashboard({
@@ -224,7 +216,7 @@ export function MarketDashboard({
         <div className="topbar-actions">
           <div className="status" aria-label={ui.statusLabel}>
             <span className="status-dot" aria-hidden="true" />
-            {edition[locale].cadenceLabel} · {formatEditionDate(edition[locale].dataCutoff, locale)}
+            {edition[locale].cadenceLabel} · <TaipeiTime value={edition[locale].dataCutoff} locale={locale} />
           </div>
           <Link
             className="language-switch"
@@ -250,7 +242,7 @@ export function MarketDashboard({
               <div className="edition-lockup">
                 <span className="signal-badge">{ui.signal} · {activeConfig.signal}</span>
                 <span className="edition">
-                  {formatEditionDate(edition[locale].dataCutoff, locale)}
+                  <TaipeiTime value={edition[locale].dataCutoff} locale={locale} />
                 </span>
               </div>
               <div className="masthead-links">
@@ -285,6 +277,7 @@ export function MarketDashboard({
               <span className="metric-label">{kpi.label}</span>
               <div className="metric-value">{kpi.value}</div>
               <EditionStatus locale={locale} metricStatus={kpi.status} />
+              {kpi.provenance ? <MetricProvenance metric={kpi.provenance} locale={locale} /> : null}
               <div className="metric-foot">
                 <span>{kpi.foot}</span>
                 <span className="metric-delta">{kpi.delta}</span>
@@ -483,7 +476,9 @@ export function MarketDashboard({
           </p>
           <Link className="footer-archive" href={localizedPath("/archive", locale)}>{ui.archiveLink} ↗</Link>
           <a className="footer-archive" href="#sources">{ui.methodologyLink} ↑</a>
-          <span className="footer-edition">AI Market Atlas · {edition[locale].runId}</span>
+          <span className="footer-edition">
+            AI Market Atlas · {edition[locale].cadenceLabel} · <TaipeiTime value={edition[locale].dataCutoff} locale={locale} />
+          </span>
           <SiteCredit />
         </footer>
       </main>

@@ -1,5 +1,6 @@
 import type { EditionMeta } from "../../market-data/view-model";
 import type { Locale, MetricStatus } from "../../market-data/types";
+import { TaipeiTime } from "./MetricProvenance";
 
 const copy = {
   zh: {
@@ -13,18 +14,6 @@ const copy = {
     waiting: "Awaiting update",
   },
 } as const;
-
-function formatDateTime(value: string, locale: Locale) {
-  return new Intl.DateTimeFormat(locale === "zh" ? "zh-TW" : "en-US", {
-    day: "2-digit",
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    month: locale === "zh" ? "2-digit" : "short",
-    timeZone: "Asia/Taipei",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 export type LocalizedEditionMeta = Record<Locale, EditionMeta>;
 export type LocalizedPageEdition = Record<
@@ -54,12 +43,11 @@ export function EditionStatus({
   const editionMeta = edition[locale];
   const pageMeta = page[locale];
   return (
-    <div className="edition-status" data-run-id={editionMeta.runId}>
+    <div className="edition-status">
       <span>{editionMeta.cadenceLabel}</span>
-      <span>{ui.cutoff} · {formatDateTime(editionMeta.dataCutoff, locale)}</span>
-      <span>{ui.verified} · {formatDateTime(pageMeta.verifiedAt, locale)}</span>
+      <span>{ui.cutoff} · <TaipeiTime value={editionMeta.dataCutoff} locale={locale} includeTime /></span>
+      <span>{ui.verified} · <TaipeiTime value={pageMeta.verifiedAt} locale={locale} includeTime /></span>
       {!pageMeta.changed ? <strong>{pageMeta.changeLabel}</strong> : null}
-      <span className="edition-run">{editionMeta.runId}</span>
     </div>
   );
 }

@@ -82,7 +82,7 @@ for (const [pathname, heading, metricIds] of [
       /rel="shortcut icon" href="https:\/\/aimarketatlas\.net\/favicon\.svg"/,
     );
     assert.match(html, /中文 \/ EN/);
-    assert.match(
+    assert.doesNotMatch(
       html,
       new RegExp(currentSnapshot.runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
     );
@@ -99,6 +99,10 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, new RegExp(`metric-source-${metricId.replaceAll(".", "\\.")}`));
     }
     if (pathname === "/") {
+      assert.match(html, /<time[^>]+dateTime="2026-[^"]+"/);
+      assert.match(html, /Atlas model|Atlas 模型/);
+      assert.doesNotMatch(html, /2026-\d\d-\d\d-(?:WEDNESDAY|SATURDAY|MONTH-END)/i);
+      assert.doesNotMatch(html, /class="edition-run"/);
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
       assert.match(html, /report-evidence-grid evidence-count-1/);
@@ -123,6 +127,12 @@ for (const [pathname, heading] of [
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, new RegExp(`<h1[^>]*>${heading}</h1>`));
+    if (pathname === "/en/stocks") {
+      assert.match(html, /Atlas model/);
+      assert.match(html, /Market observation/);
+    } else {
+      assert.match(html, /Atlas model/);
+    }
     assert.match(html, /hrefLang="zh-Hant"/);
     assert.match(html, /hrefLang="en"/);
     assert.match(html, /href="\/en\/archive"/);
@@ -176,7 +186,7 @@ test("rendered publication exposes route, source, brief, and archive markers", a
   assert.match(stocks, /href="\/archive"/);
 
   assert.match(archiveIndex, /href="\/archive\/2026-07"/);
-  assert.match(archiveDetail, /2026-07-25-saturday/);
+  assert.doesNotMatch(archiveDetail, /2026-07-25-saturday/);
   assert.match(archiveDetail, /source-nvidia-q1-fy27/);
   assert.match(archiveDetail, /完整公開來源/);
 });

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { MonthlyArchive } from "../../market-data/monthly.ts";
 import type { SourceRecord } from "../../market-data/types.ts";
 import { SiteCredit } from "./SiteCredit";
+import { TaipeiTime } from "./MetricProvenance";
 
 function monthLabel(month: string, locale: "zh" | "en") {
   const [year, monthNumber] = month.split("-");
@@ -36,7 +37,7 @@ export function ArchiveReport({
         {locale === "zh" ? <p className="archive-title-en">{titleEn}</p> : null}
         <p className="archive-summary">{archive.summary[locale]}</p>
         <p className="archive-meta" data-data-cutoff={archive.dataCutoff}>
-          {locale === "en" ? "Data cutoff" : "資料截止"} · {archive.dataCutoff.slice(0, 10)} · {archive.runId}
+          {locale === "en" ? "Data cutoff" : "資料截止"} · <TaipeiTime value={archive.dataCutoff} locale={locale} />
         </p>
       </header>
 
