@@ -45,16 +45,18 @@ test("blocks when more than twenty percent of required metrics wait", () => {
   assert.ok(result.issues.some((issue) => issue.code === "MISSING_REQUIRED" && issue.severity === "block"));
 });
 
-test("does not block when exactly twenty percent of required metrics wait", () => {
+test("blocks every required metric that is waiting", () => {
   const boundary = structuredClone(valid);
   const required = Object.values(boundary.metrics).filter((metric) => metric.required);
-  for (const metric of required.slice(0, required.length / 5)) metric.status = "waiting";
+  required[0].status = "waiting";
 
-  assert.equal(
+  assert.ok(
     evaluateQualityGate(boundary, previousSnapshot).issues.some(
-      (issue) => issue.code === "MISSING_REQUIRED" && issue.severity === "block",
+      (issue) =>
+        issue.code === "MISSING_REQUIRED" &&
+        issue.severity === "block" &&
+        issue.metricId === required[0].id,
     ),
-    false,
   );
 });
 
@@ -390,6 +392,35 @@ test("warns when metrics and narratives are unchanged across three editions", ()
   assert.equal(issues.some((issue) =>
     ["METRIC_STAGNATION", "NARRATIVE_STAGNATION"].includes(issue.code) && issue.severity === "block",
   ), false);
+});
+
+test("does not warn when a stance or thesis citation set changes across editions", () => {
+  const prior = structuredClone(valid);
+  const older = structuredClone(valid);
+  const revisedStance = structuredClone(valid);
+  revisedStance.pages["/models"].thesisStance = "bullish";
+
+  assert.equal(evaluateQualityGate(revisedStance, prior, [], [older]).issues.some(
+    (issue) => issue.code === "NARRATIVE_STAGNATION" && issue.page === "/models",
+  ), false);
+
+  const revisedCitations = structuredClone(valid);
+  revisedCitations.pages["/models"].thesisMetricIds =
+    revisedCitations.pages["/models"].thesisMetricIds.slice(1);
+  assert.equal(evaluateQualityGate(revisedCitations, prior, [], [older]).issues.some(
+    (issue) => issue.code === "NARRATIVE_STAGNATION" && issue.page === "/models",
+  ), false);
+});
+
+test("normalizes thesis citation order when detecting editorial stagnation", () => {
+  const current = structuredClone(valid);
+  const prior = structuredClone(valid);
+  const older = structuredClone(valid);
+  current.pages["/models"].thesisMetricIds.reverse();
+
+  assert.ok(evaluateQualityGate(current, prior, [], [older]).issues.some(
+    (issue) => issue.code === "NARRATIVE_STAGNATION" && issue.page === "/models",
+  ));
 });
 
 test("does not warn on unchanged periodic or event-driven metrics", () => {

@@ -151,6 +151,18 @@ function sameMetricIdSet(left: string[], right: string[]): boolean {
   );
 }
 
+function editorialState(page: MarketSnapshot["pages"][PageSlug]): {
+  report: MarketSnapshot["pages"][PageSlug]["report"];
+  thesisStance: MarketSnapshot["pages"][PageSlug]["thesisStance"];
+  thesisMetricIds: string[];
+} {
+  return {
+    report: page.report,
+    thesisStance: page.thesisStance,
+    thesisMetricIds: [...new Set(page.thesisMetricIds)].sort(),
+  };
+}
+
 function addStagnationIssues(
   current: MarketSnapshot,
   previous: MarketSnapshot,
@@ -185,8 +197,8 @@ function addStagnationIssues(
     if (
       prior !== undefined &&
       oldest !== undefined &&
-      isDeepStrictEqual(state.report, prior.report) &&
-      isDeepStrictEqual(state.report, oldest.report)
+      isDeepStrictEqual(editorialState(state), editorialState(prior)) &&
+      isDeepStrictEqual(editorialState(state), editorialState(oldest))
     ) {
       issues.push({
         code: "NARRATIVE_STAGNATION",
@@ -330,6 +342,14 @@ export function evaluateQualityGate(
         "warn",
         metric,
         "A non-required metric is waiting for data.",
+      ));
+    }
+    if (metric.required && metric.status === "waiting") {
+      issues.push(issueForMetric(
+        "MISSING_REQUIRED",
+        "block",
+        metric,
+        "A required metric is waiting for data.",
       ));
     }
 
