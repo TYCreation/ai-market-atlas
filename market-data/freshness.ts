@@ -27,11 +27,17 @@ const EVENT_DRIVEN_POLICY = { class: "event-driven" } as const;
 
 type ExchangeCalendar = {
   holidays: ReadonlySet<string>;
+  earlyCloses: Readonly<Record<string, { closeHour: number; closeMinute: number }>>;
 };
 
 // The publication pipeline intentionally supports only calendars that have been
 // reviewed and checked into code. Adding a market or year requires adding its
-// exchange holidays here; unknown coverage fails closed below.
+// exchange holidays and early closes here; unknown coverage fails closed below.
+// Verified 2026-08-28 against primary calendars: NYSE
+// (https://www.nyse.com/trade/hours-calendars), TWSE
+// (https://www.twse.com.tw/holidaySchedule/holidaySchedule?queryYear=112&response=html),
+// KRX (https://global.krx.co.kr/contents/GLB/06/0602/0602020204/GLB0602020204T1.jsp),
+// and Euronext Amsterdam (https://www.euronext.com/en/trading/trading-hours-holidays).
 const EXCHANGE_CALENDARS: Readonly<Record<string, Readonly<Record<number, ExchangeCalendar>>>> = {
   US: {
     2026: {
@@ -39,6 +45,10 @@ const EXCHANGE_CALENDARS: Readonly<Record<string, Readonly<Record<number, Exchan
         "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25",
         "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25",
       ]),
+      earlyCloses: {
+        "2026-11-27": { closeHour: 13, closeMinute: 0 },
+        "2026-12-24": { closeHour: 13, closeMinute: 0 },
+      },
     },
   },
   Taiwan: {
@@ -46,9 +56,11 @@ const EXCHANGE_CALENDARS: Readonly<Record<string, Readonly<Record<number, Exchan
       holidays: new Set([
         "2026-01-01", "2026-02-12", "2026-02-13", "2026-02-16", "2026-02-17",
         "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-27", "2026-04-03",
-        "2026-04-06", "2026-05-01", "2026-06-19", "2026-09-25", "2026-10-09",
+        "2026-04-06", "2026-05-01", "2026-06-19", "2026-09-25", "2026-09-28",
+        "2026-10-09",
         "2026-10-26", "2026-12-25",
       ]),
+      earlyCloses: {},
     },
   },
   Korea: {
@@ -56,16 +68,21 @@ const EXCHANGE_CALENDARS: Readonly<Record<string, Readonly<Record<number, Exchan
       holidays: new Set([
         "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", "2026-03-02",
         "2026-05-01", "2026-05-05", "2026-05-25", "2026-06-03", "2026-08-17",
-        "2026-09-24", "2026-09-25", "2026-10-05", "2026-12-25",
+        "2026-07-17", "2026-09-24", "2026-09-25", "2026-10-05", "2026-10-09",
+        "2026-12-25", "2026-12-31",
       ]),
+      earlyCloses: {},
     },
   },
   Europe: {
     2026: {
       holidays: new Set([
-        "2026-01-01", "2026-04-03", "2026-04-06", "2026-04-27", "2026-05-01",
-        "2026-05-14", "2026-05-25", "2026-12-25", "2026-12-26",
+        "2026-01-01", "2026-04-03", "2026-04-06", "2026-05-01", "2026-12-25",
       ]),
+      earlyCloses: {
+        "2026-12-24": { closeHour: 14, closeMinute: 5 },
+        "2026-12-31": { closeHour: 14, closeMinute: 5 },
+      },
     },
   },
 };
@@ -124,6 +141,14 @@ function dateKey(day: Date): string {
   return day.toISOString().slice(0, 10);
 }
 
+function closeTimeFor(market: string, day: Date, session: { closeHour: number; closeMinute: number }): {
+  closeHour: number;
+  closeMinute: number;
+} {
+  const calendar = exchangeCalendarFor(market, day.getUTCFullYear());
+  return calendar.earlyCloses[dateKey(day)] ?? session;
+}
+
 function completedTradingDays(metric: MetricRecord, asOf: Date, dataCutoff: Date): number {
   // Historical modeled stock estimates intentionally omit quote furniture. They
   // retain the stock metric's US session cadence, while published observations
@@ -139,7 +164,8 @@ function completedTradingDays(metric: MetricRecord, asOf: Date, dataCutoff: Date
   const cutoffDay = calendarDate(dataCutoff, timeZone);
   // A publication cutoff before the local close cannot consume that day's
   // session. The session close is exchange-local and DST-safe via Intl.
-  if (!isAtOrAfterClose(dataCutoff, timeZone, session.closeHour, session.closeMinute)) {
+  const cutoffClose = closeTimeFor(market, cutoffDay, session);
+  if (!isAtOrAfterClose(dataCutoff, timeZone, cutoffClose.closeHour, cutoffClose.closeMinute)) {
     cutoffDay.setUTCDate(cutoffDay.getUTCDate() - 1);
   }
   for (const year of new Set([firstDay.getUTCFullYear(), cutoffDay.getUTCFullYear()])) {

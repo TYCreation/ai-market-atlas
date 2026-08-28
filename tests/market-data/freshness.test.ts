@@ -91,6 +91,45 @@ test("every supported exchange counts the cutoff date only at its local close", 
   }
 });
 
+test("TWSE 2026 closures include Confucius Teachers' Day", () => {
+  const metric = marketCloseMetric("Taiwan", "Asia/Taipei", "2026-09-24T05:30:00.000Z");
+  assert.equal(evaluateMetricFreshness(metric, "2026-09-30T05:30:00.000Z").state, "current");
+});
+
+test("KRX 2026 temporary and year-end closures do not count as sessions", () => {
+  const cases = [
+    ["2026-07-16T06:30:00.000Z", "2026-07-21T06:30:00.000Z"],
+    ["2026-10-08T06:30:00.000Z", "2026-10-13T06:30:00.000Z"],
+    ["2026-12-28T06:30:00.000Z", "2026-12-31T06:30:00.000Z"],
+  ] as const;
+  for (const [asOf, cutoff] of cases) {
+    const metric = marketCloseMetric("Korea", "Asia/Seoul", asOf);
+    assert.equal(evaluateMetricFreshness(metric, cutoff).state, "current", `${asOf} → ${cutoff}`);
+  }
+});
+
+test("Euronext Amsterdam 2026 open days are not false closures", () => {
+  const cases = [
+    ["2026-04-24T15:30:00.000Z", "2026-04-29T15:30:00.000Z"],
+    ["2026-05-13T15:30:00.000Z", "2026-05-18T15:30:00.000Z"],
+    ["2026-05-22T15:30:00.000Z", "2026-05-27T15:30:00.000Z"],
+  ] as const;
+  for (const [asOf, cutoff] of cases) {
+    const metric = marketCloseMetric("Europe", "Europe/Amsterdam", asOf);
+    assert.equal(evaluateMetricFreshness(metric, cutoff).state, "stale", `${asOf} → ${cutoff}`);
+  }
+});
+
+test("NYSE and Euronext early closes use their exchange-local cutoff", () => {
+  const us = marketCloseMetric("US", "America/New_York", "2026-11-23T21:00:00.000Z");
+  assert.equal(evaluateMetricFreshness(us, "2026-11-27T17:59:59.000Z").state, "current");
+  assert.equal(evaluateMetricFreshness(us, "2026-11-27T18:00:00.000Z").state, "stale");
+
+  const europe = marketCloseMetric("Europe", "Europe/Amsterdam", "2026-12-21T16:30:00.000Z");
+  assert.equal(evaluateMetricFreshness(europe, "2026-12-24T13:04:59.000Z").state, "current");
+  assert.equal(evaluateMetricFreshness(europe, "2026-12-24T13:05:00.000Z").state, "stale");
+});
+
 test("Korea and Europe holidays do not count as completed sessions", () => {
   const korea = marketCloseMetric("Korea", "Asia/Seoul", "2026-04-30T06:30:00.000Z");
   assert.equal(evaluateMetricFreshness(korea, "2026-05-05T06:30:00.000Z").state, "current");
