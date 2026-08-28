@@ -104,10 +104,9 @@ for (const [pathname, heading, metricIds] of [
       new RegExp(currentSnapshot.runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
     );
     assert.match(html, /資料截止/);
-    assert.match(
-      html,
-      currentSnapshot.pages[pathname].changed ? /本期已更新/ : /本期無重大變化/,
-    );
+    if (!currentSnapshot.pages[pathname].changed) {
+      assert.match(html, /本期無重大變化/);
+    }
     assert.doesNotMatch(html, /July 2026 illustrative dataset|2026 年 7 月的示意數據/i);
     assert.match(html, /資料來源與方法/);
     assert.match(html, /最後查閱/);

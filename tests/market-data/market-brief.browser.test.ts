@@ -442,6 +442,9 @@ test("actual market-brief composition passes its browser behavior matrix", async
         ["cutoff", (brief) => {
           brief.dataCutoff = "not-a-date";
         }],
+        ["impossible canonical signal date", (brief) => {
+          brief.signals[0].asOf = "2026-02-29T00:00:00.000Z";
+        }],
         ["signal page", (brief) => {
           brief.signals[0].page = "/bogus" as MarketBriefPayload["signals"][number]["page"];
         }],

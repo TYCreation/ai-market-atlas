@@ -886,11 +886,30 @@
       }
 
       function isCanonicalUtcTimestamp(value) {
+        if (
+          typeof value !== "string" ||
+          !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)
+        ) {
+          return false;
+        }
+        const year = Number(value.slice(0, 4));
+        const month = Number(value.slice(5, 7));
+        const day = Number(value.slice(8, 10));
+        const hour = Number(value.slice(11, 13));
+        const minute = Number(value.slice(14, 16));
+        const second = Number(value.slice(17, 19));
+        const millisecond = Number(value.slice(20, 23));
+        const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         return (
-          typeof value === "string" &&
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
-          !Number.isNaN(Date.parse(value)) &&
-          new Date(value).toISOString() === value
+          month >= 1 &&
+          month <= 12 &&
+          day >= 1 &&
+          day <= daysInMonth[month - 1] &&
+          hour <= 23 &&
+          minute <= 59 &&
+          second <= 59 &&
+          millisecond <= 999
         );
       }
 
@@ -946,7 +965,7 @@
               brief.dataCutoff !== expectedBrief.dataCutoff)) ||
           !cadence ||
           !isCanonicalUtcTimestamp(brief.dataCutoff) ||
-          brief.signals.some((signal) => Date.parse(signal.asOf) > Date.parse(brief.dataCutoff)) ||
+          brief.signals.some((signal) => signal.asOf > brief.dataCutoff) ||
           sourceIds.length === 0 ||
           sourceIds.some((id) => typeof id !== "string" || id.length === 0) ||
           sourceIdSet.size !== sourceIds.length ||
