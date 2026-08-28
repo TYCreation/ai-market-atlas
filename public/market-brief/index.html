@@ -913,6 +913,23 @@
         );
       }
 
+      function canonicalizeBriefValue(value) {
+        if (Array.isArray(value)) return value.map(canonicalizeBriefValue);
+        if (value !== null && typeof value === "object") {
+          return Object.fromEntries(
+            Object.entries(value)
+              .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
+              .map(([key, child]) => [key, canonicalizeBriefValue(child)]),
+          );
+        }
+        return value;
+      }
+
+      function sameBriefPayload(left, right) {
+        return JSON.stringify(canonicalizeBriefValue(left)) ===
+          JSON.stringify(canonicalizeBriefValue(right));
+      }
+
       function hasLocalizedSignal(signal) {
         return (
           signal &&
@@ -1182,7 +1199,12 @@
       }
 
       function renderBrief(brief) {
-        if (!isValidBrief(brief, lastEmbeddedBrief)) return false;
+        if (
+          !isValidBrief(brief, lastEmbeddedBrief) ||
+          !sameBriefPayload(brief, lastEmbeddedBrief)
+        ) {
+          return false;
+        }
         try {
           return applyBriefRenderPlan(buildBriefRenderPlan(brief));
         } catch {
@@ -1202,7 +1224,10 @@
           });
           if (!response.ok) throw new Error(`Brief request failed with ${response.status}`);
           const brief = await response.json();
-          if (!isValidBrief(brief, lastEmbeddedBrief)) {
+          if (
+            !isValidBrief(brief, lastEmbeddedBrief) ||
+            !sameBriefPayload(brief, lastEmbeddedBrief)
+          ) {
             throw new Error("Fetched brief does not match the embedded run.");
           }
           return brief;

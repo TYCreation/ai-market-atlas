@@ -502,6 +502,50 @@ test("actual market-brief composition passes its browser behavior matrix", async
       }
     });
 
+    await t.test("same-cutoff payload changes fall back to the embedded brief", async (t) => {
+      const tamperedCases: Array<
+        [string, (brief: MarketBriefPayload) => void]
+      > = [
+        ["signal value", (brief) => {
+          brief.signals[0].en.value = "CORRUPTED VALUE";
+        }],
+        ["signal label", (brief) => {
+          brief.signals[0].en.label = "CORRUPTED LABEL";
+        }],
+        ["stale signal observation", (brief) => {
+          brief.signals[0].asOf = "2026-07-01T01:00:00.000Z";
+        }],
+      ];
+
+      for (const [name, mutate] of tamperedCases) {
+        await t.test(name, async () => {
+          embedded = saturdayBrief;
+          const tampered = structuredClone(saturdayBrief);
+          mutate(tampered);
+          data = tampered;
+          dataMode = "valid";
+          const { context, page } = await newCompositionPage(browser, baseUrl, {
+            query: "lang=en&embed=1",
+          });
+          const loaded = await page.evaluate(() => window.loadBrief());
+          assert.deepEqual(loaded, saturdayBrief);
+          assert.deepEqual(
+            await page.locator('[data-brief="signal-0-value"]').allInnerTexts(),
+            ["$2.8T", "$2.8T"],
+          );
+          assert.equal(
+            await page.locator('[data-brief="signal-0-label"]').first().innerText(),
+            "CONSTRAINT ROTATION",
+          );
+          assert.equal(
+            await page.locator('[data-brief="signal-0-provenance"] time').first().getAttribute("dateTime"),
+            saturdayBrief.signals[0].asOf,
+          );
+          await context.close();
+        });
+      }
+    });
+
     await t.test("render failure leaves the embedded DOM unchanged and resolves fallback", async () => {
       embedded = saturdayBrief;
       const fetched = structuredClone(saturdayBrief);

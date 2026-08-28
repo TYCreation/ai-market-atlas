@@ -120,6 +120,25 @@ const BRIEF_VALIDATOR_HELPER = `      function isCanonicalUtcTimestamp(value) {
       }
 
 `;
+const BRIEF_PAYLOAD_BINDING_ANCHOR = "      function hasLocalizedSignal(signal) {";
+const BRIEF_PAYLOAD_BINDING_HELPER = `      function canonicalizeBriefValue(value) {
+        if (Array.isArray(value)) return value.map(canonicalizeBriefValue);
+        if (value !== null && typeof value === "object") {
+          return Object.fromEntries(
+            Object.entries(value)
+              .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
+              .map(([key, child]) => [key, canonicalizeBriefValue(child)]),
+          );
+        }
+        return value;
+      }
+
+      function sameBriefPayload(left, right) {
+        return JSON.stringify(canonicalizeBriefValue(left)) ===
+          JSON.stringify(canonicalizeBriefValue(right));
+      }
+
+`;
 
 function assertUnique(values: string[], label: string): void {
   if (new Set(values).size !== values.length) {
@@ -412,6 +431,12 @@ function hardenBriefValidation(html: string): string {
   let hardened = html.includes("function isCanonicalUtcTimestamp(value)")
     ? html
     : html.replace(BRIEF_VALIDATOR_ANCHOR, `${BRIEF_VALIDATOR_HELPER}${BRIEF_VALIDATOR_ANCHOR}`);
+  if (!hardened.includes("function canonicalizeBriefValue(value)")) {
+    hardened = hardened.replace(
+      BRIEF_PAYLOAD_BINDING_ANCHOR,
+      `${BRIEF_PAYLOAD_BINDING_HELPER}${BRIEF_PAYLOAD_BINDING_ANCHOR}`,
+    );
+  }
   hardened = hardened
     .replace(
       'Object.prototype.hasOwnProperty.call(brief, "runId")',
