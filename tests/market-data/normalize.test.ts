@@ -26,7 +26,7 @@ function marketMetric(overrides: Partial<MetricRecord>): MetricRecord {
 test("sorts sources and metrics and keeps the prior value", () => {
   const unordered = structuredClone(validCandidate);
   unordered.metrics["stocks.nvda.price"].sourceIds.reverse();
-  unordered.metrics["stocks.nvda.price"].asOf = "2026-08-01T01:00:00Z";
+  unordered.metrics["stocks.nvda.price"].asOf = "2026-08-01T01:00:00.000Z";
   const normalized = normalizeCandidate(unordered, previousSnapshot, runStart);
 
   assert.equal(normalized.metrics["stocks.nvda.price"].previousNumericValue, 181.25);
@@ -41,7 +41,7 @@ test("sorts sources and metrics and keeps the prior value", () => {
 
 test("rejects a future or incomplete market session", () => {
   const future = structuredClone(validCandidate);
-  future.metrics["stocks.nvda.price"].asOf = "2026-08-01T20:00:00Z";
+  future.metrics["stocks.nvda.price"].asOf = "2026-08-01T20:00:00.000Z";
 
   assert.throws(
     () => normalizeCandidate(future, previousSnapshot, runStart),
@@ -217,6 +217,98 @@ test("modeled stock estimates do not require exchange-session metadata", () => {
   });
 
   assert.doesNotThrow(() => assertCompletedSession(modeled, runStart));
+});
+
+test("normalizes NYSE observations at the 2026 Thanksgiving Friday early close", () => {
+  const candidateAtClose = structuredClone(validCandidate);
+  const metric = candidateAtClose.metrics["stocks.nvda.price"];
+  Object.assign(metric, {
+    kind: "published",
+    market: "US",
+    marketTimezone: "America/New_York",
+    primaryListing: "NVDA",
+    securityType: "primary",
+    sessionState: "closed",
+    asOf: "2026-11-27T18:00:00.000Z",
+    observations: [
+      { sourceId: "atlas-model", numericValue: metric.numericValue, asOf: "2026-11-27T18:00:00.000Z" },
+      { sourceId: "openai-pricing", numericValue: metric.numericValue, asOf: "2026-11-27T18:00:00.000Z" },
+    ],
+    sourceIds: ["atlas-model", "openai-pricing"],
+  });
+
+  assert.doesNotThrow(() => normalizeCandidate(candidateAtClose, previousSnapshot, new Date("2026-11-27T19:00:00Z")));
+
+  const preClose = structuredClone(candidateAtClose);
+  preClose.metrics["stocks.nvda.price"].asOf = "2026-11-27T17:59:59.000Z";
+  for (const observation of preClose.metrics["stocks.nvda.price"].observations) observation.asOf = "2026-11-27T17:59:59.000Z";
+  assert.throws(
+    () => normalizeCandidate(preClose, previousSnapshot, new Date("2026-11-27T19:00:00Z")),
+    /stocks\.nvda\.price is not a completed session/,
+  );
+});
+
+test("normalizes Euronext Amsterdam observations at the 2026 Christmas Eve early close", () => {
+  const candidateAtClose = structuredClone(validCandidate);
+  const metric = candidateAtClose.metrics["stocks.nvda.price"];
+  Object.assign(metric, {
+    kind: "published",
+    market: "Europe",
+    marketTimezone: "Europe/Amsterdam",
+    primaryListing: "NVDA.AS",
+    securityType: "primary",
+    sessionState: "closed",
+    unit: "EUR",
+    currency: "EUR",
+    asOf: "2026-12-24T13:05:00.000Z",
+    observations: [
+      { sourceId: "atlas-model", numericValue: metric.numericValue, asOf: "2026-12-24T13:05:00.000Z" },
+      { sourceId: "openai-pricing", numericValue: metric.numericValue, asOf: "2026-12-24T13:05:00.000Z" },
+    ],
+    sourceIds: ["atlas-model", "openai-pricing"],
+  });
+
+  assert.doesNotThrow(() => normalizeCandidate(candidateAtClose, previousSnapshot, new Date("2026-12-24T14:00:00Z")));
+
+  const preClose = structuredClone(candidateAtClose);
+  preClose.metrics["stocks.nvda.price"].asOf = "2026-12-24T13:04:59.000Z";
+  for (const observation of preClose.metrics["stocks.nvda.price"].observations) observation.asOf = "2026-12-24T13:04:59.000Z";
+  assert.throws(
+    () => normalizeCandidate(preClose, previousSnapshot, new Date("2026-12-24T14:00:00Z")),
+    /stocks\.nvda\.price is not a completed session/,
+  );
+});
+
+test("rejects a published close timestamp on an exchange holiday", () => {
+  const cases = [
+    {
+      market: "US",
+      marketTimezone: "America/New_York",
+      primaryListing: "NVDA",
+      asOf: "2026-11-26T21:00:00.000Z",
+      runStart: "2026-11-26T22:00:00Z",
+    },
+    {
+      market: "Europe",
+      marketTimezone: "Europe/Amsterdam",
+      primaryListing: "ASML.AS",
+      asOf: "2026-12-25T16:30:00.000Z",
+      runStart: "2026-12-25T17:30:00Z",
+    },
+  ] as const;
+  for (const session of cases) {
+    const holiday = marketMetric({
+      kind: "published",
+      ...session,
+      securityType: "primary",
+      sessionState: "closed",
+      observations: [{ sourceId: "atlas-model", numericValue: 1, asOf: session.asOf }],
+    });
+    assert.throws(
+      () => assertCompletedSession(holiday, new Date(session.runStart)),
+      /stocks\.nvda\.price is not a completed session/,
+    );
+  }
 });
 
 test("canonicalizes catalog unit aliases and rejects currency and unit mismatches", () => {

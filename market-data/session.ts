@@ -7,6 +7,11 @@ export type MarketSession = {
   closeMinute: number;
 };
 
+export type ExchangeCalendar = {
+  holidays: ReadonlySet<string>;
+  earlyCloses: Readonly<Record<string, Pick<MarketSession, "closeHour" | "closeMinute">>>;
+};
+
 const MARKET_SESSIONS: Readonly<Record<string, MarketSession>> = {
   US: { timezone: "America/New_York", currency: "USD", closeHour: 16, closeMinute: 0 },
   Taiwan: { timezone: "Asia/Taipei", currency: "TWD", closeHour: 13, closeMinute: 30 },
@@ -23,6 +28,62 @@ const MARKET_CODES: Readonly<Record<string, string>> = {
   kr: "Korea",
   europe: "Europe",
   eu: "Europe",
+};
+
+// The publication pipeline intentionally supports only calendars that have been
+// reviewed and checked into code. Adding a market or year requires adding its
+// exchange holidays and early closes here; unknown coverage fails closed below.
+// Verified 2026-08-28 against primary calendars: NYSE
+// (https://www.nyse.com/trade/hours-calendars), TWSE
+// (https://www.twse.com.tw/holidaySchedule/holidaySchedule?queryYear=112&response=html),
+// KRX (https://global.krx.co.kr/contents/GLB/06/0602/0602020204/GLB0602020204T1.jsp),
+// and Euronext Amsterdam (https://www.euronext.com/en/trading/trading-hours-holidays).
+export const EXCHANGE_SESSION_CALENDARS: Readonly<Record<string, Readonly<Record<number, ExchangeCalendar>>>> = {
+  US: {
+    2026: {
+      holidays: new Set([
+        "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25",
+        "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25",
+      ]),
+      earlyCloses: {
+        "2026-11-27": { closeHour: 13, closeMinute: 0 },
+        "2026-12-24": { closeHour: 13, closeMinute: 0 },
+      },
+    },
+  },
+  Taiwan: {
+    2026: {
+      holidays: new Set([
+        "2026-01-01", "2026-02-12", "2026-02-13", "2026-02-16", "2026-02-17",
+        "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-27", "2026-04-03",
+        "2026-04-06", "2026-05-01", "2026-06-19", "2026-09-25", "2026-09-28",
+        "2026-10-09", "2026-10-26", "2026-12-25",
+      ]),
+      earlyCloses: {},
+    },
+  },
+  Korea: {
+    2026: {
+      holidays: new Set([
+        "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", "2026-03-02",
+        "2026-05-01", "2026-05-05", "2026-05-25", "2026-06-03", "2026-08-17",
+        "2026-07-17", "2026-09-24", "2026-09-25", "2026-10-05", "2026-10-09",
+        "2026-12-25", "2026-12-31",
+      ]),
+      earlyCloses: {},
+    },
+  },
+  Europe: {
+    2026: {
+      holidays: new Set([
+        "2026-01-01", "2026-04-03", "2026-04-06", "2026-05-01", "2026-12-25",
+      ]),
+      earlyCloses: {
+        "2026-12-24": { closeHour: 14, closeMinute: 5 },
+        "2026-12-31": { closeHour: 14, closeMinute: 5 },
+      },
+    },
+  },
 };
 
 function failCompletedSession(metric: MetricRecord): never {
@@ -45,6 +106,40 @@ export function canonicalizeMarketCode(value: string): string | undefined {
 
 export function marketSession(market: string | undefined): MarketSession | undefined {
   return market ? MARKET_SESSIONS[market] : undefined;
+}
+
+export function exchangeCalendarFor(market: string | undefined, year: number): ExchangeCalendar {
+  const calendars = market === undefined ? undefined : EXCHANGE_SESSION_CALENDARS[market];
+  const calendar = calendars?.[year];
+  if (!calendar) {
+    if (!calendars) throw new Error(`Unsupported exchange calendar: ${market ?? "missing market"}`);
+    throw new Error(`Unsupported ${market} exchange calendar year: ${year}`);
+  }
+  return calendar;
+}
+
+export function exchangeCloseFor(market: string, localDate: string): Pick<MarketSession, "closeHour" | "closeMinute"> {
+  const calendar = exchangeCalendarFor(market, Number(localDate.slice(0, 4)));
+  const session = marketSession(market);
+  if (!session) throw new Error(`Unsupported exchange calendar: ${market}`);
+  return calendar.earlyCloses[localDate] ?? session;
+}
+
+export function isExchangeClosed(market: string, localDate: string): boolean {
+  const calendar = exchangeCalendarFor(market, Number(localDate.slice(0, 4)));
+  const day = new Date(`${localDate}T00:00:00.000Z`).getUTCDay();
+  return day === 0 || day === 6 || calendar.holidays.has(localDate);
+}
+
+function localDate(timestamp: Date, timezone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(timestamp);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 function assertMarketMetadata(metric: MetricRecord): MarketSession | undefined {
@@ -92,19 +187,28 @@ function localTime(timestamp: Date, timezone: string): { weekday: string; hour: 
   return { weekday: get("weekday")!, hour: Number(get("hour")), minute: Number(get("minute")) };
 }
 
-function isAtOrAfterClose(timestamp: Date, session: MarketSession): boolean {
+function isAtOrAfterClose(timestamp: Date, market: string, session: MarketSession): boolean {
   const local = localTime(timestamp, session.timezone);
   if (local.weekday === "Sat" || local.weekday === "Sun") return false;
-  return local.hour > session.closeHour || (local.hour === session.closeHour && local.minute >= session.closeMinute);
+  const date = localDate(timestamp, session.timezone);
+  if (isExchangeClosed(market, date)) return false;
+  const close = exchangeCloseFor(market, date);
+  return local.hour > close.closeHour || (local.hour === close.closeHour && local.minute >= close.closeMinute);
 }
 
 function assertPublishedMarketClose(metric: MetricRecord, session: MarketSession, runStart: Date): void {
-  if (metric.kind !== "published" || metric.sessionState !== "closed") return;
+  if (metric.kind !== "published") return;
   const timestamps = [metric.asOf, ...metric.observations.map((observation) => observation.asOf)];
   if (
     timestamps.some((timestamp) => {
       const observedAt = new Date(timestamp);
-      return Number.isNaN(observedAt.getTime()) || observedAt.getTime() >= runStart.getTime() || !isAtOrAfterClose(observedAt, session);
+      if (Number.isNaN(observedAt.getTime())) return true;
+      const date = localDate(observedAt, session.timezone);
+      // Resolve the calendar even for holiday carry-forward records so an
+      // unsupported market year can never pass through normalization silently.
+      exchangeCalendarFor(metric.market!, Number(date.slice(0, 4)));
+      if (metric.sessionState !== "closed") return false;
+      return observedAt.getTime() >= runStart.getTime() || !isAtOrAfterClose(observedAt, metric.market!, session);
     })
   ) {
     failCompletedSession(metric);
