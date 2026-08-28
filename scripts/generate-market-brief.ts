@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { evaluateMetricFreshness } from "../market-data/freshness.ts";
+import { hashCandidate } from "../market-data/review.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import type {
   BilingualText,
@@ -55,6 +56,30 @@ export type MarketBriefAssetPaths = {
   publicHtml: string;
 };
 
+const CANONICAL_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+export function isCanonicalUtcTimestamp(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    CANONICAL_UTC_TIMESTAMP.test(value) &&
+    !Number.isNaN(Date.parse(value)) &&
+    new Date(value).toISOString() === value
+  );
+}
+
+/**
+ * Non-reader-facing identity for the complete, cutoff-bound brief payload.
+ * The domain separator prevents this digest from being confused with a
+ * candidate snapshot hash while remaining deterministic across exports.
+ */
+export function marketBriefPayloadSha256(brief: MarketBriefPayload): string {
+  return hashCandidate({
+    identity: "ai-market-atlas:market-brief:v1",
+    dataCutoff: brief.dataCutoff,
+    payload: brief,
+  });
+}
+
 const PAGE_ORDER: PageSlug[] = ["/", "/stocks", "/compute", "/energy", "/models", "/sic"];
 const PAGE_SLUGS = new Set<PageSlug>(PAGE_ORDER);
 const CADENCE_BOUNDS: Record<RunCadence, { min: number; max: number }> = {
@@ -65,6 +90,17 @@ const CADENCE_BOUNDS: Record<RunCadence, { min: number; max: number }> = {
 const EMBEDDED_BRIEF =
   /<script id="embedded-market-brief" type="application\/json">[\s\S]*?<\/script>/;
 const BODY_SCRIPT_ANCHOR = "\n    <script>\n      const params = ";
+const BRIEF_VALIDATOR_ANCHOR = "      function hasLocalizedSignal(signal) {";
+const BRIEF_VALIDATOR_HELPER = `      function isCanonicalUtcTimestamp(value) {
+        return (
+          typeof value === "string" &&
+          /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/.test(value) &&
+          !Number.isNaN(Date.parse(value)) &&
+          new Date(value).toISOString() === value
+        );
+      }
+
+`;
 
 function assertUnique(values: string[], label: string): void {
   if (new Set(values).size !== values.length) {
@@ -96,9 +132,14 @@ function assertSnapshotBriefCardinality(snapshot: MarketSnapshot): void {
 
 function freshKeySignals(snapshot: MarketSnapshot): MetricRecord[] {
   const signals: MetricRecord[] = [];
+  const cutoff = Date.parse(snapshot.dataCutoff);
   for (const id of snapshot.keySignalIds) {
     const metric = snapshot.metrics[id];
     if (!metric) throw new Error(`Market brief references missing key signal ${id}`);
+    const asOf = Date.parse(metric.asOf);
+    if (asOf > cutoff) {
+      throw new Error(`Key signal is from the future and cannot be rendered: ${metric.id}`);
+    }
     const freshness = evaluateMetricFreshness(metric, snapshot.dataCutoff);
     if (freshness.state === "stale") {
       if (metric.required) {
@@ -252,8 +293,7 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
     const structurallyValid =
       candidate.schemaVersion === 1 &&
       !("runId" in candidate) &&
-      typeof candidate.dataCutoff === "string" &&
-      !Number.isNaN(Date.parse(candidate.dataCutoff)) &&
+      isCanonicalUtcTimestamp(candidate.dataCutoff) &&
       sourceIds.length > 0 &&
       sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
       sourceIdSet.size === sourceIds.length &&
@@ -268,8 +308,8 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
           (signal.kind === "published-fact" ||
             signal.kind === "market-observation" ||
             signal.kind === "atlas-model") &&
-          typeof signal.asOf === "string" &&
-          !Number.isNaN(Date.parse(signal.asOf)) &&
+          isCanonicalUtcTimestamp(signal.asOf) &&
+          Date.parse(signal.asOf) <= Date.parse(candidate.dataCutoff) &&
           Array.isArray(signal.sourceIds) &&
           signal.sourceIds.length > 0 &&
           signal.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
@@ -346,6 +386,29 @@ function upsertEmbeddedBrief(html: string, brief: MarketBriefPayload): string {
   return html.replace(BODY_SCRIPT_ANCHOR, `\n    ${embedded}${BODY_SCRIPT_ANCHOR}`);
 }
 
+function hardenBriefValidation(html: string): string {
+  if (!html.includes(BRIEF_VALIDATOR_ANCHOR)) {
+    throw new Error("HyperFrames HTML is missing the brief validator anchor");
+  }
+  let hardened = html.includes("function isCanonicalUtcTimestamp(value)")
+    ? html
+    : html.replace(BRIEF_VALIDATOR_ANCHOR, `${BRIEF_VALIDATOR_HELPER}${BRIEF_VALIDATOR_ANCHOR}`);
+  hardened = hardened
+    .replace(
+      'Object.prototype.hasOwnProperty.call(brief, "runId")',
+      'Object.keys(brief).sort().join(",") !== "cadence,dataCutoff,featuredSignalIds,labels,methodology,nextWeekObservations,notInvestmentAdvice,schemaVersion,signals,sourceIds"',
+    )
+    .replace(
+      'typeof signal.asOf === "string" &&\n          !Number.isNaN(Date.parse(signal.asOf))',
+      'isCanonicalUtcTimestamp(signal.asOf)',
+    )
+    .replace(
+      'typeof brief.dataCutoff !== "string" ||\n          Number.isNaN(Date.parse(brief.dataCutoff))',
+      '!isCanonicalUtcTimestamp(brief.dataCutoff) ||\n          brief.signals.some((signal) => Date.parse(signal.asOf) > Date.parse(brief.dataCutoff))',
+    );
+  return hardened;
+}
+
 async function loadSnapshot(path: string): Promise<MarketSnapshot> {
   const resolved = await realpath(resolve(path));
   const file = await stat(resolved);
@@ -362,7 +425,7 @@ export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): P
   assertMarketBriefMatchesSnapshot(brief, snapshot, "Generated market brief");
   const data = serializeBrief(brief);
   const canonicalHtml = await readFile(paths.canonicalHtml, "utf8");
-  const html = upsertEmbeddedBrief(canonicalHtml, brief);
+  const html = hardenBriefValidation(upsertEmbeddedBrief(canonicalHtml, brief));
 
   await Promise.all([
     writeFile(paths.canonicalData, data),

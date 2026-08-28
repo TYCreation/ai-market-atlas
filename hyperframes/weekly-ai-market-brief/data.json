@@ -1,6 +1,5 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-08-saturday",
   "cadence": "saturday",
   "dataCutoff": "2026-08-08T01:00:00.000Z",
   "sourceIds": [
@@ -17,7 +16,8 @@
     {
       "id": "energy.vistra_helix_commitment",
       "page": "/energy",
-      "kind": "published",
+      "kind": "published-fact",
+      "asOf": "2026-08-07T00:00:00.000Z",
       "sourceIds": [
         "vistra-q2-2026"
       ],
@@ -33,7 +33,8 @@
     {
       "id": "pulse.amd_data_center_revenue",
       "page": "/",
-      "kind": "published",
+      "kind": "published-fact",
+      "asOf": "2026-08-04T20:15:00.000Z",
       "sourceIds": [
         "amd-q2-2026",
         "amd-q2-2026-gnw",
@@ -51,7 +52,8 @@
     {
       "id": "stocks.amd_q2_revenue_growth",
       "page": "/stocks",
-      "kind": "published",
+      "kind": "published-fact",
+      "asOf": "2026-08-04T20:15:00.000Z",
       "sourceIds": [
         "amd-q2-2026",
         "amd-q2-2026-gnw",
@@ -69,7 +71,8 @@
     {
       "id": "compute.amd_data_center_growth",
       "page": "/compute",
-      "kind": "published",
+      "kind": "published-fact",
+      "asOf": "2026-08-04T20:15:00.000Z",
       "sourceIds": [
         "amd-q2-2026",
         "amd-q2-2026-gnw",
@@ -87,7 +90,8 @@
     {
       "id": "models.api_deployment_share",
       "page": "/models",
-      "kind": "modeled",
+      "kind": "atlas-model",
+      "asOf": "2026-08-01T01:00:00.000Z",
       "sourceIds": [
         "atlas-model",
         "stanford-economy"
@@ -104,7 +108,8 @@
     {
       "id": "sic.onsemi_q2_revenue",
       "page": "/sic",
-      "kind": "published",
+      "kind": "published-fact",
+      "asOf": "2026-08-03T20:05:00.000Z",
       "sourceIds": [
         "onsemi-q2-2026-gnw",
         "onsemi-q2-2026-sec"

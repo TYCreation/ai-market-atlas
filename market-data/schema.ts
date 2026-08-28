@@ -50,8 +50,7 @@ function requireArray(value: unknown, path: string): unknown[] {
 
 function requireIsoTimestamp(value: unknown, path: string): string {
   const timestamp = requireString(value, path);
-  const expected = timestamp.includes(".") ? timestamp : timestamp.replace("Z", ".000Z");
-  if (!ISO_TIMESTAMP.test(timestamp) || Number.isNaN(Date.parse(timestamp)) || new Date(timestamp).toISOString() !== expected) {
+  if (!ISO_TIMESTAMP.test(timestamp) || Number.isNaN(Date.parse(timestamp)) || new Date(timestamp).toISOString() !== timestamp) {
     fail(`${path} must be an ISO timestamp`);
   }
   return timestamp;

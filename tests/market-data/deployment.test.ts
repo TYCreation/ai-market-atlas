@@ -6,7 +6,12 @@ import {
   publishWithRestore,
   verifyDeployment,
 } from "../../market-data/deployment.ts";
-import { hashCandidate } from "../../market-data/review.ts";
+import {
+  buildMarketBrief,
+  marketBriefPayloadSha256,
+} from "../../scripts/generate-market-brief.ts";
+import candidateSnapshot from "../fixtures/market/valid-candidate.json" with { type: "json" };
+import type { MarketSnapshot } from "../../market-data/types.ts";
 import {
   fakeDependencies,
   publishOptions,
@@ -581,41 +586,32 @@ const verificationExpectation = {
     },
     "/market-brief/": {
       kind: "market-brief" as const,
-      runId: "2026-08-01-saturday",
       dataCutoff: "2026-08-01T01:00:00.000Z",
-      sourceIds: ["atlas-model"],
-      payloadSha256: hashCandidate({
-        runId: "2026-08-01-saturday",
-        dataCutoff: "2026-08-01T01:00:00.000Z",
-        sourceIds: ["atlas-model"],
-      }),
+      sourceIds: buildMarketBrief(candidateSnapshot as MarketSnapshot).sourceIds,
+      payloadSha256: marketBriefPayloadSha256(
+        buildMarketBrief(candidateSnapshot as MarketSnapshot),
+      ),
     },
   },
 };
 
-function marketBriefHtml(
-  runId = "2026-08-01-saturday",
-  dataCutoff = "2026-08-01T01:00:00.000Z",
-  sourceIds = ["atlas-model"],
-) {
+const verificationBrief = buildMarketBrief(candidateSnapshot as MarketSnapshot);
+
+function marketBriefHtml(payload = verificationBrief) {
   return `AI MARKET ATLAS <script id="embedded-market-brief" type="application/json">${JSON.stringify(
-    { runId, dataCutoff, sourceIds },
+    payload,
   )}</script>`;
 }
 
 test("market brief verification fetches both HTML and canonical data.json", async () => {
-  const payload = {
-    runId: "2026-08-01-saturday",
-    dataCutoff: "2026-08-01T01:00:00.000Z",
-    sourceIds: ["atlas-model"],
-  };
+  const payload = verificationBrief;
   const expectation = {
     ...verificationExpectation,
     routeIdentities: {
       ...verificationExpectation.routeIdentities,
       "/market-brief/": {
         ...verificationExpectation.routeIdentities["/market-brief/"],
-        payloadSha256: hashCandidate(payload),
+        payloadSha256: marketBriefPayloadSha256(payload),
       },
     },
   };
@@ -638,18 +634,14 @@ test("market brief verification fetches both HTML and canonical data.json", asyn
 });
 
 test("market brief verification rejects missing, stale, and corrupt data.json without content retries", async (t) => {
-  const payload = {
-    runId: "2026-08-01-saturday",
-    dataCutoff: "2026-08-01T01:00:00.000Z",
-    sourceIds: ["atlas-model"],
-  };
+  const payload = verificationBrief;
   const expectation = {
     ...verificationExpectation,
     routeIdentities: {
       ...verificationExpectation.routeIdentities,
       "/market-brief/": {
         ...verificationExpectation.routeIdentities["/market-brief/"],
-        payloadSha256: hashCandidate(payload),
+        payloadSha256: marketBriefPayloadSha256(payload),
       },
     },
   };
@@ -667,7 +659,7 @@ test("market brief verification rejects missing, stale, and corrupt data.json wi
       name: "stale",
       response: Response.json({
         ...payload,
-        runId: "2026-07-25-saturday",
+        labels: { ...payload.labels, title: { ...payload.labels.title, en: "stale" } },
       }),
       error: /data\.json payload hash.*does not match/i,
     },
@@ -734,11 +726,7 @@ test("verification follows redirects and checks route-specific publication marke
     if (request.url === "/market-brief/data.json") {
       response.setHeader("content-type", "application/json");
       response.end(
-        JSON.stringify({
-          runId: "2026-08-01-saturday",
-          dataCutoff: "2026-08-01T01:00:00.000Z",
-          sourceIds: ["atlas-model"],
-        }),
+        JSON.stringify(verificationBrief),
       );
       return;
     }
@@ -832,10 +820,13 @@ test("verification rejects incomplete exact current/archive sources and a stale 
     ],
     [
       "stale market brief",
-      marketBriefHtml(
-        "2026-07-25-saturday",
-        "2026-07-25T01:00:00.000Z",
-      ),
+        marketBriefHtml({
+          ...verificationBrief,
+          labels: {
+            ...verificationBrief.labels,
+            title: { ...verificationBrief.labels.title, en: "stale" },
+          },
+        }),
       "/market-brief/",
     ],
   ];

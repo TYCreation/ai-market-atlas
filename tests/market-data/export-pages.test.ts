@@ -256,7 +256,6 @@ test("exports every current/archive route and public asset without localhost met
     });
     assert.deepEqual(result.routeIdentities["/market-brief/"], {
       kind: "market-brief",
-      runId: "2026-07-25-saturday",
       dataCutoff: "2026-07-25T01:00:00.000Z",
       sourceIds: [
         "atlas-model",
@@ -362,8 +361,8 @@ test("rejects stale copied market-brief JSON and embedded identities", async (t)
 
     await t.test("stale embedded JSON", async () => {
       const staleHtml = originalHtml.replace(
-        '"runId":"2026-07-25-saturday"',
-        '"runId":"2026-07-18-saturday"',
+        '"dataCutoff":"2026-07-25T01:00:00.000Z"',
+        '"dataCutoff":"2026-07-18T01:00:00.000Z"',
       );
       assert.notEqual(staleHtml, originalHtml);
       await writeFile(htmlPath, staleHtml);
@@ -429,8 +428,8 @@ test("rejects disagreement between canonical and public market-brief data and em
 
     await t.test("canonical embedded JSON", async () => {
       const staleHtml = originalCanonicalHtml.replace(
-        '"runId":"2026-07-25-saturday"',
-        '"runId":"2026-07-18-saturday"',
+        '"dataCutoff":"2026-07-25T01:00:00.000Z"',
+        '"dataCutoff":"2026-07-18T01:00:00.000Z"',
       );
       await writeFile(canonicalHtml, staleHtml);
       try {
@@ -580,6 +579,11 @@ test("exports the canonical changed-sic Wednesday brief without reconstructing a
   snapshot.cadence = "wednesday";
   snapshot.generatedAt = "2026-07-29T01:00:00.000Z";
   snapshot.dataCutoff = "2026-07-29T01:00:00.000Z";
+  for (const metric of Object.values(snapshot.metrics)) {
+    if (Date.parse(metric.asOf) > Date.parse(snapshot.dataCutoff)) {
+      metric.asOf = snapshot.dataCutoff;
+    }
+  }
   snapshot.metrics["sic.market_2030_usd_b"].display = {
     en: "$24B",
     zh: "240 億美元",
@@ -674,6 +678,9 @@ test("exports a month-end candidate with its prospective archive without mutatin
   candidate.cadence = "month-end";
   candidate.generatedAt = "2026-08-29T01:00:00.000Z";
   candidate.dataCutoff = "2026-08-29T01:00:00.000Z";
+  for (const metric of Object.values(candidate.metrics)) {
+    metric.asOf = candidate.dataCutoff;
+  }
   const review = autoPublishReview(candidate);
   const prospectiveArchive = projectMonthlyArchive(candidate, review);
   await writeFile(candidatePath, `${JSON.stringify(candidate, null, 2)}\n`);

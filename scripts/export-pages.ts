@@ -27,6 +27,7 @@ import { buildSourceBundles } from "../market-data/view-model.ts";
 import {
   assertMarketBriefMatchesSnapshot,
   isMarketBriefPayload,
+  marketBriefPayloadSha256,
   type MarketBriefPayload,
 } from "./generate-market-brief.ts";
 
@@ -340,7 +341,7 @@ function assertMarketBriefIdentity(
 ): void {
   if (
     !isMarketBriefPayload(value) ||
-    value.runId !== expected.runId ||
+    marketBriefPayloadSha256(value) !== marketBriefPayloadSha256(expected) ||
     value.dataCutoff !== expected.dataCutoff ||
     JSON.stringify([...value.sourceIds].sort()) !==
       JSON.stringify([...expected.sourceIds].sort()) ||
@@ -582,10 +583,9 @@ export async function exportPages(
     ),
     "/market-brief/": {
       kind: "market-brief",
-      runId: canonicalBrief.runId,
       dataCutoff: canonicalBrief.dataCutoff,
       sourceIds: [...canonicalBrief.sourceIds].sort(),
-      payloadSha256: hashCandidate(canonicalBrief),
+      payloadSha256: marketBriefPayloadSha256(canonicalBrief),
     },
   };
   const renderedRoutes = [

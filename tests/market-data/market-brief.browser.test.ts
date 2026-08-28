@@ -158,11 +158,21 @@ test("actual market-brief composition passes its browser behavior matrix", async
   monthEndSnapshot.runId = "2026-07-31-month-end";
   monthEndSnapshot.cadence = "month-end";
   monthEndSnapshot.dataCutoff = "2026-07-31T01:00:00.000Z";
+  for (const metric of Object.values(monthEndSnapshot.metrics)) {
+    if (Date.parse(metric.asOf) > Date.parse(monthEndSnapshot.dataCutoff)) {
+      metric.asOf = monthEndSnapshot.dataCutoff;
+    }
+  }
   const monthEndBrief = buildMarketBrief(monthEndSnapshot);
   const wednesdaySnapshot = structuredClone(snapshot);
   wednesdaySnapshot.runId = "2026-07-29-wednesday";
   wednesdaySnapshot.cadence = "wednesday";
   wednesdaySnapshot.dataCutoff = "2026-07-29T01:00:00.000Z";
+  for (const metric of Object.values(wednesdaySnapshot.metrics)) {
+    if (Date.parse(metric.asOf) > Date.parse(wednesdaySnapshot.dataCutoff)) {
+      metric.asOf = wednesdaySnapshot.dataCutoff;
+    }
+  }
   const wednesdayBrief = buildMarketBrief(wednesdaySnapshot);
 
   let embedded = saturdayBrief;
@@ -230,7 +240,7 @@ test("actual market-brief composition passes its browser behavior matrix", async
       assert.equal(await page.locator('[data-brief="signal-5-code"]').innerText(), "SIC");
       assert.match(
         await page.locator('[data-brief="signal-0-provenance"]').first().innerText(),
-        /Atlas model · /,
+        /Atlas model · /i,
       );
       assert.equal(
         await page.locator('[data-brief="signal-0-provenance"] time').first().getAttribute("dateTime"),

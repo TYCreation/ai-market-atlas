@@ -8,6 +8,7 @@ import {
   assertMarketBriefMatchesSnapshot,
   buildMarketBrief,
   generateMarketBriefAssets,
+  marketBriefPayloadSha256,
   isMarketBriefPayload,
   type MarketBriefAssetPaths,
   type MarketBriefPayload,
@@ -54,6 +55,11 @@ function makeWednesday(snapshot: MarketSnapshot): MarketSnapshot {
   wednesday.cadence = "wednesday";
   wednesday.generatedAt = "2026-07-29T01:00:00.000Z";
   wednesday.dataCutoff = "2026-07-29T01:00:00.000Z";
+  for (const metric of Object.values(wednesday.metrics)) {
+    if (Date.parse(metric.asOf) > Date.parse(wednesday.dataCutoff)) {
+      metric.asOf = wednesday.dataCutoff;
+    }
+  }
   for (const page of Object.values(wednesday.pages)) {
     page.changed = false;
     page.changeReasons = [];
@@ -287,7 +293,10 @@ test("unchanged Wednesday preserves canonical prior editorial content while stam
   assert.equal(brief.cadence, "wednesday");
   assert.equal(brief.dataCutoff, wednesday.dataCutoff);
   assert.deepEqual(brief.sourceIds, prior.sourceIds);
-  assert.deepEqual(brief.signals, prior.signals);
+  assert.deepEqual(
+    brief.signals,
+    prior.signals.map((signal) => ({ ...signal, asOf: wednesday.dataCutoff })),
+  );
   assert.deepEqual(brief.labels, prior.labels);
   assert.deepEqual(brief.methodology, prior.methodology);
   assert.deepEqual(brief.notInvestmentAdvice, prior.notInvestmentAdvice);
@@ -467,6 +476,34 @@ test("payload validation returns false instead of throwing for malformed nested 
 
   assert.doesNotThrow(() => isMarketBriefPayload(malformed));
   assert.equal(isMarketBriefPayload(malformed), false);
+});
+
+test("rejects non-canonical, stale, and future signal observations", async () => {
+  const cases = [
+    ["non-ISO date", "Aug 1 2026", /ISO|invalid/i],
+    ["stale date", "2020-01-01T00:00:00.000Z", /stale/i],
+    ["future date", "2099-01-01T00:00:00.000Z", /future/i],
+  ] as const;
+  for (const [label, asOf, error] of cases) {
+    const snapshot = await currentSnapshot();
+    snapshot.metrics[snapshot.keySignalIds[0]].asOf = asOf;
+    await assert.rejects(() => Promise.resolve().then(() => buildMarketBrief(snapshot)), error, label);
+  }
+});
+
+test("brief payload identity is deterministic and rejects same-cutoff tampering", async () => {
+  const snapshot = await currentSnapshot();
+  const brief = buildMarketBrief(snapshot);
+  assert.equal(marketBriefPayloadSha256(brief), marketBriefPayloadSha256(structuredClone(brief)));
+  const tampered = structuredClone(brief);
+  tampered.dataCutoff = brief.dataCutoff;
+  tampered.labels.title.en = `${tampered.labels.title.en} (tampered)`;
+  assert.notEqual(marketBriefPayloadSha256(tampered), marketBriefPayloadSha256(brief));
+  assert.equal(isMarketBriefPayload(tampered), true);
+  assert.throws(
+    () => assertMarketBriefMatchesSnapshot(tampered, snapshot),
+    /semantics do not match/i,
+  );
 });
 
 test("rejects invalid generated payloads before changing any output", async (t) => {

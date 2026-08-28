@@ -9,6 +9,11 @@ import {
 import { assertMarketSnapshot } from "./schema.ts";
 import type { PromotionResult } from "./storage.ts";
 import type { MarketSnapshot } from "./types.ts";
+import {
+  isCanonicalUtcTimestamp,
+  isMarketBriefPayload,
+  marketBriefPayloadSha256,
+} from "../scripts/generate-market-brief.ts";
 
 export type PublishDependencies = {
   deploy(directory: string, branch: string): Promise<string>;
@@ -71,10 +76,9 @@ export type RouteVerificationIdentity =
     }
   | {
       kind: "market-brief";
-      runId: string;
       dataCutoff: string;
       sourceIds: string[];
-      payloadSha256?: string;
+      payloadSha256: string;
     };
 
 export type DeploymentFetcher = (
@@ -217,7 +221,7 @@ function assertVerificationExpectation(
   const archiveSourceEntries = Object.entries(expectation.archiveSourceIds);
   if (
     !isSafeMarketRunId(expectation.runId) ||
-    Number.isNaN(Date.parse(expectation.dataCutoff)) ||
+    !isCanonicalUtcTimestamp(expectation.dataCutoff) ||
     expectation.archiveMonths.some(
       (month) => !/^\d{4}-(0[1-9]|1[0-2])$/.test(month),
     ) ||
@@ -246,6 +250,22 @@ function assertVerificationExpectation(
     Array.isArray(expectation.routeIdentities)
   ) {
     throw new Error("deployment route identities are invalid");
+  }
+  for (const identity of Object.values(expectation.routeIdentities)) {
+    if (identity === null || typeof identity !== "object" || Array.isArray(identity)) {
+      throw new Error("deployment route identities are invalid");
+    }
+    const candidate = identity as Record<string, unknown>;
+    if (candidate.kind === "market-brief") {
+      if (
+        "runId" in candidate ||
+        !isCanonicalUtcTimestamp(candidate.dataCutoff) ||
+        typeof candidate.payloadSha256 !== "string" ||
+        !/^[a-f0-9]{64}$/.test(candidate.payloadSha256)
+      ) {
+        throw new Error("deployment market brief identity is invalid");
+      }
+    }
   }
 }
 
@@ -308,7 +328,6 @@ function assertVerificationContent(
     }
     const brief = embeddedBrief(body);
     if (
-      brief.runId !== identity.runId ||
       brief.dataCutoff !== identity.dataCutoff ||
       !Array.isArray(brief.sourceIds) ||
       !brief.sourceIds.every((sourceId) => typeof sourceId === "string")
@@ -321,12 +340,12 @@ function assertVerificationContent(
       `${route} market brief sources`,
     );
     if (
-      identity.payloadSha256 !== undefined &&
-      hashCandidate(brief) !== identity.payloadSha256
+      !isMarketBriefPayload(brief) ||
+      marketBriefPayloadSha256(brief) !== identity.payloadSha256
     ) {
       throw new Error(`${route} market brief payload hash does not match`);
     }
-    return hashCandidate(brief);
+    return marketBriefPayloadSha256(brief);
   }
   if (identity.kind === "archive-detail") {
     const escapedMonth = identity.archiveMonth.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -467,7 +486,8 @@ export async function verifyDeployment(
       } catch {
         throw new Error(`${route}data.json is not valid JSON`);
       }
-      const dataPayloadSha256 = hashCandidate(payload);
+      const dataPayloadSha256 =
+        isMarketBriefPayload(payload) ? marketBriefPayloadSha256(payload) : "";
       if (
         dataPayloadSha256 !== identity.payloadSha256 ||
         dataPayloadSha256 !== embeddedPayloadSha256
