@@ -116,7 +116,7 @@ test("generates one bilingual brief from the promoted snapshot", async () => {
   const snapshot = await currentSnapshot();
   const brief = buildMarketBrief(snapshot);
 
-  assert.equal(brief.runId, snapshot.runId);
+  assert.equal("runId" in brief, false);
   assert.equal(brief.signals.length, snapshot.keySignalIds.length);
   assert.deepEqual(
     brief.signals.map((signal) => signal.id),
@@ -129,6 +129,8 @@ test("generates one bilingual brief from the promoted snapshot", async () => {
         signal.zh.value &&
         signal.en.label &&
         signal.en.value &&
+        signal.kind === "atlas-model" &&
+        signal.asOf === snapshot.metrics[signal.id].asOf &&
         signal.sourceIds.length > 0,
     ),
   );
@@ -136,6 +138,28 @@ test("generates one bilingual brief from the promoted snapshot", async () => {
   assert.ok(brief.nextWeekObservations.length > 0);
   assert.match(brief.methodology.en, /modeled/i);
   assert.match(brief.notInvestmentAdvice.en, /not investment advice/i);
+});
+
+test("omits an optional stale key signal without presenting it as current", async () => {
+  const snapshot = await currentSnapshot();
+  const staleSignalId = snapshot.keySignalIds.at(-1);
+  assert.ok(staleSignalId);
+  snapshot.metrics[staleSignalId].required = false;
+  snapshot.metrics[staleSignalId].asOf = "2026-07-01T01:00:00.000Z";
+
+  const brief = buildMarketBrief(snapshot);
+
+  assert.ok(!brief.signals.some((signal) => signal.id === staleSignalId));
+  assert.ok(!brief.featuredSignalIds.includes(staleSignalId));
+});
+
+test("fails closed when a required key signal is stale", async () => {
+  const snapshot = await currentSnapshot();
+  const staleSignalId = snapshot.keySignalIds.at(-1);
+  assert.ok(staleSignalId);
+  snapshot.metrics[staleSignalId].asOf = "2026-07-01T01:00:00.000Z";
+
+  assert.throws(() => buildMarketBrief(snapshot), /required key signal.*stale/i);
 });
 
 test("semantic validation rejects synchronized editorial and feature tampering", async (t) => {
@@ -225,7 +249,9 @@ test("keeps canonical and public HyperFrames assets synchronized", async () => {
   const canonicalHtml = await readFile(paths.canonicalHtml, "utf8");
   assert.equal(canonicalHtml, await readFile(paths.publicHtml, "utf8"));
   const embedded = embeddedBrief(canonicalHtml);
-  assert.equal(embedded.runId, snapshot.runId);
+  assert.equal("runId" in embedded, false);
+  assert.doesNotMatch(canonicalHtml, new RegExp(snapshot.runId));
+  assert.doesNotMatch(await readFile(paths.canonicalData, "utf8"), new RegExp(snapshot.runId));
   assert.deepEqual(embedded, JSON.parse(await readFile(paths.canonicalData, "utf8")));
   assert.doesNotMatch(canonicalHtml, /ISSUE 07\.26|JULY 30, 2026/);
 });
@@ -257,7 +283,7 @@ test("unchanged Wednesday preserves canonical prior editorial content while stam
   await generateMarketBriefAssets(paths);
 
   const brief = JSON.parse(await readFile(paths.canonicalData, "utf8")) as MarketBriefPayload;
-  assert.equal(brief.runId, wednesday.runId);
+  assert.equal("runId" in brief, false);
   assert.equal(brief.cadence, "wednesday");
   assert.equal(brief.dataCutoff, wednesday.dataCutoff);
   assert.deepEqual(brief.sourceIds, prior.sourceIds);
@@ -307,12 +333,12 @@ test("prioritizes a changed /sic key signal before Wednesday page balancing", as
   const brief = JSON.parse(
     await readFile(paths.canonicalData, "utf8"),
   ) as MarketBriefPayload;
-  assert.equal(brief.runId, wednesday.runId);
+  assert.equal("runId" in brief, false);
   assert.ok(brief.featuredSignalIds.includes(changedId));
   assert.equal(brief.nextWeekObservations.length, 0);
 });
 
-test("prioritizes a genuinely added /sic signal when a Wednesday ID is replaced", async () => {
+test("rejects a newly added key signal without a code-owned freshness policy", async () => {
   const saturday = await currentSnapshot();
   const { paths } = await generatePriorBrief(saturday);
   const wednesday = makeWednesday(saturday);
@@ -326,18 +352,10 @@ test("prioritizes a genuinely added /sic signal when a Wednesday ID is replaced"
   wednesday.pages["/sic"].changeReasons = ["first-party-event"];
   await writeFile(paths.snapshotPath, `${JSON.stringify(wednesday)}\n`);
 
-  await generateMarketBriefAssets(paths);
-
-  const brief = JSON.parse(
-    await readFile(paths.canonicalData, "utf8"),
-  ) as MarketBriefPayload;
-  assert.equal(brief.runId, wednesday.runId);
-  assert.ok(
-    brief.featuredSignalIds.includes(replacementId),
-    `expected ${replacementId} in ${brief.featuredSignalIds.join(", ")}`,
+  assert.throws(
+    () => buildMarketBrief(wednesday),
+    /Unknown metric freshness policy: sic\.new_packaging_signal/,
   );
-  assert.ok(brief.featuredSignalIds.length >= 3);
-  assert.ok(brief.featuredSignalIds.length <= 5);
 });
 
 test("reorder-only Wednesday remains page-balanced without reviewed changed pages", async () => {
@@ -505,7 +523,7 @@ test("supports --snapshot=<path> in a real CLI process", async () => {
   const brief = JSON.parse(
     await readFile(join(root, "hyperframes/weekly-ai-market-brief/data.json"), "utf8"),
   ) as MarketBriefPayload;
-  assert.equal(brief.runId, snapshot.runId);
+  assert.equal("runId" in brief, false);
 });
 
 test("rejects unknown, duplicate, and positional CLI arguments before writing", async (t) => {

@@ -228,6 +228,14 @@ test("actual market-brief composition passes its browser behavior matrix", async
       assert.equal(await page.locator("html").getAttribute("lang"), "en");
       assert.match(await page.locator('[data-brief="edition"]').innerText(), /Saturday brief/i);
       assert.equal(await page.locator('[data-brief="signal-5-code"]').innerText(), "SIC");
+      assert.match(
+        await page.locator('[data-brief="signal-0-provenance"]').first().innerText(),
+        /Atlas model · /,
+      );
+      assert.equal(
+        await page.locator('[data-brief="signal-0-provenance"] time').first().getAttribute("dateTime"),
+        saturdayBrief.signals[0].asOf,
+      );
       await context.close();
     });
 
@@ -474,7 +482,7 @@ test("actual market-brief composition passes its browser behavior matrix", async
           );
           assert.equal(
             await page.locator('[data-brief="signal-5-kind"]').innerText(),
-            "MODELED",
+            "Atlas model",
           );
           await context.close();
         });
@@ -497,14 +505,14 @@ test("actual market-brief composition passes its browser behavior matrix", async
       const outcome = await page.evaluate(async () => {
         try {
           const brief = await window.briefReady;
-          return { status: "resolved", runId: brief.runId };
+          return { status: "resolved", hasRunId: "runId" in brief };
         } catch {
-          return { status: "rejected", runId: "" };
+          return { status: "rejected", hasRunId: false };
         }
       });
       assert.deepEqual(outcome, {
         status: "resolved",
-        runId: saturdayBrief.runId,
+        hasRunId: false,
       });
       assert.equal(
         await page.locator('[data-brief="title"]').first().innerText(),
@@ -533,13 +541,17 @@ test("actual market-brief composition passes its browser behavior matrix", async
         query: "lang=en&embed=1",
       });
       await page.waitForTimeout(350);
-      const state = await page.evaluate((expectedRunId) => ({
-        runId: document
-          .querySelector("#embedded-market-brief")
-          ?.textContent?.includes(expectedRunId),
+      const state = await page.evaluate(() => ({
+        hasRunId: (() => {
+          try {
+            return "runId" in JSON.parse(document.querySelector("#embedded-market-brief")?.textContent ?? "{}");
+          } catch {
+            return false;
+          }
+        })(),
         time: window.__timelines["weekly-ai-market-brief"].time(),
-      }), saturdayBrief.runId);
-      assert.equal(state.runId, true);
+      }));
+      assert.equal(state.hasRunId, false);
       assert.ok(state.time > 0.1);
       await context.close();
     });

@@ -2,11 +2,12 @@ import { realpath, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
+import { evaluateMetricFreshness } from "../market-data/freshness.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import type {
   BilingualText,
   MarketSnapshot,
-  MetricKind,
+  MetricRecord,
   PageSlug,
   RunCadence,
 } from "../market-data/types.ts";
@@ -19,7 +20,8 @@ type LocalizedSignal = {
 export type MarketBriefSignal = {
   id: string;
   page: PageSlug;
-  kind: MetricKind;
+  kind: "published-fact" | "market-observation" | "atlas-model";
+  asOf: string;
   sourceIds: string[];
   zh: LocalizedSignal;
   en: LocalizedSignal;
@@ -27,7 +29,6 @@ export type MarketBriefSignal = {
 
 export type MarketBriefPayload = {
   schemaVersion: 1;
-  runId: string;
   cadence: RunCadence;
   dataCutoff: string;
   sourceIds: string[];
@@ -93,13 +94,37 @@ function assertSnapshotBriefCardinality(snapshot: MarketSnapshot): void {
   }
 }
 
-function featuredSignalIds(snapshot: MarketSnapshot): string[] {
-  const limit = CADENCE_BOUNDS[snapshot.cadence].max;
-  const ordered = snapshot.keySignalIds.map((id) => {
+function freshKeySignals(snapshot: MarketSnapshot): MetricRecord[] {
+  const signals: MetricRecord[] = [];
+  for (const id of snapshot.keySignalIds) {
     const metric = snapshot.metrics[id];
     if (!metric) throw new Error(`Market brief references missing key signal ${id}`);
-    return metric;
-  });
+    const freshness = evaluateMetricFreshness(metric, snapshot.dataCutoff);
+    if (freshness.state === "stale") {
+      if (metric.required) {
+        throw new Error(
+          `Required key signal is stale and cannot be rendered: ${metric.id} (${freshness.policy.class} policy)`,
+        );
+      }
+      continue;
+    }
+    signals.push(metric);
+  }
+  const { min } = CADENCE_BOUNDS[snapshot.cadence];
+  if (signals.length < min) {
+    throw new Error(`${snapshot.cadence} market brief requires at least ${min} fresh key signals`);
+  }
+  return signals;
+}
+
+function briefSignalKind(metric: MetricRecord): MarketBriefSignal["kind"] {
+  const policy = evaluateMetricFreshness(metric, metric.asOf).policy;
+  if (metric.kind === "modeled") return "atlas-model";
+  return policy.class === "market-close" ? "market-observation" : "published-fact";
+}
+
+function featuredSignalIds(snapshot: MarketSnapshot, ordered: readonly MetricRecord[]): string[] {
+  const limit = CADENCE_BOUNDS[snapshot.cadence].max;
   const selected: string[] = [];
   const changedPages = new Set<PageSlug>();
 
@@ -135,14 +160,14 @@ function nextWeekObservations(snapshot: MarketSnapshot): BilingualText[] {
 export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
   assertMarketSnapshot(snapshot);
   assertSnapshotBriefCardinality(snapshot);
-  const signals = snapshot.keySignalIds.map((id): MarketBriefSignal => {
-    const metric = snapshot.metrics[id];
-    if (!metric) throw new Error(`Market brief references missing key signal ${id}`);
+  const freshSignals = freshKeySignals(snapshot);
+  const signals = freshSignals.map((metric): MarketBriefSignal => {
     const label = snapshot.pages[metric.page].report.signal;
     return {
-      id,
+      id: metric.id,
       page: metric.page,
-      kind: metric.kind,
+      kind: briefSignalKind(metric),
+      asOf: metric.asOf,
       sourceIds: [...metric.sourceIds],
       zh: { label: label.zh, value: metric.display.zh },
       en: { label: label.en, value: metric.display.en },
@@ -153,12 +178,11 @@ export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
 
   return {
     schemaVersion: 1,
-    runId: snapshot.runId,
     cadence: snapshot.cadence,
     dataCutoff: snapshot.dataCutoff,
     sourceIds,
     signals,
-    featuredSignalIds: featuredSignalIds(snapshot),
+    featuredSignalIds: featuredSignalIds(snapshot, freshSignals),
     nextWeekObservations: nextWeekObservations(snapshot),
     labels: {
       eyebrow: report.eyebrow,
@@ -227,8 +251,7 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
     const labels = candidate.labels;
     const structurallyValid =
       candidate.schemaVersion === 1 &&
-      typeof candidate.runId === "string" &&
-      candidate.runId.length > 0 &&
+      !("runId" in candidate) &&
       typeof candidate.dataCutoff === "string" &&
       !Number.isNaN(Date.parse(candidate.dataCutoff)) &&
       sourceIds.length > 0 &&
@@ -242,7 +265,11 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
           typeof signal.id === "string" &&
           signal.id.length > 0 &&
           PAGE_SLUGS.has(signal.page) &&
-          (signal.kind === "modeled" || signal.kind === "published") &&
+          (signal.kind === "published-fact" ||
+            signal.kind === "market-observation" ||
+            signal.kind === "atlas-model") &&
+          typeof signal.asOf === "string" &&
+          !Number.isNaN(Date.parse(signal.asOf)) &&
           Array.isArray(signal.sourceIds) &&
           signal.sourceIds.length > 0 &&
           signal.sourceIds.every((id) => typeof id === "string" && id.length > 0) &&
