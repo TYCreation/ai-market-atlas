@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { link, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { jsonCandidateAdapter } from "./adapters/json-candidate.ts";
 import type { SourceAdapter } from "./adapters/types.ts";
@@ -33,7 +33,6 @@ export type StoragePaths = {
   now?: Date;
 };
 
-const WEEKLY_FILE = /^(\d{4}-\d{2}-\d{2}-(wednesday|saturday))\.json$/;
 const ARCHIVE_FILE = /^(\d{4}-\d{2}-\d{2}-(wednesday|saturday|month-end))\.json$/;
 
 function parseSnapshot(text: string, label: string): MarketSnapshot {
@@ -323,38 +322,12 @@ export async function restoreCurrent(paths: StoragePaths, promotion: PromotionRe
   }
 }
 
-function olderThanRetention(runId: string, now: Date): boolean {
-  const date = new Date(`${runId.slice(0, 10)}T00:00:00.000Z`);
-  const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-  return date.getTime() < cutoff.getTime();
-}
-
-async function pruneDirectory(directory: string, now: Date): Promise<string[]> {
-  let entries: string[];
-  try {
-    entries = await readdir(directory);
-  } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
-  const removed: string[] = [];
-  for (const name of entries) {
-    const match = WEEKLY_FILE.exec(name);
-    if (!match || !isSafeMarketRunId(match[1]) || !olderThanRetention(match[1], now)) continue;
-    const path = resolve(directory, name);
-    if (dirname(path) !== resolve(directory) || relative(directory, path).includes("..")) continue;
-    await rm(path, { force: true });
-    removed.push(path);
-  }
-  return removed;
-}
-
-/** Deletes only direct-child weekly run/review files older than ninety days. */
-export async function pruneRuns(root: string, now: Date = new Date()): Promise<string[]> {
-  const directory = resolve(root);
-  const [runs, reviews] = await Promise.all([
-    pruneDirectory(join(directory, "runs"), now),
-    pruneDirectory(join(directory, "reviews"), now),
-  ]);
-  return [...runs, ...reviews];
+/**
+ * Legacy CLI compatibility only. Weekly run and review provenance is permanent
+ * because dated routes depend on it, so this command deliberately removes nothing.
+ */
+export async function pruneRuns(_root: string, _now: Date = new Date()): Promise<string[]> {
+  void _root;
+  void _now;
+  return [];
 }

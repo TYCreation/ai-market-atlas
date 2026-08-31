@@ -187,12 +187,8 @@ these exact bytes.
 
 Promotion is allowed only through the reviewed storage gate. It first archives
 the prior snapshot, then atomically switches `current.json`. Weekly run
-snapshots and their review reports are retained for 90 days; pruning is run
-only after production verification:
-
-```bash
-npm run market:prune
-```
+snapshots and their review reports are retained indefinitely because dated URLs
+depend on their accepted provenance.
 
 A final-Saturday `month-end` candidate creates exactly one permanent
 `/archive/YYYY-MM` record. Monthly records retain their complete public source

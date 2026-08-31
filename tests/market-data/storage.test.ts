@@ -319,7 +319,7 @@ test("rejects a mismatched existing archive before promotion", async () => {
   );
 });
 
-test("prunes only old named weekly runs and reviews", async () => {
+test("retains old weekly run and review provenance indefinitely", async () => {
   const paths = await makeFixtureWorkspace();
   const oldRun = "2026-01-31-saturday.json";
   const oldReview = "2026-01-28-wednesday.json";
@@ -335,9 +335,12 @@ test("prunes only old named weekly runs and reviews", async () => {
 
   const removed = await pruneRuns(paths.root, new Date("2026-05-02T00:00:00.000Z"));
 
-  assert.deepEqual(removed.sort(), [join(paths.runsDir, oldRun), join(paths.root, "reviews", oldReview)].sort());
-  assert.deepEqual((await readdir(paths.runsDir)).sort(), [protectedMonthly, unrelated]);
-  assert.deepEqual((await readdir(join(paths.root, "reviews"))).sort(), ["2026-08-01-saturday.json", protectedMonthly].sort());
+  assert.deepEqual(removed, []);
+  assert.deepEqual((await readdir(paths.runsDir)).sort(), [oldRun, protectedMonthly, unrelated].sort());
+  assert.deepEqual(
+    (await readdir(join(paths.root, "reviews"))).sort(),
+    ["2026-08-01-saturday.json", oldReview, protectedMonthly].sort(),
+  );
 });
 
 test("rejects duplicate month archive keys before changing current", async () => {

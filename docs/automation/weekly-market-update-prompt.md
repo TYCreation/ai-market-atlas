@@ -43,11 +43,12 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    reviewed candidate, publishes production, verifies production, and restores
    both the prior snapshot and last-known-good site if a post-promotion step
    fails. Never bypass or reproduce these steps manually.
-8. Run `npm run market:prune` only after successful production verification.
+8. Retain accepted weekly run and review provenance indefinitely; do not invoke
+   `npm run market:prune` as part of publication.
 9. Report the data cutoff; cadence; changed and unchanged pages; sources;
    review decision, checks, and issues; selected signals and next observations;
    preview state; test/build/export results; deployment and production
-   verification state; pruning; and whether snapshot or site restoration was
+   verification state; provenance retention; and whether snapshot or site restoration was
    required and verified. The final report must also list the authoritative workspace
    path, freshness failures (including `STALE_REQUIRED_METRIC` and
    `STALE_OPTIONAL_METRIC`), stagnation warnings (including `METRIC_STAGNATION` and
