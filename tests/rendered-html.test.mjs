@@ -138,6 +138,10 @@ for (const [pathname, heading, metricIds] of [
         html,
         /class="market-delta negative"[^>]*>[^<]*<span aria-hidden="true">▼<\/span>/,
       );
+      const equityTable = html.match(/<table class="market-table equity-table">[\s\S]*?<\/table>/)?.[0];
+      assert.ok(equityTable, "stocks page must render the equity watchlist table");
+      assert.doesNotMatch(equityTable, /<th[^>]*>股價<\/th>|<th[^>]*>一週<\/th>|<th[^>]*>一個月<\/th>/);
+      assert.doesNotMatch(equityTable, /metric-source-stocks\.[^.]+\.(?:price|weekReturn|monthReturn)/);
     }
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });
@@ -162,7 +166,7 @@ for (const [pathname, heading] of [
     );
     if (pathname === "/en/stocks") {
       assert.match(html, /Atlas model/);
-      assert.match(html, /Market observation/);
+      assert.doesNotMatch(html, /Market observation/);
     } else {
       assert.match(html, /Atlas model/);
     }

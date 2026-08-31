@@ -1,5 +1,5 @@
-import type { createMarketViewModel, LocalizedPageReport, MetricView } from "../market-data/view-model";
-import type { Locale, MetricStatus, PageSlug } from "../market-data/types";
+import type { createMarketViewModel, LocalizedPageReport } from "../market-data/view-model";
+import type { Locale, PageSlug } from "../market-data/types";
 
 type MarketViewModel = ReturnType<typeof createMarketViewModel>;
 
@@ -66,30 +66,12 @@ export type EquityDeepDiveConfig = {
     ticker: string;
     company: string;
     sector: "compute" | "energy" | "sic" | "software";
-    price: string;
-    week: string;
-    month: string;
     strength: number;
     forwardPe: string;
     revenueGrowth: string;
     catalyst: string;
     risk: string;
     stance: string;
-    stockMetricIds?: {
-      price?: string;
-      weekReturn?: string;
-      monthReturn?: string;
-    };
-    stockMetricStatuses?: {
-      price?: MetricStatus;
-      weekReturn?: MetricStatus;
-      monthReturn?: MetricStatus;
-    };
-    stockMetricViews?: {
-      price: MetricView | undefined;
-      weekReturn: MetricView | undefined;
-      monthReturn: MetricView | undefined;
-    };
   }>;
   catalysts: Array<{
     date: string;
@@ -173,32 +155,6 @@ export function hydrateDashboard(
     ? {
         ...config.equityDive,
         updated: edition.dataCutoff,
-        equities: config.equityDive.equities.map((equity) => {
-          const price = viewModel.getStockMetric(equity.ticker, "price", locale);
-          const weekReturn = viewModel.getStockMetric(equity.ticker, "weekReturn", locale);
-          const monthReturn = viewModel.getStockMetric(equity.ticker, "monthReturn", locale);
-          return {
-            ...equity,
-            price: price?.value ?? "—",
-            week: weekReturn?.value ?? "—",
-            month: monthReturn?.value ?? "—",
-            stockMetricIds: {
-              ...(price ? { price: price.metricId } : {}),
-              ...(weekReturn ? { weekReturn: weekReturn.metricId } : {}),
-              ...(monthReturn ? { monthReturn: monthReturn.metricId } : {}),
-            },
-            stockMetricStatuses: {
-              ...(price ? { price: viewModel.getMetricStatus(price.metricId) } : {}),
-              ...(weekReturn ? { weekReturn: viewModel.getMetricStatus(weekReturn.metricId) } : {}),
-              ...(monthReturn ? { monthReturn: viewModel.getMetricStatus(monthReturn.metricId) } : {}),
-            },
-            stockMetricViews: {
-              price,
-              weekReturn,
-              monthReturn,
-            },
-          };
-        }),
       }
     : undefined;
 
@@ -1028,9 +984,6 @@ export const stocks: DashboardConfig = {
         ticker: "NVDA",
         company: "NVIDIA",
         sector: "compute",
-        price: "$194.70",
-        week: "+5.8%",
-        month: "+12.4%",
         strength: 96,
         forwardPe: "34.8×",
         revenueGrowth: "+48%",
@@ -1042,9 +995,6 @@ export const stocks: DashboardConfig = {
         ticker: "AVGO",
         company: "Broadcom",
         sector: "compute",
-        price: "$362.40",
-        week: "+4.9%",
-        month: "+10.1%",
         strength: 93,
         forwardPe: "32.1×",
         revenueGrowth: "+31%",
@@ -1056,9 +1006,6 @@ export const stocks: DashboardConfig = {
         ticker: "AMD",
         company: "AMD",
         sector: "compute",
-        price: "$241.30",
-        week: "+3.2%",
-        month: "+8.6%",
         strength: 86,
         forwardPe: "37.6×",
         revenueGrowth: "+29%",
@@ -1070,9 +1017,6 @@ export const stocks: DashboardConfig = {
         ticker: "TSM",
         company: "TSMC",
         sector: "compute",
-        price: "$287.10",
-        week: "+1.9%",
-        month: "+7.4%",
         strength: 84,
         forwardPe: "25.4×",
         revenueGrowth: "+24%",
@@ -1084,9 +1028,6 @@ export const stocks: DashboardConfig = {
         ticker: "VRT",
         company: "Vertiv",
         sector: "energy",
-        price: "$176.80",
-        week: "+6.7%",
-        month: "+15.3%",
         strength: 94,
         forwardPe: "36.2×",
         revenueGrowth: "+27%",
@@ -1098,9 +1039,6 @@ export const stocks: DashboardConfig = {
         ticker: "ETN",
         company: "Eaton",
         sector: "energy",
-        price: "$472.60",
-        week: "+3.4%",
-        month: "+8.2%",
         strength: 81,
         forwardPe: "29.7×",
         revenueGrowth: "+14%",
@@ -1112,9 +1050,6 @@ export const stocks: DashboardConfig = {
         ticker: "CEG",
         company: "Constellation Energy",
         sector: "energy",
-        price: "$418.20",
-        week: "+4.1%",
-        month: "+13.7%",
         strength: 89,
         forwardPe: "30.5×",
         revenueGrowth: "+18%",
@@ -1126,9 +1061,6 @@ export const stocks: DashboardConfig = {
         ticker: "WOLF",
         company: "Wolfspeed",
         sector: "sic",
-        price: "$23.09",
-        week: "−21.4%",
-        month: "−8.9%",
         strength: 24,
         forwardPe: "N/M",
         revenueGrowth: "+19%",
@@ -1140,9 +1072,6 @@ export const stocks: DashboardConfig = {
         ticker: "ON",
         company: "onsemi",
         sector: "sic",
-        price: "$86.81",
-        week: "+0.1%",
-        month: "+4.6%",
         strength: 57,
         forwardPe: "18.9×",
         revenueGrowth: "+8%",
@@ -1154,9 +1083,6 @@ export const stocks: DashboardConfig = {
         ticker: "NOW",
         company: "ServiceNow",
         sector: "software",
-        price: "$1,238",
-        week: "+2.8%",
-        month: "+6.5%",
         strength: 78,
         forwardPe: "46.7×",
         revenueGrowth: "+22%",
@@ -1168,9 +1094,6 @@ export const stocks: DashboardConfig = {
         ticker: "PLTR",
         company: "Palantir",
         sector: "software",
-        price: "$191.40",
-        week: "+4.2%",
-        month: "+11.1%",
         strength: 91,
         forwardPe: "71.5×",
         revenueGrowth: "+36%",
@@ -1182,9 +1105,6 @@ export const stocks: DashboardConfig = {
         ticker: "CRM",
         company: "Salesforce",
         sector: "software",
-        price: "$329.70",
-        week: "−0.8%",
-        month: "+1.9%",
         strength: 52,
         forwardPe: "24.6×",
         revenueGrowth: "+10%",

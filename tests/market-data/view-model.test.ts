@@ -10,6 +10,7 @@ import {
   getPageMeta,
   loadMarketSnapshot,
 } from "../../market-data/view-model.ts";
+import { hydrateDashboard, stocks } from "../../app/content.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
 test("returns both locales from one metric record", () => {
@@ -90,4 +91,19 @@ test("omits an optional stale stock observation", () => {
   snapshot.metrics["stocks.nvda.price"].asOf = "2026-07-01T20:00:00.000Z";
   const view = createMarketViewModel(snapshot);
   assert.equal(view.getStockMetric("NVDA", "price", "en"), undefined);
+});
+
+test("hydrates the stocks reader without loading stale per-ticker quotes", () => {
+  const snapshot = structuredClone(
+    JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,
+  );
+  snapshot.metrics["stocks.nvda.price"].asOf = "2026-07-01T20:00:00.000Z";
+
+  const hydrated = hydrateDashboard(stocks, "en", createMarketViewModel(snapshot));
+  const equity = hydrated.equityDive?.equities[0];
+
+  assert.ok(equity);
+  assert.equal("price" in equity, false);
+  assert.equal("week" in equity, false);
+  assert.equal("month" in equity, false);
 });

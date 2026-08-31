@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import type { EquityDeepDiveConfig } from "../content";
-import { EditionStatus } from "./EditionStatus";
 import { MarketDelta } from "./MarketDelta";
-import { MetricProvenance, TaipeiTime } from "./MetricProvenance";
+import { TaipeiTime } from "./MetricProvenance";
 
 type Locale = "zh" | "en";
 type SectorKey = EquityDeepDiveConfig["sectors"][number]["key"];
@@ -23,9 +22,6 @@ const copy = {
     stockTitle: "AI 股票觀察清單",
     stockColumns: [
       "股票",
-      "股價",
-      "一週",
-      "一個月",
       "相對強度",
       "預估本益比",
       "營收成長",
@@ -56,9 +52,6 @@ const copy = {
     stockTitle: "AI equity watchlist",
     stockColumns: [
       "Equity",
-      "Price",
-      "1 week",
-      "1 month",
       "Relative strength",
       "Forward P/E",
       "Revenue growth",
@@ -182,21 +175,6 @@ export function EquityMarketDeepDive({
                         <strong>{equity.ticker}</strong>
                         <span>{equity.company}</span>
                       </div>
-                    </td>
-                    <td>
-                      {equity.price}
-                      {equity.stockMetricViews?.price ? <MetricProvenance metric={equity.stockMetricViews.price} locale={locale} /> : null}
-                      <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.price} />
-                    </td>
-                    <td>
-                      <MarketDelta value={equity.week} />
-                      {equity.stockMetricViews?.weekReturn ? <MetricProvenance metric={equity.stockMetricViews.weekReturn} locale={locale} /> : null}
-                      <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.weekReturn} />
-                    </td>
-                    <td>
-                      <MarketDelta value={equity.month} />
-                      {equity.stockMetricViews?.monthReturn ? <MetricProvenance metric={equity.stockMetricViews.monthReturn} locale={locale} /> : null}
-                      <EditionStatus locale={locale} metricStatus={equity.stockMetricStatuses?.monthReturn} />
                     </td>
                     <td>
                       <div className="strength-cell">
