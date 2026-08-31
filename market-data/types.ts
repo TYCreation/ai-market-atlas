@@ -8,6 +8,20 @@ export type PageSlug = "/" | "/stocks" | "/compute" | "/energy" | "/models" | "/
 export type ThesisStance = "bullish" | "neutral" | "bearish";
 export type BilingualText = Record<Locale, string>;
 
+/** A cited condition that would weaken or invalidate the page thesis. */
+export type FalsifiableRisk = {
+  condition: BilingualText;
+  metricIds: string[];
+};
+
+/** A dated, threshold-bearing reading to revisit in the next edition. */
+export type NextObservation = {
+  what: BilingualText;
+  by: string;
+  threshold: BilingualText;
+  metricIds: string[];
+};
+
 export type SourceRecord = {
   id: string;
   kind: "official" | "company" | "research" | "pricing" | "market" | "atlas";
@@ -53,8 +67,10 @@ export type PageReport = {
   supportingEvidence: Array<{ text: BilingualText; metricIds: string[] }>;
   opposingEvidence: Array<{ text: BilingualText; metricIds: string[] }>;
   catalysts: BilingualText[];
-  risks: BilingualText[];
-  nextObservations: BilingualText[];
+  /** Required for newly authored candidates; omitted by legacy published snapshots. */
+  analystNotes?: BilingualText[];
+  risks: Array<FalsifiableRisk | BilingualText>;
+  nextObservations: Array<NextObservation | BilingualText>;
 };
 
 export type PageState = {

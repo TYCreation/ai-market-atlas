@@ -134,28 +134,82 @@
   ],
   "nextWeekObservations": [
     {
-      "en": "Next read · utility queue",
-      "zh": "下一讀 · 公用事業排隊"
+      "what": {
+        "en": "Next read · utility queue",
+        "zh": "下一讀 · 公用事業排隊"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "metricIds": [],
+      "legacy": true
     },
     {
-      "en": "Next read · revision breadth",
-      "zh": "下一讀 · 上修廣度"
+      "what": {
+        "en": "Next read · revision breadth",
+        "zh": "下一讀 · 上修廣度"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "metricIds": [],
+      "legacy": true
     },
     {
-      "en": "Next read · supplier mix",
-      "zh": "下一讀 · 供應商組合"
+      "what": {
+        "en": "Next read · supplier mix",
+        "zh": "下一讀 · 供應商組合"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "metricIds": [],
+      "legacy": true
     },
     {
-      "en": "Next read · Helix project conversion",
-      "zh": "下一讀 · Helix 專案轉化"
+      "what": {
+        "en": "Next read · Helix project conversion",
+        "zh": "下一讀 · Helix 專案轉化"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "metricIds": [],
+      "legacy": true
     },
     {
-      "en": "Next read · outcome cohort",
-      "zh": "下一讀 · 成果群組"
+      "what": {
+        "en": "Next read · outcome cohort",
+        "zh": "下一讀 · 成果群組"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "metricIds": [],
+      "legacy": true
     },
     {
-      "en": "Next read · packaging customers",
-      "zh": "下一讀 · 封裝客戶"
+      "what": {
+        "en": "Next read · packaging customers",
+        "zh": "下一讀 · 封裝客戶"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "metricIds": [],
+      "legacy": true
     }
   ],
   "labels": {

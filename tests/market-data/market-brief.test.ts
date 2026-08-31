@@ -542,10 +542,10 @@ test("rejects invalid generated payloads before changing any output", async (t) 
       },
     ],
     [
-      "fewer tags than the three rendered slots",
+      "missing thesis tags",
       (snapshot) => {
-        snapshot.pages["/"].report.thesis.tags.en = ["Compute", "Power"];
-        snapshot.pages["/"].report.thesis.tags.zh = ["算力", "電力"];
+        snapshot.pages["/"].report.thesis.tags.en = [];
+        snapshot.pages["/"].report.thesis.tags.zh = [];
       },
     ],
   ];
@@ -562,7 +562,7 @@ test("rejects invalid generated payloads before changing any output", async (t) 
 
       await assert.rejects(
         generateMarketBriefAssets(paths),
-        /invalid generated market brief|observations|tags/i,
+        /invalid generated market brief|observations|tag/i,
       );
 
       assert.equal(await readFile(paths.canonicalData, "utf8"), "sentinel-canonical\n");

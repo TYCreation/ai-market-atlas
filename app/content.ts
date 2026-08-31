@@ -138,6 +138,8 @@ export type DashboardConfig = {
     title: string;
     body: string;
     owner: string;
+    deadline?: string | null;
+    legacy?: boolean;
   }>;
   deepDive?: DeepDiveConfig;
   equityDive?: EquityDeepDiveConfig;
@@ -175,11 +177,19 @@ export function hydrateDashboard(
         provenance: metric,
       };
     }),
-    watchlist: config.watchlist.map((item, index) => ({
-      ...item,
-      body: report.risks[index] ?? item.body,
-      owner: report.nextObservations[index] ?? item.owner,
-    })),
+    watchlist: report.risks.map((risk, index) => {
+      const observation = report.nextObservations[index];
+      const fallback = config.watchlist[index] ?? config.watchlist[0];
+      return {
+        ...fallback,
+        priority: fallback?.priority ?? `${index + 1}`,
+        title: observation?.what ?? fallback?.title ?? report.title,
+        body: risk.condition,
+        owner: observation?.threshold ?? fallback?.owner ?? "",
+        deadline: observation?.by,
+        legacy: observation?.legacy,
+      };
+    }),
     report,
     ...(config.deepDive
       ? { deepDive: { ...config.deepDive, updated: edition.dataCutoff } }

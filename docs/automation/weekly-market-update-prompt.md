@@ -23,9 +23,15 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    Every page on every edition must satisfy the editorial contract: re-examine its thesis
    against new supporting and opposing evidence; restate, sharpen, or explicitly explain why
    it survives unchanged; and include at least one
-   cited `opposingEvidence` item with the metric IDs that support that item. Each risk must
-   name an observable metric, event, or time-based condition that could disprove or materially
-   weaken the thesis, rather than only giving methodological advice. Use a directional
+   cited `opposingEvidence` item with the metric IDs that support that item. Preserve methodological
+   commentary in `report.analystNotes`; do not place it in `report.risks`. Every risk must be a
+   bilingual `{ condition, metricIds }` object: state the observable condition that would
+   disprove or materially weaken the thesis and cite at least one existing metric. Every
+   `report.nextObservations` entry must be a bilingual `{ what, by, threshold, metricIds }`
+   object: say what will be read, give a real ISO timestamp or calendar-date deadline, state the
+   threshold or reading that changes the thesis, and cite its metric. Do not use fixed counts;
+   provide at least one analyst note, falsifiable risk, and dated threshold observation for each
+   page. Use a directional
    `thesisStance` only when the evidence supports it; a neutral stance is
    valid when the evidence does not support a directional conclusion. A restated or sharpened
    thesis must set `changed` to `true`, add the exact `thesis-reexamined-restated` change reason,

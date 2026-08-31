@@ -2,6 +2,7 @@ import { assertArchivedAutoPublishReview, type AutomatedReview } from "./review.
 import { assertSourceRecord } from "./schema.ts";
 import type {
   BilingualText,
+  FalsifiableRisk,
   MetricRecord,
   PageSlug,
   SourceRecord,
@@ -32,7 +33,8 @@ export type MonthlyArchiveRecord = {
     metricIds: string[];
   }>;
   catalysts: BilingualText[];
-  risks: BilingualText[];
+  analystNotes?: BilingualText[];
+  risks: Array<FalsifiableRisk | BilingualText>;
   sourceIds: string[];
   sources: SourceRecord[];
   review: MonthlyArchiveReviewProvenance;
@@ -44,6 +46,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isBilingualText(value: unknown): value is BilingualText {
   return isRecord(value) && typeof value.en === "string" && typeof value.zh === "string";
+}
+
+function isFalsifiableRisk(value: unknown): value is FalsifiableRisk {
+  return isRecord(value) && isBilingualText(value.condition) && Array.isArray(value.metricIds) && value.metricIds.every((id) => typeof id === "string");
 }
 
 function isMetricRecord(value: unknown): value is MetricRecord {
@@ -82,7 +88,8 @@ export function assertMonthlyArchiveRecord(value: unknown): asserts value is Mon
     !Array.isArray(value.catalysts) ||
     !value.catalysts.every(isBilingualText) ||
     !Array.isArray(value.risks) ||
-    !value.risks.every(isBilingualText) ||
+    !value.risks.every((risk) => isBilingualText(risk) || isFalsifiableRisk(risk)) ||
+    (value.analystNotes !== undefined && (!Array.isArray(value.analystNotes) || !value.analystNotes.every(isBilingualText))) ||
     !Array.isArray(value.sourceIds) ||
     !value.sourceIds.every((sourceId) => typeof sourceId === "string") ||
     !Array.isArray(value.sources) ||

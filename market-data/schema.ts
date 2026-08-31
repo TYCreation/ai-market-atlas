@@ -17,6 +17,7 @@ const CHANGE_REASONS = new Set([
   "thesis-reexamined-restated",
 ]);
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const SECRET_QUERY_PARAMETER = /(?:api[_-]?key|access[_-]?token|token|secret|signature|sig|password|credential|key)/i;
 
 type UnknownRecord = Record<string, unknown>;
@@ -55,6 +56,19 @@ function requireIsoTimestamp(value: unknown, path: string): string {
     fail(`${path} must be an ISO timestamp`);
   }
   return timestamp;
+}
+
+function requireEditorialDate(value: unknown, path: string): string {
+  if (typeof value !== "string") fail(`${path} must be an ISO timestamp or calendar date`);
+  if (ISO_TIMESTAMP.test(value)) return requireIsoTimestamp(value, path);
+  if (
+    !ISO_DATE.test(value) ||
+    Number.isNaN(Date.parse(`${value}T00:00:00.000Z`)) ||
+    new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) !== value
+  ) {
+    fail(`${path} must be an ISO timestamp or calendar date`);
+  }
+  return value;
 }
 
 function requireBilingual(value: unknown, path: string): void {
@@ -181,11 +195,67 @@ function assertMetricReferences(ids: string[], path: string, metrics: UnknownRec
   }
 }
 
+function assertMinimum(items: unknown[], path: string): void {
+  if (items.length === 0) fail(`${path} must contain at least one item`);
+}
+
+function assertEditorialPayload(
+  report: UnknownRecord,
+  path: string,
+  metrics: UnknownRecord,
+  strict: boolean,
+): void {
+  const analystNotes = report.analystNotes;
+  if (strict || analystNotes !== undefined) {
+    const notes = requireArray(analystNotes, `${path}.analystNotes`);
+    if (strict) assertMinimum(notes, `${path}.analystNotes`);
+    for (const [index, note] of notes.entries()) requireBilingual(note, `${path}.analystNotes[${index}]`);
+  }
+
+  const risks = requireArray(report.risks, `${path}.risks`);
+  const observations = requireArray(report.nextObservations, `${path}.nextObservations`);
+  const hasStrictRisks = risks.every(isRecord) && risks.every((risk) => "condition" in risk || "metricIds" in risk);
+  const hasStrictObservations = observations.every(isRecord) && observations.every((observation) =>
+    "what" in observation || "by" in observation || "threshold" in observation || "metricIds" in observation
+  );
+  if (strict) {
+    assertMinimum(risks, `${path}.risks`);
+    assertMinimum(observations, `${path}.nextObservations`);
+    if (!hasStrictRisks) fail(`${path}.risks must contain falsifiable risk objects`);
+    if (!hasStrictObservations) fail(`${path}.nextObservations must contain structured observation objects`);
+  }
+  if (hasStrictRisks) {
+    for (const [index, value] of risks.entries()) {
+      const risk = requireRecord(value, `${path}.risks[${index}]`);
+      requireBilingual(risk.condition, `${path}.risks[${index}].condition`);
+      const metricIds = requireStringArray(risk.metricIds, `${path}.risks[${index}].metricIds`);
+      if (metricIds.length === 0) fail(`${path}.risks[${index}].metricIds must cite at least one metric`);
+      assertMetricReferences(metricIds, `${path}.risks[${index}].metricIds`, metrics);
+    }
+  } else if (!strict) {
+    for (const [index, value] of risks.entries()) requireBilingual(value, `${path}.risks[${index}]`);
+  }
+  if (hasStrictObservations) {
+    for (const [index, value] of observations.entries()) {
+      const observation = requireRecord(value, `${path}.nextObservations[${index}]`);
+      requireBilingual(observation.what, `${path}.nextObservations[${index}].what`);
+      requireEditorialDate(observation.by, `${path}.nextObservations[${index}].by`);
+      requireBilingual(observation.threshold, `${path}.nextObservations[${index}].threshold`);
+      const metricIds = requireStringArray(observation.metricIds, `${path}.nextObservations[${index}].metricIds`);
+      if (metricIds.length === 0) fail(`${path}.nextObservations[${index}].metricIds must cite at least one metric`);
+      assertMetricReferences(metricIds, `${path}.nextObservations[${index}].metricIds`, metrics);
+    }
+  } else if (!strict) {
+    for (const [index, value] of observations.entries()) requireBilingual(value, `${path}.nextObservations[${index}]`);
+  }
+}
+
 function assertPage(
   key: PageSlug,
   value: unknown,
   metrics: UnknownRecord,
   allowLegacyMissingThesisSurvivalRationale: boolean,
+  allowLegacyEditorialPayload: boolean,
 ): void {
   const page = requireRecord(value, `pages.${key}`);
   if (typeof page.changed !== "boolean") fail(`pages.${key}.changed must be a boolean`);
@@ -248,16 +318,23 @@ function assertPage(
       assertMetricReferences(requireStringArray(evidence.metricIds, `pages.${key}.report.${field}[${index}].metricIds`), `pages.${key}.report.${field}[${index}].metricIds`, metrics);
     }
   }
-  for (const field of ["catalysts", "risks", "nextObservations"] as const) {
+  for (const field of ["catalysts"] as const) {
     for (const [index, text] of requireArray(report[field], `pages.${key}.report.${field}`).entries()) {
       requireBilingual(text, `pages.${key}.report.${field}[${index}]`);
     }
   }
+  assertEditorialPayload(
+    report,
+    `pages.${key}.report`,
+    metrics,
+    !allowLegacyEditorialPayload,
+  );
 }
 
 function assertSnapshot(
   value: unknown,
   allowLegacyMissingThesisSurvivalRationale: boolean,
+  allowLegacyEditorialPayload: boolean,
 ): asserts value is MarketSnapshot {
   const snapshot = requireRecord(value, "snapshot");
   if (snapshot.schemaVersion !== 1) fail("schemaVersion must be 1");
@@ -280,17 +357,17 @@ function assertSnapshot(
   const pages = requireRecord(snapshot.pages, "pages");
   for (const slug of PAGE_SLUGS) {
     if (!pages[slug]) fail(`page is missing: ${slug}`);
-    assertPage(slug, pages[slug], metrics, allowLegacyMissingThesisSurvivalRationale);
+    assertPage(slug, pages[slug], metrics, allowLegacyMissingThesisSurvivalRationale, allowLegacyEditorialPayload);
   }
   assertMetricReferences(requireStringArray(snapshot.keySignalIds, "keySignalIds"), "keySignalIds", metrics);
 }
 
 /** Strictly validates newly authored candidates against the current editorial contract. */
 export function assertMarketSnapshot(value: unknown): asserts value is MarketSnapshot {
-  assertSnapshot(value, false);
+  assertSnapshot(value, false, false);
 }
 
 /** Allows only the missing rationale field used by snapshots published before this contract. */
 export function assertPublishedMarketSnapshot(value: unknown): asserts value is MarketSnapshot {
-  assertSnapshot(value, true);
+  assertSnapshot(value, true, true);
 }

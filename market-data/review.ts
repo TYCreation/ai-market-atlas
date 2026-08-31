@@ -227,12 +227,35 @@ function validateNarrativeEvidence(snapshot: MarketSnapshot): GateIssue[] {
         });
       }
     }
-    for (const collection of ["catalysts", "risks", "nextObservations"] as const) {
-      for (const [index, text] of state.report[collection].entries()) {
+    for (const [index, text] of state.report.catalysts.entries()) {
+      fields.push({
+        path: `catalysts[${index}]`,
+        text,
+        metricIds: state.thesisMetricIds,
+      });
+    }
+    for (const [index, note] of (state.report.analystNotes ?? []).entries()) {
+      fields.push({
+        path: `analystNotes[${index}]`,
+        text: note,
+        metricIds: state.thesisMetricIds,
+      });
+    }
+    for (const [index, risk] of state.report.risks.entries()) {
+      if (!("condition" in risk)) continue;
+      fields.push({
+        path: `risks[${index}].condition`,
+        text: risk.condition,
+        metricIds: risk.metricIds,
+      });
+    }
+    for (const [index, observation] of state.report.nextObservations.entries()) {
+      if (!("what" in observation)) continue;
+      for (const [part, text] of [["what", observation.what], ["threshold", observation.threshold]] as const) {
         fields.push({
-          path: `${collection}[${index}]`,
+          path: `nextObservations[${index}].${part}`,
           text,
-          metricIds: state.thesisMetricIds,
+          metricIds: observation.metricIds,
         });
       }
     }

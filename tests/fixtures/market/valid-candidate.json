@@ -71,6 +71,106 @@
         "catalysts": [],
         "risks": [
           {
+            "condition": {
+              "en": "The thesis weakens if: Track signed megawatts, not announced campuses. The spread between the two is becoming the best reality check on growth.",
+              "zh": "若出現以下情況，論點將被削弱：追蹤已簽約的兆瓦，而不是已公布的園區。兩者之間的差距，正成為檢驗成長真實度的最佳指標。"
+            },
+            "metricIds": [
+              "pulse.infrastructure_spend",
+              "pulse.accelerator_market",
+              "pulse.power_queue",
+              "pulse.enterprise_agents"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Watch whether price compression expands total workloads fast enough to offset falling revenue per token.",
+              "zh": "若出現以下情況，論點將被削弱：觀察價格壓縮能否讓總工作負載快速擴張，足以抵銷每 Token 收入下降。"
+            },
+            "metricIds": [
+              "pulse.infrastructure_spend",
+              "pulse.accelerator_market",
+              "pulse.power_queue",
+              "pulse.enterprise_agents"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Completion rate, human review burden, and gross margin matter more than seats or pilots.",
+              "zh": "若出現以下情況，論點將被削弱：完成率、人工覆核負擔與毛利率，比席次或試點數量更重要。"
+            },
+            "metricIds": [
+              "pulse.infrastructure_spend",
+              "pulse.accelerator_market",
+              "pulse.power_queue",
+              "pulse.enterprise_agents"
+            ]
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Next read · utility queue",
+              "zh": "下一讀 · 公用事業排隊"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "pulse.infrastructure_spend",
+              "pulse.accelerator_market",
+              "pulse.power_queue",
+              "pulse.enterprise_agents"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · API pricing",
+              "zh": "下一讀 · API 定價"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "pulse.infrastructure_spend",
+              "pulse.accelerator_market",
+              "pulse.power_queue",
+              "pulse.enterprise_agents"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · production cohort",
+              "zh": "下一讀 · 正式環境群組"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "pulse.infrastructure_spend",
+              "pulse.accelerator_market",
+              "pulse.power_queue",
+              "pulse.enterprise_agents"
+            ]
+          }
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "pulse.infrastructure_spend"
+          ]
+        },
+        "analystNotes": [
+          {
             "en": "Track signed megawatts, not announced campuses. The spread between the two is becoming the best reality check on growth.",
             "zh": "追蹤已簽約的兆瓦，而不是已公布的園區。兩者之間的差距，正成為檢驗成長真實度的最佳指標。"
           },
@@ -82,30 +182,7 @@
             "en": "Completion rate, human review burden, and gross margin matter more than seats or pilots.",
             "zh": "完成率、人工覆核負擔與毛利率，比席次或試點數量更重要。"
           }
-        ],
-        "nextObservations": [
-          {
-            "en": "Next read · utility queue",
-            "zh": "下一讀 · 公用事業排隊"
-          },
-          {
-            "en": "Next read · API pricing",
-            "zh": "下一讀 · API 定價"
-          },
-          {
-            "en": "Next read · production cohort",
-            "zh": "下一讀 · 正式環境群組"
-          }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "pulse.infrastructure_spend"
-          ]
-        }
+        ]
       }
     },
     "/stocks": {
@@ -174,6 +251,106 @@
         "catalysts": [],
         "risks": [
           {
+            "condition": {
+              "en": "The thesis weakens if: Track changes in next-twelve-month estimates. Rising prices without rising earnings create the most fragile form of AI leadership.",
+              "zh": "若出現以下情況，論點將被削弱：追蹤未來十二個月的預估變化。只有股價上漲、獲利沒有上修，是最脆弱的 AI 領漲型態。"
+            },
+            "metricIds": [
+              "stocks.basket_30d",
+              "stocks.positive_breadth",
+              "stocks.median_forward_pe",
+              "stocks.catalyst_count"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: A healthy AI cycle spreads beyond one or two mega-caps into memory, networking, power, and application leaders.",
+              "zh": "若出現以下情況，論點將被削弱：健康的 AI 週期會從少數大型股，擴散到記憶體、網路、電力與應用領導者。"
+            },
+            "metricIds": [
+              "stocks.basket_30d",
+              "stocks.positive_breadth",
+              "stocks.median_forward_pe",
+              "stocks.catalyst_count"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Booked revenue, utilization, and free cash flow matter more than announced capacity when valuations already price in growth.",
+              "zh": "若出現以下情況，論點將被削弱：當估值已反映成長時，已入帳營收、利用率與自由現金流，比公布的產能更重要。"
+            },
+            "metricIds": [
+              "stocks.basket_30d",
+              "stocks.positive_breadth",
+              "stocks.median_forward_pe",
+              "stocks.catalyst_count"
+            ]
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Next read · revision breadth",
+              "zh": "下一讀 · 上修廣度"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "stocks.basket_30d",
+              "stocks.positive_breadth",
+              "stocks.median_forward_pe",
+              "stocks.catalyst_count"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · fifty-day participation",
+              "zh": "下一讀 · 五十日線參與率"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "stocks.basket_30d",
+              "stocks.positive_breadth",
+              "stocks.median_forward_pe",
+              "stocks.catalyst_count"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · cash conversion",
+              "zh": "下一讀 · 現金轉化"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "stocks.basket_30d",
+              "stocks.positive_breadth",
+              "stocks.median_forward_pe",
+              "stocks.catalyst_count"
+            ]
+          }
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "stocks.basket_30d"
+          ]
+        },
+        "analystNotes": [
+          {
             "en": "Track changes in next-twelve-month estimates. Rising prices without rising earnings create the most fragile form of AI leadership.",
             "zh": "追蹤未來十二個月的預估變化。只有股價上漲、獲利沒有上修，是最脆弱的 AI 領漲型態。"
           },
@@ -185,30 +362,7 @@
             "en": "Booked revenue, utilization, and free cash flow matter more than announced capacity when valuations already price in growth.",
             "zh": "當估值已反映成長時，已入帳營收、利用率與自由現金流，比公布的產能更重要。"
           }
-        ],
-        "nextObservations": [
-          {
-            "en": "Next read · revision breadth",
-            "zh": "下一讀 · 上修廣度"
-          },
-          {
-            "en": "Next read · fifty-day participation",
-            "zh": "下一讀 · 五十日線參與率"
-          },
-          {
-            "en": "Next read · cash conversion",
-            "zh": "下一讀 · 現金轉化"
-          }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "stocks.basket_30d"
-          ]
-        }
+        ]
       }
     },
     "/compute": {
@@ -277,6 +431,106 @@
         "catalysts": [],
         "risks": [
           {
+            "condition": {
+              "en": "The thesis weakens if: Memory supply matters only after platform qualification. Track approved capacity rather than aggregate wafer starts.",
+              "zh": "若出現以下情況，論點將被削弱：記憶體只有通過平台認證後才構成有效供應。應追蹤已核准產能，而非總晶圓投入量。"
+            },
+            "metricIds": [
+              "compute.accelerator_pool",
+              "compute.hbm_demand",
+              "compute.packaging_lead_weeks",
+              "compute.inference_cost_change"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: The next profit pool belongs to operators that can keep expensive clusters fed, scheduled, and networked.",
+              "zh": "若出現以下情況，論點將被削弱：下一個利潤池屬於能讓昂貴叢集持續有工作、排程順暢且網路充足的營運商。"
+            },
+            "metricIds": [
+              "compute.accelerator_pool",
+              "compute.hbm_demand",
+              "compute.packaging_lead_weeks",
+              "compute.inference_cost_change"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: ASIC momentum is real, but software portability and deployment scale decide where share actually shifts.",
+              "zh": "若出現以下情況，論點將被削弱：ASIC 動能確實存在，但軟體可攜性與部署規模才決定市占真正轉移的位置。"
+            },
+            "metricIds": [
+              "compute.accelerator_pool",
+              "compute.hbm_demand",
+              "compute.packaging_lead_weeks",
+              "compute.inference_cost_change"
+            ]
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Next read · supplier mix",
+              "zh": "下一讀 · 供應商組合"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "compute.accelerator_pool",
+              "compute.hbm_demand",
+              "compute.packaging_lead_weeks",
+              "compute.inference_cost_change"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · workload density",
+              "zh": "下一讀 · 工作負載密度"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "compute.accelerator_pool",
+              "compute.hbm_demand",
+              "compute.packaging_lead_weeks",
+              "compute.inference_cost_change"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · volume ramps",
+              "zh": "下一讀 · 出貨放量"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "compute.accelerator_pool",
+              "compute.hbm_demand",
+              "compute.packaging_lead_weeks",
+              "compute.inference_cost_change"
+            ]
+          }
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "compute.accelerator_pool"
+          ]
+        },
+        "analystNotes": [
+          {
             "en": "Memory supply matters only after platform qualification. Track approved capacity rather than aggregate wafer starts.",
             "zh": "記憶體只有通過平台認證後才構成有效供應。應追蹤已核准產能，而非總晶圓投入量。"
           },
@@ -288,30 +542,7 @@
             "en": "ASIC momentum is real, but software portability and deployment scale decide where share actually shifts.",
             "zh": "ASIC 動能確實存在，但軟體可攜性與部署規模才決定市占真正轉移的位置。"
           }
-        ],
-        "nextObservations": [
-          {
-            "en": "Next read · supplier mix",
-            "zh": "下一讀 · 供應商組合"
-          },
-          {
-            "en": "Next read · workload density",
-            "zh": "下一讀 · 工作負載密度"
-          },
-          {
-            "en": "Next read · volume ramps",
-            "zh": "下一讀 · 出貨放量"
-          }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "compute.accelerator_pool"
-          ]
-        }
+        ]
       }
     },
     "/energy": {
@@ -380,6 +611,106 @@
         "catalysts": [],
         "risks": [
           {
+            "condition": {
+              "en": "The thesis weakens if: Treat projects as real only after land, power, equipment, and customer commitments converge.",
+              "zh": "若出現以下情況，論點將被削弱：只有在土地、電力、設備與客戶承諾同時到位後，才能把專案視為真實容量。"
+            },
+            "metricIds": [
+              "energy.announced_power_gw",
+              "energy.committed_power_gw",
+              "energy.interconnection_years",
+              "energy.liquid_cooling_share"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Rack density is rising faster than retrofit readiness. Watch coolant distribution and heat rejection capacity.",
+              "zh": "若出現以下情況，論點將被削弱：機櫃密度上升速度快於改造準備。應追蹤冷卻液配送與排熱能力。"
+            },
+            "metricIds": [
+              "energy.announced_power_gw",
+              "energy.committed_power_gw",
+              "energy.interconnection_years",
+              "energy.liquid_cooling_share"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Gas, nuclear, storage, and demand response are converging into a new portfolio for always-on compute.",
+              "zh": "若出現以下情況，論點將被削弱：天然氣、核能、儲能與需量反應正匯聚成全天候算力的新型供電組合。"
+            },
+            "metricIds": [
+              "energy.announced_power_gw",
+              "energy.committed_power_gw",
+              "energy.interconnection_years",
+              "energy.liquid_cooling_share"
+            ]
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Next read · project conversion",
+              "zh": "下一讀 · 專案轉化"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "energy.announced_power_gw",
+              "energy.committed_power_gw",
+              "energy.interconnection_years",
+              "energy.liquid_cooling_share"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · design wins",
+              "zh": "下一讀 · 設計導入"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "energy.announced_power_gw",
+              "energy.committed_power_gw",
+              "energy.interconnection_years",
+              "energy.liquid_cooling_share"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · PPA quality",
+              "zh": "下一讀 · PPA 品質"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "energy.announced_power_gw",
+              "energy.committed_power_gw",
+              "energy.interconnection_years",
+              "energy.liquid_cooling_share"
+            ]
+          }
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "energy.announced_power_gw"
+          ]
+        },
+        "analystNotes": [
+          {
             "en": "Treat projects as real only after land, power, equipment, and customer commitments converge.",
             "zh": "只有在土地、電力、設備與客戶承諾同時到位後，才能把專案視為真實容量。"
           },
@@ -391,30 +722,7 @@
             "en": "Gas, nuclear, storage, and demand response are converging into a new portfolio for always-on compute.",
             "zh": "天然氣、核能、儲能與需量反應正匯聚成全天候算力的新型供電組合。"
           }
-        ],
-        "nextObservations": [
-          {
-            "en": "Next read · project conversion",
-            "zh": "下一讀 · 專案轉化"
-          },
-          {
-            "en": "Next read · design wins",
-            "zh": "下一讀 · 設計導入"
-          },
-          {
-            "en": "Next read · PPA quality",
-            "zh": "下一讀 · PPA 品質"
-          }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "energy.announced_power_gw"
-          ]
-        }
+        ]
       }
     },
     "/models": {
@@ -483,6 +791,106 @@
         "catalysts": [],
         "risks": [
           {
+            "condition": {
+              "en": "The thesis weakens if: Measure completed work after review, not generated content. The gap exposes hidden operating cost.",
+              "zh": "若出現以下情況，論點將被削弱：衡量覆核後真正完成的工作，而不是生成的內容。兩者差距會揭露隱藏營運成本。"
+            },
+            "metricIds": [
+              "models.production_agents",
+              "models.software_spend_growth",
+              "models.managed_tokens",
+              "models.api_deployment_share"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: The most defensible agents learn from proprietary workflows without compromising governance.",
+              "zh": "若出現以下情況，論點將被削弱：最具防禦力的代理能從專有工作流程學習，同時不犧牲治理。"
+            },
+            "metricIds": [
+              "models.production_agents",
+              "models.software_spend_growth",
+              "models.managed_tokens",
+              "models.api_deployment_share"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Outcome pricing expands upside but transfers model, review, and exception risk back to the vendor.",
+              "zh": "若出現以下情況，論點將被削弱：成果定價提高上行空間，但也把模型、覆核與例外風險轉回供應商。"
+            },
+            "metricIds": [
+              "models.production_agents",
+              "models.software_spend_growth",
+              "models.managed_tokens",
+              "models.api_deployment_share"
+            ]
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Next read · outcome cohort",
+              "zh": "下一讀 · 成果群組"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "models.production_agents",
+              "models.software_spend_growth",
+              "models.managed_tokens",
+              "models.api_deployment_share"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · data flywheel",
+              "zh": "下一讀 · 資料飛輪"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "models.production_agents",
+              "models.software_spend_growth",
+              "models.managed_tokens",
+              "models.api_deployment_share"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · gross margin",
+              "zh": "下一讀 · 毛利率"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "models.production_agents",
+              "models.software_spend_growth",
+              "models.managed_tokens",
+              "models.api_deployment_share"
+            ]
+          }
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "models.production_agents"
+          ]
+        },
+        "analystNotes": [
+          {
             "en": "Measure completed work after review, not generated content. The gap exposes hidden operating cost.",
             "zh": "衡量覆核後真正完成的工作，而不是生成的內容。兩者差距會揭露隱藏營運成本。"
           },
@@ -494,30 +902,7 @@
             "en": "Outcome pricing expands upside but transfers model, review, and exception risk back to the vendor.",
             "zh": "成果定價提高上行空間，但也把模型、覆核與例外風險轉回供應商。"
           }
-        ],
-        "nextObservations": [
-          {
-            "en": "Next read · outcome cohort",
-            "zh": "下一讀 · 成果群組"
-          },
-          {
-            "en": "Next read · data flywheel",
-            "zh": "下一讀 · 資料飛輪"
-          },
-          {
-            "en": "Next read · gross margin",
-            "zh": "下一讀 · 毛利率"
-          }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "models.production_agents"
-          ]
-        }
+        ]
       }
     },
     "/sic": {
@@ -586,6 +971,106 @@
         "catalysts": [],
         "risks": [
           {
+            "condition": {
+              "en": "The thesis weakens if: Track named customer qualification and production orders, not wafer demonstrations. That is the bridge from technical proof to revenue.",
+              "zh": "若出現以下情況，論點將被削弱：追蹤具名客戶認證與量產訂單，而不是晶圓展示。這才是從技術證明跨向營收的橋梁。"
+            },
+            "metricIds": [
+              "sic.market_2030_usd_b",
+              "sic.wafer_frontier_mm",
+              "sic.packaging_watts",
+              "sic.ev_penetration"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: The Wolfspeed–Navitas dispute could reshape design freedom and IP value across SiC and GaN power devices.",
+              "zh": "若出現以下情況，論點將被削弱：Wolfspeed 與 Navitas 的爭議，可能重塑 SiC 與 GaN 功率元件的設計自由與智慧財產價值。"
+            },
+            "metricIds": [
+              "sic.market_2030_usd_b",
+              "sic.wafer_frontier_mm",
+              "sic.packaging_watts",
+              "sic.ev_penetration"
+            ]
+          },
+          {
+            "condition": {
+              "en": "The thesis weakens if: Watch reference designs become signed data-center orders. Power architecture adoption is the fastest path to material AI revenue.",
+              "zh": "若出現以下情況，論點將被削弱：觀察參考設計能否變成已簽署的資料中心訂單。電力架構採用，是 AI 營收實質化的最快路徑。"
+            },
+            "metricIds": [
+              "sic.market_2030_usd_b",
+              "sic.wafer_frontier_mm",
+              "sic.packaging_watts",
+              "sic.ev_penetration"
+            ]
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Next read · packaging customers",
+              "zh": "下一讀 · 封裝客戶"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "sic.market_2030_usd_b",
+              "sic.wafer_frontier_mm",
+              "sic.packaging_watts",
+              "sic.ev_penetration"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · injunction status",
+              "zh": "下一讀 · 禁制令進度"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "sic.market_2030_usd_b",
+              "sic.wafer_frontier_mm",
+              "sic.packaging_watts",
+              "sic.ev_penetration"
+            ]
+          },
+          {
+            "what": {
+              "en": "Next read · design wins",
+              "zh": "下一讀 · 設計導入"
+            },
+            "by": "2026-08-15",
+            "threshold": {
+              "en": "A material miss versus this reading would weaken the thesis.",
+              "zh": "若此讀值明顯不及預期，將削弱論點。"
+            },
+            "metricIds": [
+              "sic.market_2030_usd_b",
+              "sic.wafer_frontier_mm",
+              "sic.packaging_watts",
+              "sic.ev_penetration"
+            ]
+          }
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "sic.market_2030_usd_b"
+          ]
+        },
+        "analystNotes": [
+          {
             "en": "Track named customer qualification and production orders, not wafer demonstrations. That is the bridge from technical proof to revenue.",
             "zh": "追蹤具名客戶認證與量產訂單，而不是晶圓展示。這才是從技術證明跨向營收的橋梁。"
           },
@@ -597,30 +1082,7 @@
             "en": "Watch reference designs become signed data-center orders. Power architecture adoption is the fastest path to material AI revenue.",
             "zh": "觀察參考設計能否變成已簽署的資料中心訂單。電力架構採用，是 AI 營收實質化的最快路徑。"
           }
-        ],
-        "nextObservations": [
-          {
-            "en": "Next read · packaging customers",
-            "zh": "下一讀 · 封裝客戶"
-          },
-          {
-            "en": "Next read · injunction status",
-            "zh": "下一讀 · 禁制令進度"
-          },
-          {
-            "en": "Next read · design wins",
-            "zh": "下一讀 · 設計導入"
-          }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "sic.market_2030_usd_b"
-          ]
-        }
+        ]
       }
     }
   },

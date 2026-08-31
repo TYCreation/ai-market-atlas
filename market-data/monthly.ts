@@ -5,7 +5,7 @@ import {
   type MonthlyArchiveRecord,
 } from "./monthly-record.ts";
 import type { AutomatedReview } from "./review.ts";
-import type { BilingualText, MetricRecord, PageSlug, SourceRecord, ThesisStance } from "./types.ts";
+import type { BilingualText, FalsifiableRisk, MetricRecord, PageSlug, SourceRecord, ThesisStance } from "./types.ts";
 
 export type MonthlyArchive = {
   month: string;
@@ -22,7 +22,8 @@ export type MonthlyArchive = {
     metricIds: string[];
   }>;
   catalysts: BilingualText[];
-  risks: BilingualText[];
+  analystNotes?: BilingualText[];
+  risks: Array<FalsifiableRisk | BilingualText>;
   sourceIds: string[];
 };
 
@@ -50,6 +51,7 @@ function entryFromRecord(month: string, record: MonthlyArchiveRecord): MonthlyAr
       equityChanges: record.equityChanges,
       thesisChanges: record.thesisChanges,
       catalysts: record.catalysts,
+      ...(record.analystNotes ? { analystNotes: record.analystNotes } : {}),
       risks: record.risks,
       sourceIds: record.sourceIds,
     },

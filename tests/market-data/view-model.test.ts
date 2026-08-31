@@ -29,6 +29,33 @@ test("returns both locales from one metric record", () => {
   assert.equal(createMarketViewModel(snapshot).getKpi("/", 0, "zh").metricId, "pulse.infrastructure_spend");
 });
 
+test("localizes falsifiable risks and dated threshold observations without fixed counts", () => {
+  const snapshot = JSON.parse(
+    readFileSync(new URL("../../tests/fixtures/market/valid-candidate.json", import.meta.url), "utf8"),
+  ) as MarketSnapshot;
+  const report = createMarketViewModel(snapshot).getPageReport("/compute", "en");
+
+  assert.ok(report.analystNotes.length > 0);
+  assert.ok(report.risks.length > 0);
+  assert.match(report.risks[0].condition, /^The thesis weakens if:/);
+  assert.equal(report.nextObservations[0].by, "2026-08-15");
+  assert.equal(report.nextObservations[0].legacy, false);
+  assert.match(report.nextObservations[0].threshold, /weaken the thesis/i);
+});
+
+test("marks legacy published observation thresholds as unavailable without relaxing candidates", () => {
+  const snapshot = JSON.parse(
+    readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8"),
+  ) as MarketSnapshot;
+  const report = createMarketViewModel(snapshot).getPageReport("/compute", "en");
+
+  assert.equal(report.risks.length, 0);
+  assert.ok(report.analystNotes.length > 0);
+  assert.equal(report.nextObservations[0].legacy, true);
+  assert.equal(report.nextObservations[0].by, null);
+  assert.match(report.nextObservations[0].threshold, /legacy observation; threshold unavailable/i);
+});
+
 test("marks an unchanged page without replacing its thesis", () => {
   const meta = getPageMeta("/models", "zh");
   assert.equal(meta.changeLabel, "本期無重大變化");

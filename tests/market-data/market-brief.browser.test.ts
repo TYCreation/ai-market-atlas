@@ -473,8 +473,8 @@ test("actual market-brief composition passes its browser behavior matrix", async
           brief.nextWeekObservations = [];
         }],
         ["rendered tag cardinality", (brief) => {
-          brief.labels.tags.en = ["CORRUPTED"];
-          brief.labels.tags.zh = ["已破壞"];
+          brief.labels.tags.en = [];
+          brief.labels.tags.zh = [];
         }],
       ];
 

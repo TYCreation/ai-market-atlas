@@ -4,6 +4,10 @@ import type { SourceRecord } from "../../market-data/types.ts";
 import { SiteCredit } from "./SiteCredit";
 import { TaipeiTime } from "./MetricProvenance";
 
+function isFalsifiableRisk(value: MonthlyArchive["risks"][number]): value is Extract<MonthlyArchive["risks"][number], { condition: unknown }> {
+  return typeof value === "object" && value !== null && "condition" in value;
+}
+
 function monthLabel(month: string, locale: "zh" | "en") {
   const [year, monthNumber] = month.split("-");
   return locale === "zh" ? `${year} 年 ${Number(monthNumber)} 月` : `${month} `;
@@ -24,6 +28,9 @@ export function ArchiveReport({
 }) {
   const titleZh = `${monthLabel(archive.month, "zh")}市場封存`;
   const titleEn = `${monthLabel(archive.month, "en")}market archive`;
+  const legacyNotes = archive.risks.filter((risk) => !isFalsifiableRisk(risk));
+  const analystNotes = archive.analystNotes ?? legacyNotes;
+  const risks = archive.risks.filter(isFalsifiableRisk);
 
   return (
     <main className="archive-main">
@@ -103,13 +110,21 @@ export function ArchiveReport({
         <section className="archive-section" aria-labelledby="archive-risks">
           <div className="archive-section-head">
             <div>
-              <p className="section-kicker">04 · 風險 / Risks</p>
-              <h2 id="archive-risks">{locale === "en" ? "Risks to monitor" : "持續觀察的風險"}</h2>
+              <p className="section-kicker">04 · {analystNotes.length > 0 ? "分析註記 / Analyst notes" : "風險 / Risks"}</p>
+              <h2 id="archive-risks">{analystNotes.length > 0 ? (locale === "en" ? "Analyst notes" : "分析註記") : (locale === "en" ? "Falsification risks" : "可驗證的風險")}</h2>
             </div>
           </div>
           <ul className="archive-list">
-            {archive.risks.map((item, index) => <li key={index}>{item[locale]}</li>)}
+            {(analystNotes.length > 0 ? analystNotes : risks.map((risk) => risk.condition)).map((item, index) => <li key={index}>{item[locale]}</li>)}
           </ul>
+          {analystNotes.length > 0 && risks.length > 0 ? (
+            <>
+              <p className="section-kicker">{locale === "en" ? "Falsification risks" : "可驗證的風險"}</p>
+              <ul className="archive-list">
+                {risks.map((risk, index) => <li key={index}>{risk.condition[locale]}</li>)}
+              </ul>
+            </>
+          ) : null}
         </section>
       </div>
 

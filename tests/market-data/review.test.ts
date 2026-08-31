@@ -53,9 +53,14 @@ function withoutNumericNarrative(snapshot: MarketSnapshot): MarketSnapshot {
         text: redact(evidence.text),
       }));
     }
-    for (const collection of ["catalysts", "risks", "nextObservations"] as const) {
-      page.report[collection] = page.report[collection].map(redact);
-    }
+    page.report.catalysts = page.report.catalysts.map(redact);
+    page.report.analystNotes = page.report.analystNotes?.map(redact);
+    page.report.risks = page.report.risks.map((risk) => "condition" in risk
+      ? { ...risk, condition: redact(risk.condition) }
+      : redact(risk));
+    page.report.nextObservations = page.report.nextObservations.map((observation) => "what" in observation
+      ? { ...observation, what: redact(observation.what), threshold: redact(observation.threshold) }
+      : redact(observation));
   }
   return snapshot;
 }
@@ -331,7 +336,10 @@ test("rejects unsupported numeric claims across general bilingual report fields"
       snapshot.pages["/compute"].report.thesis.body = { en: "Thesis 999", zh: "論點 999" };
     },
     (snapshot) => {
-      snapshot.pages["/compute"].report.risks = [{ en: "Risk 999", zh: "風險 999" }];
+      snapshot.pages["/compute"].report.risks = [{
+        condition: { en: "Risk 999", zh: "風險 999" },
+        metricIds: ["compute.accelerator_pool"],
+      }];
     },
   ];
 
@@ -351,8 +359,8 @@ test("accepts numeric claims matched by the page citation set", async () => {
     zh: "加速器市場 242",
   };
   snapshot.pages["/compute"].report.risks = [{
-    en: "Accelerator pool remains 242",
-    zh: "加速器市場維持 242",
+    condition: { en: "Accelerator pool remains 242", zh: "加速器市場維持 242" },
+    metricIds: ["compute.accelerator_pool"],
   }];
 
   assert.equal((await reviewSnapshot(snapshot)).decision, "auto_publish");

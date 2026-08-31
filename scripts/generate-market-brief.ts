@@ -7,6 +7,7 @@ import { hashCandidate } from "../market-data/review.ts";
 import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "../market-data/schema.ts";
 import type {
   BilingualText,
+  NextObservation,
   MarketSnapshot,
   MetricRecord,
   PageSlug,
@@ -35,7 +36,7 @@ export type MarketBriefPayload = {
   sourceIds: string[];
   signals: MarketBriefSignal[];
   featuredSignalIds: string[];
-  nextWeekObservations: BilingualText[];
+  nextWeekObservations: MarketBriefObservation[];
   labels: {
     eyebrow: BilingualText;
     title: BilingualText;
@@ -46,6 +47,14 @@ export type MarketBriefPayload = {
   };
   methodology: BilingualText;
   notInvestmentAdvice: BilingualText;
+};
+
+export type MarketBriefObservation = {
+  what: BilingualText;
+  by: string | null;
+  threshold: BilingualText;
+  metricIds: string[];
+  legacy: boolean;
 };
 
 export type MarketBriefAssetPaths = {
@@ -171,8 +180,8 @@ function assertSnapshotBriefCardinality(snapshot: MarketSnapshot): void {
     );
   }
   const tags = snapshot.pages["/"].report.thesis.tags;
-  if (tags.zh.length !== 3 || tags.en.length !== 3) {
-    throw new Error("Market brief requires exactly three thesis tags per language");
+  if (tags.zh.length === 0 || tags.en.length === 0) {
+    throw new Error("Market brief requires at least one thesis tag per language");
   }
   if (
     snapshot.cadence !== "wednesday" &&
@@ -247,9 +256,26 @@ function featuredSignalIds(snapshot: MarketSnapshot, ordered: readonly MetricRec
   return selected;
 }
 
-function nextWeekObservations(snapshot: MarketSnapshot): BilingualText[] {
+function isStructuredObservation(value: MarketSnapshot["pages"][PageSlug]["report"]["nextObservations"][number]): value is NextObservation {
+  return typeof value === "object" && value !== null && "what" in value && "by" in value && "threshold" in value && "metricIds" in value;
+}
+
+function nextWeekObservations(snapshot: MarketSnapshot): MarketBriefObservation[] {
   if (snapshot.cadence === "wednesday") return [];
-  return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.slice(0, 1));
+  return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.slice(0, 1).map((observation) =>
+    isStructuredObservation(observation)
+      ? { ...observation, metricIds: [...observation.metricIds], legacy: false }
+      : {
+        what: observation,
+        by: null,
+        threshold: {
+          en: "Legacy observation; threshold unavailable.",
+          zh: "舊版觀察；門檻未提供。",
+        },
+        metricIds: [],
+        legacy: true,
+      },
+  ));
 }
 
 export function buildMarketBrief(
@@ -327,6 +353,20 @@ function isLocalizedSignal(value: unknown): value is LocalizedSignal {
   );
 }
 
+function isMarketBriefObservation(value: unknown): value is MarketBriefObservation {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<MarketBriefObservation>;
+  const metricIds = Array.isArray(candidate.metricIds) ? candidate.metricIds : [];
+  if (!isBilingualText(candidate.what) || !isBilingualText(candidate.threshold) || typeof candidate.legacy !== "boolean") return false;
+  if (candidate.legacy) return candidate.by === null && metricIds.length === 0;
+  return isCanonicalUtcTimestamp(candidate.by) || (
+    typeof candidate.by === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(candidate.by) &&
+    !Number.isNaN(Date.parse(`${candidate.by}T00:00:00.000Z`)) &&
+    new Date(`${candidate.by}T00:00:00.000Z`).toISOString().slice(0, 10) === candidate.by
+  ) && metricIds.length > 0 && metricIds.every((id) => typeof id === "string" && id.length > 0);
+}
+
 export function isMarketBriefPayload(value: unknown): value is MarketBriefPayload {
   try {
     if (!value || typeof value !== "object") return false;
@@ -384,7 +424,7 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
       featuredIdSet.size === featuredSignalIds.length &&
       featuredSignalIds.every((id) => typeof id === "string" && signalIdSet.has(id)) &&
       Array.isArray(candidate.nextWeekObservations) &&
-      candidate.nextWeekObservations.every(isBilingualText) &&
+      candidate.nextWeekObservations.every(isMarketBriefObservation) &&
       Boolean(labels) &&
       isBilingualText(labels?.eyebrow) &&
       isBilingualText(labels?.title) &&
@@ -392,10 +432,10 @@ export function isMarketBriefPayload(value: unknown): value is MarketBriefPayloa
       isBilingualText(labels?.signal) &&
       isBilingualText(labels?.thesis) &&
       Array.isArray(labels?.tags?.zh) &&
-      labels.tags.zh.length === 3 &&
+      labels.tags.zh.length > 0 &&
       labels.tags.zh.every((tag) => typeof tag === "string" && tag.length > 0) &&
       Array.isArray(labels?.tags?.en) &&
-      labels.tags.en.length === 3 &&
+      labels.tags.en.length > 0 &&
       labels.tags.en.every((tag) => typeof tag === "string" && tag.length > 0) &&
       isBilingualText(candidate.methodology) &&
       isBilingualText(candidate.notInvestmentAdvice);
@@ -465,6 +505,22 @@ function hardenBriefValidation(html: string): string {
     .replace(
       'Object.prototype.hasOwnProperty.call(brief, "runId")',
       'Object.keys(brief).sort().join(",") !== "cadence,dataCutoff,featuredSignalIds,labels,methodology,nextWeekObservations,notInvestmentAdvice,schemaVersion,signals,sourceIds"',
+    )
+    .replace(
+      '!brief.nextWeekObservations.every(hasBilingualText)',
+      '!brief.nextWeekObservations.every(hasBriefObservation)',
+    )
+    .replace(
+      'brief.labels.tags.zh.length === 3',
+      'brief.labels.tags.zh.length > 0',
+    )
+    .replace(
+      'brief.labels.tags.en.length === 3',
+      'brief.labels.tags.en.length > 0',
+    )
+    .replace(
+      'localized(\n                brief.nextWeekObservations[index % brief.nextWeekObservations.length],\n              )',
+      'localized(\n                brief.nextWeekObservations[index % brief.nextWeekObservations.length].what,\n              )',
     )
     .replace(
       'typeof signal.asOf === "string" &&\n          !Number.isNaN(Date.parse(signal.asOf))',

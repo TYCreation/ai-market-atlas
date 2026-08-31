@@ -128,12 +128,28 @@ function fixtureCandidate(value: unknown): MarketSnapshot {
   // pipeline behavior under test. Keep those sentinels inside fixture mode.
   for (const page of Object.values(candidate.pages)) {
     const thesisSurvivalRationale = page.report.thesisSurvivalRationale;
+    const risks = structuredClone(page.report.risks);
+    const nextObservations = structuredClone(page.report.nextObservations);
     page.report = JSON.parse(
       JSON.stringify(page.report).replaceAll(/\d/g, "x"),
     ) as typeof page.report;
     if (thesisSurvivalRationale !== undefined) {
       page.report.thesisSurvivalRationale = thesisSurvivalRationale;
     }
+    page.report.risks = page.report.risks.map((risk, index) =>
+      "condition" in risk
+        ? { ...risk, metricIds: (risks[index] as Extract<typeof risk, { metricIds: string[] }>).metricIds }
+        : risk,
+    );
+    page.report.nextObservations = page.report.nextObservations.map((observation, index) =>
+      "what" in observation
+        ? {
+          ...observation,
+          by: (nextObservations[index] as Extract<typeof observation, { by: string }>).by,
+          metricIds: (nextObservations[index] as Extract<typeof observation, { metricIds: string[] }>).metricIds,
+        }
+        : observation,
+    );
   }
   for (const metric of Object.values(candidate.metrics)) {
     if (

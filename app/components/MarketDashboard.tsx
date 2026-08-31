@@ -138,6 +138,11 @@ export function MarketDashboard({
           text,
           key: `catalyst-${index}`,
         })),
+        ...activeConfig.report.analystNotes.map((text, index) => ({
+          kind: locale === "zh" ? "分析註記" : "Analyst note",
+          text,
+          key: `analyst-note-${index}`,
+        })),
       ]
     : [];
 
@@ -465,7 +470,11 @@ export function MarketDashboard({
                 </div>
                 <h3>{item.title}</h3>
                 <p>{item.body}</p>
-                <span className="watch-owner">{item.owner}</span>
+                {item.deadline ? (
+                  <span className="watch-owner">
+                    {locale === "zh" ? "觀察截至" : "Observe by"} <TaipeiTime value={item.deadline} locale={locale} /> · {item.owner}
+                  </span>
+                ) : <span className="watch-owner">{item.owner}</span>}
               </article>
             ))}
           </div>

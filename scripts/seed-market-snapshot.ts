@@ -64,7 +64,7 @@ function modeledMetric(id: string, page: PageSlug, value: string, valueZh: strin
   };
 }
 
-function report(english: DashboardConfig, chinese: DashboardConfig, thesisMetricIds: string[]) {
+function report(english: DashboardConfig, chinese: DashboardConfig, thesisMetricIds: string[], timestamp: string) {
   const field = (name: "eyebrow" | "title" | "summary" | "signal") => ({ en: english[name], zh: chinese[name] });
   return {
     eyebrow: field("eyebrow"), title: field("title"), summary: field("summary"), signal: field("signal"),
@@ -77,8 +77,23 @@ function report(english: DashboardConfig, chinese: DashboardConfig, thesisMetric
       metricIds: [thesisMetricIds[0]],
     },
     supportingEvidence: [], opposingEvidence: [], catalysts: [],
-    risks: english.watchlist.map((item, index) => ({ en: item.body, zh: chinese.watchlist[index]?.body ?? item.body })),
-    nextObservations: english.watchlist.map((item, index) => ({ en: item.owner, zh: chinese.watchlist[index]?.owner ?? item.owner })),
+    analystNotes: english.watchlist.map((item, index) => ({ en: item.body, zh: chinese.watchlist[index]?.body ?? item.body })),
+    risks: english.watchlist.map((item, index) => ({
+      condition: {
+        en: `The thesis weakens if: ${item.body}`,
+        zh: `若出現以下情況，論點將被削弱：${chinese.watchlist[index]?.body ?? item.body}`,
+      },
+      metricIds: [thesisMetricIds[0]],
+    })),
+    nextObservations: english.watchlist.map((item, index) => ({
+      what: { en: item.owner, zh: chinese.watchlist[index]?.owner ?? item.owner },
+      by: timestamp,
+      threshold: {
+        en: "A material miss versus this reading would weaken the thesis.",
+        zh: "若此讀值明顯不及預期，將削弱論點。",
+      },
+      metricIds: [thesisMetricIds[0]],
+    })),
   };
 }
 
@@ -112,7 +127,7 @@ function createSnapshot(runId: string): MarketSnapshot {
   const pages = {} as MarketSnapshot["pages"];
   for (const page of Object.keys(dashboards) as PageSlug[]) {
     const thesisMetricIds = KPI_CATALOG.filter((entry) => entry[0] === page).map((entry) => entry[2]);
-    pages[page] = { changed: false, changeReasons: [], verifiedAt: timestamp, thesisStance: "neutral", previousThesisStance: "neutral", thesisMetricIds, report: report(dashboards[page], chineseDashboards[page], thesisMetricIds) };
+    pages[page] = { changed: false, changeReasons: [], verifiedAt: timestamp, thesisStance: "neutral", previousThesisStance: "neutral", thesisMetricIds, report: report(dashboards[page], chineseDashboards[page], thesisMetricIds, timestamp) };
   }
   return { schemaVersion: 1, runId, cadence: runId.endsWith("wednesday") ? "wednesday" : runId.endsWith("month-end") ? "month-end" : "saturday", generatedAt: timestamp, dataCutoff: timestamp, pages, sources, metrics, keySignalIds: KPI_CATALOG.map((entry) => entry[2]) };
 }

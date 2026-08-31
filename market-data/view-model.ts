@@ -6,9 +6,11 @@ import { evaluateMetricFreshness } from "./freshness.ts";
 import { assertPublishedMarketSnapshot } from "./schema.ts";
 import type {
   Locale,
+  FalsifiableRisk,
   MarketSnapshot,
   MetricRecord,
   MetricStatus,
+  NextObservation,
   PageReport,
   PageSlug,
   RunCadence,
@@ -23,8 +25,15 @@ export type LocalizedPageReport = {
   supportingEvidence: Array<{ text: string; metricIds: string[] }>;
   opposingEvidence: Array<{ text: string; metricIds: string[] }>;
   catalysts: string[];
-  risks: string[];
-  nextObservations: string[];
+  analystNotes: string[];
+  risks: Array<{ condition: string; metricIds: string[] }>;
+  nextObservations: Array<{
+    what: string;
+    by: string | null;
+    threshold: string;
+    metricIds: string[];
+    legacy: boolean;
+  }>;
 };
 
 export type MetricView = {
@@ -80,6 +89,11 @@ function validateSnapshot(value: unknown): MarketSnapshot {
 const currentSnapshot = validateSnapshot(currentSnapshotJson);
 
 function localizeReport(report: PageReport, locale: Locale): LocalizedPageReport {
+  const isFalsifiableRisk = (value: PageReport["risks"][number]): value is FalsifiableRisk =>
+    typeof value === "object" && value !== null && "condition" in value && "metricIds" in value;
+  const isNextObservation = (value: PageReport["nextObservations"][number]): value is NextObservation =>
+    typeof value === "object" && value !== null && "what" in value && "by" in value && "threshold" in value && "metricIds" in value;
+  const legacyNotes = report.risks.filter((risk): risk is Exclude<typeof risk, FalsifiableRisk> => !isFalsifiableRisk(risk));
   return {
     eyebrow: report.eyebrow[locale],
     title: report.title[locale],
@@ -99,8 +113,26 @@ function localizeReport(report: PageReport, locale: Locale): LocalizedPageReport
       metricIds: evidence.metricIds,
     })),
     catalysts: report.catalysts.map((item) => item[locale]),
-    risks: report.risks.map((item) => item[locale]),
-    nextObservations: report.nextObservations.map((item) => item[locale]),
+    analystNotes: (report.analystNotes ?? legacyNotes).map((item) => item[locale]),
+    risks: report.risks.filter(isFalsifiableRisk).map((risk) => ({
+      condition: risk.condition[locale],
+      metricIds: risk.metricIds,
+    })),
+    nextObservations: report.nextObservations.map((item) => isNextObservation(item)
+      ? {
+        what: item.what[locale],
+        by: item.by,
+        threshold: item.threshold[locale],
+        metricIds: item.metricIds,
+        legacy: false,
+      }
+      : {
+        what: item[locale],
+        by: null,
+        threshold: locale === "en" ? "Legacy observation; threshold unavailable." : "舊版觀察；門檻未提供。",
+        metricIds: [],
+        legacy: true,
+      }),
   };
 }
 

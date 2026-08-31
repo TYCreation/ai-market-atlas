@@ -121,7 +121,7 @@ for (const [pathname, heading, metricIds] of [
       assert.doesNotMatch(html, /class="edition-run"/);
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
-      assert.match(html, /report-evidence-grid evidence-count-1/);
+      assert.match(html, /report-evidence-grid evidence-count-3/);
       assert.match(html, /class="masthead-copy"/);
       assert.match(html, /class="atlas-field"/);
       assert.match(html, /href="#sources"/);

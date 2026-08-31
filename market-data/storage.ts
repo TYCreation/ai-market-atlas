@@ -194,6 +194,7 @@ export function projectMonthlyArchive(
         metricIds: [...state.thesisMetricIds],
       })),
     catalysts: root.report.catalysts,
+    analystNotes: root.report.analystNotes ?? [],
     risks: root.report.risks,
     sourceIds: sources.map((source) => source.id),
     sources,

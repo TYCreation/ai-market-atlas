@@ -10,6 +10,53 @@ test("accepts a complete bilingual candidate", () => {
   assert.doesNotThrow(() => assertMarketSnapshot(candidate));
 });
 
+test("rejects legacy editorial strings for a newly authored candidate", () => {
+  const legacyCandidate = structuredClone(candidate);
+  for (const page of Object.values(legacyCandidate.pages)) {
+    page.report.risks = page.report.analystNotes;
+    page.report.nextObservations = page.report.nextObservations.map((observation) => observation.what);
+    delete page.report.analystNotes;
+  }
+  assert.throws(
+    () => assertMarketSnapshot(legacyCandidate),
+    /pages\.\/\.report\.analystNotes must be an array/,
+  );
+});
+
+test("requires checkable falsification conditions and dated threshold observations", () => {
+  const strictCandidate = structuredClone(candidate);
+  assert.doesNotThrow(() => assertMarketSnapshot(strictCandidate));
+
+  delete strictCandidate.pages["/compute"].report.nextObservations[0].by;
+  assert.throws(
+    () => assertMarketSnapshot(strictCandidate),
+    /pages\.\/compute\.report\.nextObservations\[0\]\.by must be an ISO timestamp or calendar date/,
+  );
+
+  const missingThreshold = structuredClone(candidate);
+  delete missingThreshold.pages["/compute"].report.nextObservations[0].threshold;
+  assert.throws(
+    () => assertMarketSnapshot(missingThreshold),
+    /pages\.\/compute\.report\.nextObservations\[0\]\.threshold must be an object/,
+  );
+});
+
+test("allows variable editorial counts while enforcing meaningful minimums", () => {
+  const variableCount = structuredClone(candidate);
+  for (const page of Object.values(variableCount.pages)) {
+    page.report.analystNotes = page.report.analystNotes.slice(0, 1);
+    page.report.risks = page.report.risks.slice(0, 1);
+    page.report.nextObservations = page.report.nextObservations.slice(0, 1);
+  }
+  assert.doesNotThrow(() => assertMarketSnapshot(variableCount));
+
+  variableCount.pages["/compute"].report.risks = [];
+  assert.throws(
+    () => assertMarketSnapshot(variableCount),
+    /pages\.\/compute\.report\.risks must contain at least one item/,
+  );
+});
+
 test("rejects a required metric without sources", () => {
   const broken = structuredClone(candidate);
   broken.metrics["pulse.infrastructure_spend"].sourceIds = [];
