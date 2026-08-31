@@ -306,6 +306,8 @@ test("blocks a stance change without cited thesis metrics", () => {
   const prior = structuredClone(valid);
   const changed = structuredClone(valid);
   prior.pages["/models"].thesisStance = "neutral";
+  prior.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
   changed.pages["/models"].changed = true;
   changed.pages["/models"].thesisStance = "bullish";
   changed.pages["/models"].previousThesisStance = "neutral";
@@ -321,6 +323,8 @@ test("accepts a changed directional stance with cited thesis metrics", () => {
   const prior = structuredClone(valid);
   const changed = structuredClone(valid);
   prior.pages["/models"].thesisStance = "neutral";
+  prior.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
   changed.pages["/models"].changed = true;
   changed.pages["/models"].thesisStance = "bullish";
   changed.pages["/models"].previousThesisStance = "neutral";
@@ -349,6 +353,66 @@ test("blocks a stance change when cited metrics do not causally change", () => {
     (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models" &&
       /causal|current.*prior|changed metric/i.test(issue.message),
   ));
+});
+
+test("blocks a stance change when a changed thesis metric is not the metric cited by changed evidence", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
+  prior.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.pages["/models"].changed = true;
+  changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].previousThesisStance = "neutral";
+  changed.metrics["models.production_agents"].numericValue += 1;
+  changed.pages["/models"].thesisMetricIds = ["models.production_agents", "models.software_spend_growth"];
+  changed.pages["/models"].report.supportingEvidence = [{
+    text: { en: "Software evidence changed.", zh: "軟體證據已變更。" },
+    metricIds: ["models.software_spend_growth"],
+  }];
+
+  assert.equal(evaluateQualityGate(changed, prior).publishable, false);
+});
+
+test("blocks a stance change when cited evidence only refreshes as-of metadata", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
+  prior.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.pages["/models"].changed = true;
+  changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].previousThesisStance = "neutral";
+  changed.metrics["models.production_agents"].asOf = "2026-08-02T01:00:00.000Z";
+  changed.metrics["models.production_agents"].observations = changed.metrics["models.production_agents"].observations.map(
+    (observation) => ({ ...observation, asOf: "2026-08-02T01:00:00.000Z" }),
+  );
+  changed.pages["/models"].report.supportingEvidence = [{
+    text: { en: "Production evidence was refreshed.", zh: "生產證據已更新。" },
+    metricIds: ["models.production_agents"],
+  }];
+
+  assert.equal(evaluateQualityGate(changed, prior).publishable, false);
+});
+
+test("accepts a stance change driven by a newly introduced same-page metric", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  const metricId = "models.production_agents";
+  prior.pages["/models"].thesisStance = "neutral";
+  prior.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  delete prior.metrics[metricId];
+  changed.pages["/models"].changed = true;
+  changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].previousThesisStance = "neutral";
+  changed.pages["/models"].thesisMetricIds = [metricId];
+  changed.pages["/models"].report.supportingEvidence = [{
+    text: { en: "New production evidence supports the thesis.", zh: "新的生產證據支持此論點。" },
+    metricIds: [metricId],
+  }];
+
+  assert.equal(evaluateQualityGate(changed, prior).publishable, true);
 });
 
 test("rejects a candidate whose previous stance disagrees with the trusted prior page", () => {

@@ -184,31 +184,27 @@ function sameMetricIdSet(left: string[], right: string[]): boolean {
 function metricChanged(current: MarketSnapshot, previous: MarketSnapshot, metricId: string): boolean {
   const metric = current.metrics[metricId];
   const prior = previous.metrics?.[metricId];
-  if (metric === undefined || prior === undefined) return false;
-  return metric.numericValue !== prior.numericValue ||
-    metric.asOf !== prior.asOf ||
-    !sameMetricIdSet(metric.sourceIds, prior.sourceIds) ||
-    !isDeepStrictEqual(metric.observations, prior.observations);
+  if (metric === undefined) return false;
+  return prior === undefined || metric.numericValue !== prior.numericValue;
 }
 
-function changedEvidenceCites(
+function changedEvidenceMetricIds(
   current: MarketSnapshot,
   previous: MarketSnapshot,
   page: PageSlug,
-  thesisMetricIds: string[],
-): boolean {
+): Set<string> {
   const priorEvidence = [
     ...(previous.pages?.[page]?.report.supportingEvidence ?? []),
     ...(previous.pages?.[page]?.report.opposingEvidence ?? []),
   ];
-  const priorIds = new Set(thesisMetricIds);
   const currentEvidence = [
     ...current.pages[page].report.supportingEvidence,
     ...current.pages[page].report.opposingEvidence,
   ];
-  return currentEvidence.some((item) =>
-    item.metricIds.some((metricId) => priorIds.has(metricId)) &&
-    !priorEvidence.some((priorItem) => isDeepStrictEqual(priorItem, item)),
+  return new Set(
+    currentEvidence
+      .filter((item) => !priorEvidence.some((priorItem) => isDeepStrictEqual(priorItem, item)))
+      .flatMap((item) => item.metricIds),
   );
 }
 
@@ -218,8 +214,12 @@ function hasCausalStanceEvidence(
   page: PageSlug,
   thesisMetricIds: string[],
 ): boolean {
-  return thesisMetricIds.some((metricId) => metricChanged(current, previous, metricId)) &&
-    changedEvidenceCites(current, previous, page, thesisMetricIds);
+  const changedEvidenceIds = changedEvidenceMetricIds(current, previous, page);
+  return thesisMetricIds.some((metricId) =>
+    current.metrics[metricId]?.page === page &&
+    changedEvidenceIds.has(metricId) &&
+    metricChanged(current, previous, metricId),
+  );
 }
 
 function editorialState(page: MarketSnapshot["pages"][PageSlug]): {
