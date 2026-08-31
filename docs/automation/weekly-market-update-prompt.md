@@ -25,11 +25,14 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    it survives unchanged; and include at least one
    cited `opposingEvidence` item with the metric IDs that support that item. Preserve methodological
    commentary in `report.analystNotes`; do not place it in `report.risks`. Every risk must be a
-   bilingual `{ condition, metricIds }` object: state the observable condition that would
-   disprove or materially weaken the thesis and cite at least one existing metric. Every
-   `report.nextObservations` entry must be a bilingual `{ what, by, threshold, metricIds }`
-   object: say what will be read, give a real ISO timestamp or calendar-date deadline, state the
-   threshold or reading that changes the thesis, and cite its metric. Do not use fixed counts;
+   bilingual `{ condition, by, comparison, consequence }` object: state the observable condition
+   that would disprove or materially weaken the thesis, give ISO timestamp or calendar-date deadline,
+   and include `{ metricId, operator, value, unit, currency? }` with a cited metric and
+   compatible unit/currency. State the consequence for the thesis in both languages. Every
+   `report.nextObservations` entry must be a bilingual
+   `{ what, by, threshold, comparison, consequence }` object with the same explicit comparison:
+   say what will be read, give a real deadline, state the threshold or reading that changes the
+   thesis, cite its compatible metric comparison, and state the bilingual thesis consequence. Do not use fixed counts;
    provide at least one analyst note, falsifiable risk, and dated threshold observation for each
    page. Use a directional
    `thesisStance` only when the evidence supports it; a neutral stance is

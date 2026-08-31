@@ -19,6 +19,7 @@ test("weekly automation prompt requires thesis re-examination on every page and 
   assert.match(prompt, /thesis-reexamined-restated/);
   assert.match(prompt, /thesisSurvivalRationale/);
   assert.match(prompt, /report\.analystNotes/);
-  assert.match(prompt, /\{ what, by, threshold, metricIds \}/);
+  assert.match(prompt, /\{ what, by, threshold, comparison, consequence \}/);
+  assert.match(prompt, /metricId, operator, value, unit/);
   assert.match(prompt, /ISO timestamp or calendar-date deadline/i);
 });

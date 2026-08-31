@@ -130,15 +130,25 @@ function fixtureCandidate(value: unknown): MarketSnapshot {
     const thesisSurvivalRationale = page.report.thesisSurvivalRationale;
     const risks = structuredClone(page.report.risks);
     const nextObservations = structuredClone(page.report.nextObservations);
-    page.report = JSON.parse(
-      JSON.stringify(page.report).replaceAll(/\d/g, "x"),
-    ) as typeof page.report;
+    const redactText = (value: unknown): unknown => {
+      if (typeof value === "string") return value.replaceAll(/\d/g, "x");
+      if (Array.isArray(value)) return value.map(redactText);
+      if (value !== null && typeof value === "object") {
+        return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, redactText(child)]));
+      }
+      return value;
+    };
+    page.report = redactText(page.report) as typeof page.report;
     if (thesisSurvivalRationale !== undefined) {
       page.report.thesisSurvivalRationale = thesisSurvivalRationale;
     }
     page.report.risks = page.report.risks.map((risk, index) =>
       "condition" in risk
-        ? { ...risk, metricIds: (risks[index] as Extract<typeof risk, { metricIds: string[] }>).metricIds }
+        ? {
+          ...risk,
+          by: (risks[index] as Extract<typeof risk, { by: string }>).by,
+          comparison: (risks[index] as Extract<typeof risk, { comparison: unknown }>).comparison,
+        }
         : risk,
     );
     page.report.nextObservations = page.report.nextObservations.map((observation, index) =>
@@ -146,7 +156,7 @@ function fixtureCandidate(value: unknown): MarketSnapshot {
         ? {
           ...observation,
           by: (nextObservations[index] as Extract<typeof observation, { by: string }>).by,
-          metricIds: (nextObservations[index] as Extract<typeof observation, { metricIds: string[] }>).metricIds,
+          comparison: (nextObservations[index] as Extract<typeof observation, { comparison: unknown }>).comparison,
         }
         : observation,
     );

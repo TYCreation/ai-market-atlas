@@ -9,9 +9,19 @@ export type ThesisStance = "bullish" | "neutral" | "bearish";
 export type BilingualText = Record<Locale, string>;
 
 /** A cited condition that would weaken or invalidate the page thesis. */
+export type MetricComparison = {
+  metricId: string;
+  operator: "<" | "<=" | ">" | ">=" | "=";
+  value: number;
+  unit: string;
+  currency?: string;
+};
+
 export type FalsifiableRisk = {
   condition: BilingualText;
-  metricIds: string[];
+  by: string;
+  comparison: MetricComparison;
+  consequence: BilingualText;
 };
 
 /** A dated, threshold-bearing reading to revisit in the next edition. */
@@ -19,7 +29,8 @@ export type NextObservation = {
   what: BilingualText;
   by: string;
   threshold: BilingualText;
-  metricIds: string[];
+  comparison: MetricComparison;
+  consequence: BilingualText;
 };
 
 export type SourceRecord = {

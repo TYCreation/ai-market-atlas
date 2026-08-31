@@ -1745,6 +1745,11 @@ h2 {
   margin: 0;
 }
 
+.watch-card .watch-consequence {
+  color: var(--ink);
+  margin-top: 10px;
+}
+
 .watch-owner {
   color: var(--cyan);
   display: block;

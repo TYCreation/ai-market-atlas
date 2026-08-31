@@ -8,6 +8,7 @@ import type {
   Locale,
   FalsifiableRisk,
   MarketSnapshot,
+  MetricComparison,
   MetricRecord,
   MetricStatus,
   NextObservation,
@@ -26,12 +27,13 @@ export type LocalizedPageReport = {
   opposingEvidence: Array<{ text: string; metricIds: string[] }>;
   catalysts: string[];
   analystNotes: string[];
-  risks: Array<{ condition: string; metricIds: string[] }>;
+  risks: Array<{ condition: string; by: string; consequence: string; comparison: MetricComparison }>;
   nextObservations: Array<{
     what: string;
     by: string | null;
     threshold: string;
-    metricIds: string[];
+    consequence: string;
+    comparison: MetricComparison | null;
     legacy: boolean;
   }>;
 };
@@ -90,9 +92,9 @@ const currentSnapshot = validateSnapshot(currentSnapshotJson);
 
 function localizeReport(report: PageReport, locale: Locale): LocalizedPageReport {
   const isFalsifiableRisk = (value: PageReport["risks"][number]): value is FalsifiableRisk =>
-    typeof value === "object" && value !== null && "condition" in value && "metricIds" in value;
+    typeof value === "object" && value !== null && "condition" in value && "by" in value && "comparison" in value && "consequence" in value;
   const isNextObservation = (value: PageReport["nextObservations"][number]): value is NextObservation =>
-    typeof value === "object" && value !== null && "what" in value && "by" in value && "threshold" in value && "metricIds" in value;
+    typeof value === "object" && value !== null && "what" in value && "by" in value && "threshold" in value && "comparison" in value && "consequence" in value;
   const legacyNotes = report.risks.filter((risk): risk is Exclude<typeof risk, FalsifiableRisk> => !isFalsifiableRisk(risk));
   return {
     eyebrow: report.eyebrow[locale],
@@ -116,21 +118,25 @@ function localizeReport(report: PageReport, locale: Locale): LocalizedPageReport
     analystNotes: (report.analystNotes ?? legacyNotes).map((item) => item[locale]),
     risks: report.risks.filter(isFalsifiableRisk).map((risk) => ({
       condition: risk.condition[locale],
-      metricIds: risk.metricIds,
+      by: risk.by,
+      consequence: risk.consequence[locale],
+      comparison: risk.comparison,
     })),
     nextObservations: report.nextObservations.map((item) => isNextObservation(item)
       ? {
         what: item.what[locale],
         by: item.by,
         threshold: item.threshold[locale],
-        metricIds: item.metricIds,
+        consequence: item.consequence[locale],
+        comparison: item.comparison,
         legacy: false,
       }
       : {
         what: item[locale],
         by: null,
         threshold: locale === "en" ? "Legacy observation; threshold unavailable." : "舊版觀察；門檻未提供。",
-        metricIds: [],
+        consequence: locale === "en" ? "Legacy observation cannot test the thesis." : "舊版觀察無法檢驗論點。",
+        comparison: null,
         legacy: true,
       }),
   };

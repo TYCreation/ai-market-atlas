@@ -140,6 +140,8 @@ export type DashboardConfig = {
     owner: string;
     deadline?: string | null;
     legacy?: boolean;
+    consequence?: string;
+    comparison?: string;
   }>;
   deepDive?: DeepDiveConfig;
   equityDive?: EquityDeepDiveConfig;
@@ -177,17 +179,23 @@ export function hydrateDashboard(
         provenance: metric,
       };
     }),
-    watchlist: report.risks.map((risk, index) => {
+    watchlist: Array.from({ length: Math.max(report.risks.length, report.nextObservations.length) }, (_, index) => {
+      const risk = report.risks[index];
       const observation = report.nextObservations[index];
       const fallback = config.watchlist[index] ?? config.watchlist[0];
+      const comparison = risk?.comparison ?? observation?.comparison;
       return {
         ...fallback,
         priority: fallback?.priority ?? `${index + 1}`,
-        title: observation?.what ?? fallback?.title ?? report.title,
-        body: risk.condition,
+        title: observation?.what ?? fallback?.title ?? risk?.condition ?? report.title,
+        body: risk?.condition ?? observation?.consequence ?? fallback?.body ?? "",
         owner: observation?.threshold ?? fallback?.owner ?? "",
         deadline: observation?.by,
         legacy: observation?.legacy,
+        consequence: observation?.consequence,
+        comparison: comparison
+          ? `${comparison.metricId} ${comparison.operator} ${comparison.value}${comparison.unit}${comparison.currency ? ` ${comparison.currency}` : ""}`
+          : undefined,
       };
     }),
     report,

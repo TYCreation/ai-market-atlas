@@ -49,7 +49,9 @@ function isBilingualText(value: unknown): value is BilingualText {
 }
 
 function isFalsifiableRisk(value: unknown): value is FalsifiableRisk {
-  return isRecord(value) && isBilingualText(value.condition) && Array.isArray(value.metricIds) && value.metricIds.every((id) => typeof id === "string");
+  return isRecord(value) && isBilingualText(value.condition) && typeof value.by === "string" &&
+    isRecord(value.comparison) && typeof value.comparison.metricId === "string" &&
+    isBilingualText(value.consequence);
 }
 
 function isMetricRecord(value: unknown): value is MetricRecord {

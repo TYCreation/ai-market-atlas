@@ -53,7 +53,8 @@ export type MarketBriefObservation = {
   what: BilingualText;
   by: string | null;
   threshold: BilingualText;
-  metricIds: string[];
+  comparison: NextObservation["comparison"] | null;
+  consequence: BilingualText;
   legacy: boolean;
 };
 
@@ -90,6 +91,16 @@ export function isCanonicalUtcTimestamp(value: unknown): value is string {
     !Number.isNaN(Date.parse(value)) &&
     new Date(value).toISOString() === value
   );
+}
+
+function isCalendarDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
 }
 
 /**
@@ -142,6 +153,18 @@ const BRIEF_VALIDATOR_HELPER = `      function isCanonicalUtcTimestamp(value) {
           second <= 59 &&
           millisecond <= 999
         );
+      }
+
+      function isCalendarDate(value) {
+        if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+          return false;
+        }
+        const year = Number(value.slice(0, 4));
+        const month = Number(value.slice(5, 7));
+        const day = Number(value.slice(8, 10));
+        const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
       }
 
 `;
@@ -257,14 +280,14 @@ function featuredSignalIds(snapshot: MarketSnapshot, ordered: readonly MetricRec
 }
 
 function isStructuredObservation(value: MarketSnapshot["pages"][PageSlug]["report"]["nextObservations"][number]): value is NextObservation {
-  return typeof value === "object" && value !== null && "what" in value && "by" in value && "threshold" in value && "metricIds" in value;
+  return typeof value === "object" && value !== null && "what" in value && "by" in value && "threshold" in value && "comparison" in value && "consequence" in value;
 }
 
 function nextWeekObservations(snapshot: MarketSnapshot): MarketBriefObservation[] {
   if (snapshot.cadence === "wednesday") return [];
-  return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.slice(0, 1).map((observation) =>
+  return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.map((observation) =>
     isStructuredObservation(observation)
-      ? { ...observation, metricIds: [...observation.metricIds], legacy: false }
+      ? { ...observation, comparison: { ...observation.comparison }, legacy: false }
       : {
         what: observation,
         by: null,
@@ -272,7 +295,11 @@ function nextWeekObservations(snapshot: MarketSnapshot): MarketBriefObservation[
           en: "Legacy observation; threshold unavailable.",
           zh: "舊版觀察；門檻未提供。",
         },
-        metricIds: [],
+        comparison: null,
+        consequence: {
+          en: "Legacy observation cannot test the thesis.",
+          zh: "舊版觀察無法檢驗論點。",
+        },
         legacy: true,
       },
   ));
@@ -356,15 +383,20 @@ function isLocalizedSignal(value: unknown): value is LocalizedSignal {
 function isMarketBriefObservation(value: unknown): value is MarketBriefObservation {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<MarketBriefObservation>;
-  const metricIds = Array.isArray(candidate.metricIds) ? candidate.metricIds : [];
-  if (!isBilingualText(candidate.what) || !isBilingualText(candidate.threshold) || typeof candidate.legacy !== "boolean") return false;
-  if (candidate.legacy) return candidate.by === null && metricIds.length === 0;
-  return isCanonicalUtcTimestamp(candidate.by) || (
+  if (!isBilingualText(candidate.what) || !isBilingualText(candidate.threshold) || !isBilingualText(candidate.consequence) || typeof candidate.legacy !== "boolean") return false;
+  if (candidate.legacy) return candidate.by === null && candidate.comparison === null;
+  const comparison = candidate.comparison;
+  const validBy = (
+    isCanonicalUtcTimestamp(candidate.by) || (
     typeof candidate.by === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(candidate.by) &&
-    !Number.isNaN(Date.parse(`${candidate.by}T00:00:00.000Z`)) &&
-    new Date(`${candidate.by}T00:00:00.000Z`).toISOString().slice(0, 10) === candidate.by
-  ) && metricIds.length > 0 && metricIds.every((id) => typeof id === "string" && id.length > 0);
+    isCalendarDate(candidate.by)
+    )
+  );
+  // Keep the dated deadline check grouped before requiring the cited comparison.
+  if (!validBy || !comparison || typeof comparison !== "object") return false;
+  return typeof comparison.metricId === "string" && comparison.metricId.length > 0 &&
+    ["<", "<=", ">", ">=", "="].includes(comparison.operator) && typeof comparison.value === "number" &&
+    Number.isFinite(comparison.value) && typeof comparison.unit === "string" && comparison.unit.length > 0;
 }
 
 export function isMarketBriefPayload(value: unknown): value is MarketBriefPayload {

@@ -57,6 +57,15 @@ test("allows variable editorial counts while enforcing meaningful minimums", () 
   );
 });
 
+test("requires each risk and observation to carry a dated compatible metric comparison", () => {
+  const missingComparison = structuredClone(candidate);
+  delete missingComparison.pages["/compute"].report.risks[0].comparison;
+  assert.throws(
+    () => assertMarketSnapshot(missingComparison),
+    /pages\.\/compute\.report\.risks\[0\]\.comparison must be an object/,
+  );
+});
+
 test("rejects a required metric without sources", () => {
   const broken = structuredClone(candidate);
   broken.metrics["pulse.infrastructure_spend"].sourceIds = [];

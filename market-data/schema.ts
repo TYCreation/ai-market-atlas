@@ -195,6 +195,57 @@ function assertMetricReferences(ids: string[], path: string, metrics: UnknownRec
   }
 }
 
+const COMPATIBLE_UNITS = [
+  ["$B", "billion-usd", "$T", "trillion-usd"],
+  ["%", "percent"],
+  ["GW", "gigawatt"],
+  ["MW", "megawatt"],
+  ["TW", "terawatt"],
+  ["T tokens", "trillion-tokens"],
+  ["B tokens", "billion-tokens"],
+  ["USD", "US$"],
+  ["TWD", "NT$"],
+  ["EUR", "€"],
+] as const;
+const COMPATIBLE_CURRENCIES = [["USD", "US$"], ["TWD", "NT$"], ["EUR", "€"]] as const;
+
+function unitsCompatible(left: string, right: string): boolean {
+  if (left === right) return true;
+  return COMPATIBLE_UNITS.some((group) =>
+    group.some((unit) => unit === left) && group.some((unit) => unit === right),
+  );
+}
+
+function currenciesCompatible(left: string, right: string): boolean {
+  if (left === right) return true;
+  return COMPATIBLE_CURRENCIES.some((group) =>
+    group.some((currency) => currency === left) && group.some((currency) => currency === right),
+  );
+}
+
+function assertMetricComparison(value: unknown, path: string, metrics: UnknownRecord): void {
+  const comparison = requireRecord(value, path);
+  const metricId = requireString(comparison.metricId, `${path}.metricId`);
+  if (!Object.prototype.hasOwnProperty.call(metrics, metricId)) fail(`${path}.metricId references missing metric ${metricId}`);
+  assertMetricReferences([metricId], `${path}.metricId`, metrics);
+  if (!["<", "<=", ">", ">=", "="].includes(requireString(comparison.operator, `${path}.operator`))) {
+    fail(`${path}.operator is unsupported`);
+  }
+  requireNumber(comparison.value, `${path}.value`);
+  const metric = requireRecord(metrics[metricId], `metrics.${metricId}`);
+  const unit = requireString(comparison.unit, `${path}.unit`);
+  if (!unitsCompatible(unit, requireString(metric.unit, `metrics.${metricId}.unit`))) {
+    fail(`${metricId} has an incompatible unit: ${path}.unit must match cited metric unit`);
+  }
+  if (metric.currency !== undefined) {
+    if (!currenciesCompatible(requireString(comparison.currency, `${path}.currency`), metric.currency)) {
+      fail(`${metricId} has a currency mismatch: ${path}.currency must match cited metric currency`);
+    }
+  } else if (comparison.currency !== undefined) {
+    fail(`${path}.currency is only allowed for a cited currency metric`);
+  }
+}
+
 function assertMinimum(items: unknown[], path: string): void {
   if (items.length === 0) fail(`${path} must contain at least one item`);
 }
@@ -214,10 +265,8 @@ function assertEditorialPayload(
 
   const risks = requireArray(report.risks, `${path}.risks`);
   const observations = requireArray(report.nextObservations, `${path}.nextObservations`);
-  const hasStrictRisks = risks.every(isRecord) && risks.every((risk) => "condition" in risk || "metricIds" in risk);
-  const hasStrictObservations = observations.every(isRecord) && observations.every((observation) =>
-    "what" in observation || "by" in observation || "threshold" in observation || "metricIds" in observation
-  );
+  const hasStrictRisks = risks.every(isRecord) && risks.every((risk) => "condition" in risk);
+  const hasStrictObservations = observations.every(isRecord) && observations.every((observation) => "what" in observation);
   if (strict) {
     assertMinimum(risks, `${path}.risks`);
     assertMinimum(observations, `${path}.nextObservations`);
@@ -228,9 +277,9 @@ function assertEditorialPayload(
     for (const [index, value] of risks.entries()) {
       const risk = requireRecord(value, `${path}.risks[${index}]`);
       requireBilingual(risk.condition, `${path}.risks[${index}].condition`);
-      const metricIds = requireStringArray(risk.metricIds, `${path}.risks[${index}].metricIds`);
-      if (metricIds.length === 0) fail(`${path}.risks[${index}].metricIds must cite at least one metric`);
-      assertMetricReferences(metricIds, `${path}.risks[${index}].metricIds`, metrics);
+      requireEditorialDate(risk.by, `${path}.risks[${index}].by`);
+      assertMetricComparison(risk.comparison, `${path}.risks[${index}].comparison`, metrics);
+      requireBilingual(risk.consequence, `${path}.risks[${index}].consequence`);
     }
   } else if (!strict) {
     for (const [index, value] of risks.entries()) requireBilingual(value, `${path}.risks[${index}]`);
@@ -241,9 +290,8 @@ function assertEditorialPayload(
       requireBilingual(observation.what, `${path}.nextObservations[${index}].what`);
       requireEditorialDate(observation.by, `${path}.nextObservations[${index}].by`);
       requireBilingual(observation.threshold, `${path}.nextObservations[${index}].threshold`);
-      const metricIds = requireStringArray(observation.metricIds, `${path}.nextObservations[${index}].metricIds`);
-      if (metricIds.length === 0) fail(`${path}.nextObservations[${index}].metricIds must cite at least one metric`);
-      assertMetricReferences(metricIds, `${path}.nextObservations[${index}].metricIds`, metrics);
+      assertMetricComparison(observation.comparison, `${path}.nextObservations[${index}].comparison`, metrics);
+      requireBilingual(observation.consequence, `${path}.nextObservations[${index}].consequence`);
     }
   } else if (!strict) {
     for (const [index, value] of observations.entries()) requireBilingual(value, `${path}.nextObservations[${index}]`);

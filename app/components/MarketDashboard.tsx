@@ -50,7 +50,7 @@ const copy = {
     sectionTwoTitle: "壓力正在何處累積",
     sectionThreeKicker: "03 · 市場追蹤",
     sectionFourKicker: "04 · 領導者觀察清單",
-    sectionFourTitle: "會議室裡的三個問題",
+    sectionFourTitle: "會議室裡的問題",
     methodLabel: "方法說明。",
     archiveLink: "月度封存",
     methodologyLink: "資料與審查方法",
@@ -85,7 +85,7 @@ const copy = {
     sectionTwoTitle: "Where pressure is building",
     sectionThreeKicker: "03 · Market tracker",
     sectionFourKicker: "04 · Leadership watchlist",
-    sectionFourTitle: "Three questions for the room",
+    sectionFourTitle: "Questions for the room",
     methodLabel: "Method note.",
     archiveLink: "Monthly archive",
     methodologyLink: "Sources & review method",
@@ -470,11 +470,13 @@ export function MarketDashboard({
                 </div>
                 <h3>{item.title}</h3>
                 <p>{item.body}</p>
+                {item.consequence ? <p className="watch-consequence">{item.consequence}</p> : null}
                 {item.deadline ? (
                   <span className="watch-owner">
                     {locale === "zh" ? "觀察截至" : "Observe by"} <TaipeiTime value={item.deadline} locale={locale} /> · {item.owner}
                   </span>
                 ) : <span className="watch-owner">{item.owner}</span>}
+                {item.comparison ? <span className="watch-owner">{locale === "zh" ? "比較" : "Compare"}: {item.comparison}</span> : null}
               </article>
             ))}
           </div>

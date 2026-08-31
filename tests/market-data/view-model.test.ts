@@ -38,9 +38,12 @@ test("localizes falsifiable risks and dated threshold observations without fixed
   assert.ok(report.analystNotes.length > 0);
   assert.ok(report.risks.length > 0);
   assert.match(report.risks[0].condition, /^The thesis weakens if:/);
+  assert.equal(report.risks[0].comparison.metricId, "compute.accelerator_pool");
+  assert.equal(report.risks[0].comparison.operator, ">=");
   assert.equal(report.nextObservations[0].by, "2026-08-15");
   assert.equal(report.nextObservations[0].legacy, false);
   assert.match(report.nextObservations[0].threshold, /weaken the thesis/i);
+  assert.equal(report.nextObservations[0].comparison?.unit, "$B");
 });
 
 test("marks legacy published observation thresholds as unavailable without relaxing candidates", () => {

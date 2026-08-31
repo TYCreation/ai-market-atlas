@@ -143,7 +143,45 @@
         "en": "Legacy observation; threshold unavailable.",
         "zh": "舊版觀察；門檻未提供。"
       },
-      "metricIds": [],
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · API pricing",
+        "zh": "下一讀 · API 定價"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · production cohort",
+        "zh": "下一讀 · 正式環境群組"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
       "legacy": true
     },
     {
@@ -156,7 +194,45 @@
         "en": "Legacy observation; threshold unavailable.",
         "zh": "舊版觀察；門檻未提供。"
       },
-      "metricIds": [],
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · fifty-day participation",
+        "zh": "下一讀 · 五十日線參與率"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · cash conversion",
+        "zh": "下一讀 · 現金轉化"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
       "legacy": true
     },
     {
@@ -169,7 +245,45 @@
         "en": "Legacy observation; threshold unavailable.",
         "zh": "舊版觀察；門檻未提供。"
       },
-      "metricIds": [],
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · workload density",
+        "zh": "下一讀 · 工作負載密度"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · volume ramps",
+        "zh": "下一讀 · 出貨放量"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
       "legacy": true
     },
     {
@@ -182,7 +296,45 @@
         "en": "Legacy observation; threshold unavailable.",
         "zh": "舊版觀察；門檻未提供。"
       },
-      "metricIds": [],
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · signed power capacity",
+        "zh": "下一讀 · 已簽約電力容量"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · PPA quality",
+        "zh": "下一讀 · PPA 品質"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
       "legacy": true
     },
     {
@@ -195,7 +347,45 @@
         "en": "Legacy observation; threshold unavailable.",
         "zh": "舊版觀察；門檻未提供。"
       },
-      "metricIds": [],
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · data flywheel",
+        "zh": "下一讀 · 資料飛輪"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · gross margin",
+        "zh": "下一讀 · 毛利率"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
       "legacy": true
     },
     {
@@ -208,7 +398,45 @@
         "en": "Legacy observation; threshold unavailable.",
         "zh": "舊版觀察；門檻未提供。"
       },
-      "metricIds": [],
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · injunction status",
+        "zh": "下一讀 · 禁制令進度"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
+      "legacy": true
+    },
+    {
+      "what": {
+        "en": "Next read · design wins",
+        "zh": "下一讀 · 設計導入"
+      },
+      "by": null,
+      "threshold": {
+        "en": "Legacy observation; threshold unavailable.",
+        "zh": "舊版觀察；門檻未提供。"
+      },
+      "comparison": null,
+      "consequence": {
+        "en": "Legacy observation cannot test the thesis.",
+        "zh": "舊版觀察無法檢驗論點。"
+      },
       "legacy": true
     }
   ],

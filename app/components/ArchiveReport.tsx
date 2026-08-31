@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { MonthlyArchive } from "../../market-data/monthly.ts";
 import type { SourceRecord } from "../../market-data/types.ts";
+import type { FalsifiableRisk } from "../../market-data/types.ts";
 import { SiteCredit } from "./SiteCredit";
 import { TaipeiTime } from "./MetricProvenance";
 
-function isFalsifiableRisk(value: MonthlyArchive["risks"][number]): value is Extract<MonthlyArchive["risks"][number], { condition: unknown }> {
-  return typeof value === "object" && value !== null && "condition" in value;
+function isFalsifiableRisk(value: MonthlyArchive["risks"][number]): value is FalsifiableRisk {
+  return typeof value === "object" && value !== null && "condition" in value && "by" in value && "comparison" in value && "consequence" in value;
 }
 
 function monthLabel(month: string, locale: "zh" | "en") {
@@ -115,13 +116,17 @@ export function ArchiveReport({
             </div>
           </div>
           <ul className="archive-list">
-            {(analystNotes.length > 0 ? analystNotes : risks.map((risk) => risk.condition)).map((item, index) => <li key={index}>{item[locale]}</li>)}
+            {analystNotes.length > 0
+              ? analystNotes.map((item, index) => <li key={index}>{item[locale]}</li>)
+              : risks.map((risk, index) => <li key={index}>{risk.condition[locale]}</li>)}
           </ul>
           {analystNotes.length > 0 && risks.length > 0 ? (
             <>
               <p className="section-kicker">{locale === "en" ? "Falsification risks" : "可驗證的風險"}</p>
               <ul className="archive-list">
-                {risks.map((risk, index) => <li key={index}>{risk.condition[locale]}</li>)}
+                {risks.map((risk, index) => <li key={index}>
+                  {risk.condition[locale]} {risk.consequence[locale]} · {risk.by} · {risk.comparison.metricId} {risk.comparison.operator} {risk.comparison.value}{risk.comparison.unit}
+                </li>)}
               </ul>
             </>
           ) : null}

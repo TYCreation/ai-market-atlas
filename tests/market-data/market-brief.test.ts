@@ -503,6 +503,30 @@ test("payload validation returns false instead of throwing for malformed nested 
   assert.equal(isMarketBriefPayload(malformed), false);
 });
 
+test("rejects timestamp observations without a structural metric comparison", async () => {
+  const brief = buildMarketBrief(await currentSnapshot());
+  const observation = brief.nextWeekObservations[0];
+  assert.ok(observation && !observation.legacy);
+  observation.comparison = null;
+  assert.equal(isMarketBriefPayload(brief), false);
+});
+
+test("brief generation preserves nonuniform observation and tag counts", async () => {
+  const snapshot = await currentSnapshot();
+  snapshot.pages["/"].report.thesis.tags.en.push("Execution risk", "Customer proof");
+  snapshot.pages["/"].report.thesis.tags.zh.push("執行風險", "客戶證明");
+  snapshot.pages["/compute"].report.nextObservations = snapshot.pages["/compute"].report.nextObservations.slice(0, 1);
+  snapshot.pages["/energy"].report.nextObservations.push(
+    structuredClone(snapshot.pages["/energy"].report.nextObservations[0]),
+  );
+  const brief = buildMarketBrief(snapshot);
+  const expectedObservationCount = Object.values(snapshot.pages)
+    .reduce((total, page) => total + page.report.nextObservations.length, 0);
+  assert.equal(brief.nextWeekObservations.length, expectedObservationCount);
+  assert.equal(brief.labels.tags.en.length, 5);
+  assert.equal(brief.labels.tags.zh.length, 5);
+});
+
 test("rejects non-canonical, stale, and future signal observations", async () => {
   const cases = [
     ["non-ISO date", "Aug 1 2026", /ISO|invalid/i],

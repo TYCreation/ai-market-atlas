@@ -336,10 +336,9 @@ test("rejects unsupported numeric claims across general bilingual report fields"
       snapshot.pages["/compute"].report.thesis.body = { en: "Thesis 999", zh: "論點 999" };
     },
     (snapshot) => {
-      snapshot.pages["/compute"].report.risks = [{
-        condition: { en: "Risk 999", zh: "風險 999" },
-        metricIds: ["compute.accelerator_pool"],
-      }];
+      const risk = structuredClone(snapshot.pages["/compute"].report.risks[0]);
+      if ("condition" in risk) risk.condition = { en: "Risk 999", zh: "風險 999" };
+      snapshot.pages["/compute"].report.risks = [risk];
     },
   ];
 
@@ -358,10 +357,12 @@ test("accepts numeric claims matched by the page citation set", async () => {
     en: "Accelerator pool 242",
     zh: "加速器市場 242",
   };
-  snapshot.pages["/compute"].report.risks = [{
-    condition: { en: "Accelerator pool remains 242", zh: "加速器市場維持 242" },
-    metricIds: ["compute.accelerator_pool"],
-  }];
+  const risk = structuredClone(snapshot.pages["/compute"].report.risks[0]);
+  if ("condition" in risk) risk.condition = {
+    en: "Accelerator pool remains 242",
+    zh: "加速器市場維持 242",
+  };
+  snapshot.pages["/compute"].report.risks = [risk];
 
   assert.equal((await reviewSnapshot(snapshot)).decision, "auto_publish");
 });
