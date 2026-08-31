@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "2026-08-05-wednesday:24392efee4353568adb9b137a834b768e74b734b418c012f6a9d5e3996fab261",
+  "runId": "2026-08-05-wednesday",
+  "reviewedAt": "2026-08-05T01:12:30.900Z",
+  "candidateSha256": "24392efee4353568adb9b137a834b768e74b734b418c012f6a9d5e3996fab261",
+  "decision": "auto_publish",
+  "checks": [
+    {
+      "id": "schema",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "completed-session",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "required-data",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "source-health",
+      "status": "warn",
+      "issueCodes": [
+        "SOURCE_UNREACHABLE"
+      ]
+    },
+    {
+      "id": "source-conflict",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "anomaly",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "bilingual",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "narrative-evidence",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "no-change-integrity",
+      "status": "pass",
+      "issueCodes": []
+    }
+  ],
+  "issues": [
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "compute.amd_data_center_growth",
+      "page": "/compute",
+      "message": "Source amd-q2-2026 denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "amd-q2-2026"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "compute.amd_data_center_growth",
+      "page": "/compute",
+      "message": "Source amd-q2-2026-sec denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "amd-q2-2026-sec"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "pulse.amd_data_center_revenue",
+      "page": "/",
+      "message": "Source amd-q2-2026 denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "amd-q2-2026"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "pulse.amd_data_center_revenue",
+      "page": "/",
+      "message": "Source amd-q2-2026-sec denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "amd-q2-2026-sec"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.market_2030_usd_b",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.onsemi_q2_revenue",
+      "page": "/sic",
+      "message": "Source onsemi-q2-2026-sec denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "onsemi-q2-2026-sec"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.wafer_frontier_mm",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "stocks.amd_q2_revenue_growth",
+      "page": "/stocks",
+      "message": "Source amd-q2-2026 denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "amd-q2-2026"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "stocks.amd_q2_revenue_growth",
+      "page": "/stocks",
+      "message": "Source amd-q2-2026-sec denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "amd-q2-2026-sec"
+      ]
+    }
+  ],
+  "reviewedMetricCount": 65,
+  "reviewedSourceCount": 20
+}

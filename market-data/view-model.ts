@@ -148,18 +148,23 @@ function metricKind(metricKind: MetricRecord["kind"], policyClass: string): Metr
   return "published-fact";
 }
 
-function metricView(snapshot: MarketSnapshot, metricId: string, locale: Locale): MetricView | undefined {
+function metricView(
+  snapshot: MarketSnapshot,
+  metricId: string,
+  locale: Locale,
+  historical = false,
+): MetricView | undefined {
   const metric = snapshot.metrics[metricId];
   if (!metric) throw new Error(`Snapshot is missing metric ${metricId}`);
 
   const freshness = evaluateMetricFreshness(metric, snapshot.dataCutoff);
   if (freshness.state === "stale") {
-    if (metric.required) {
+    if (metric.required && !historical) {
       throw new Error(
         `Required metric is stale and cannot be rendered: ${metric.id} (${freshness.policy.class} policy)`,
       );
     }
-    return undefined;
+    if (!historical) return undefined;
   }
 
   const direction = metric.previousNumericValue === undefined
@@ -174,18 +179,24 @@ function metricView(snapshot: MarketSnapshot, metricId: string, locale: Locale):
     value: metric.display[locale],
     sourceIds: [...metric.sourceIds],
     kind: metricKind(metric.kind, freshness.policy.class),
-    freshness: freshness.state === "dated" ? "dated" : "current",
+    freshness: freshness.state === "current" ? "current" : "dated",
     asOf: metric.asOf,
     direction,
   };
 }
 
-function kpiFor(snapshot: MarketSnapshot, slug: PageSlug, index: number, locale: Locale): KpiView {
+function kpiFor(
+  snapshot: MarketSnapshot,
+  slug: PageSlug,
+  index: number,
+  locale: Locale,
+  historical = false,
+): KpiView {
   const catalog = KPI_CATALOG.find(
     ([page, kpiIndex]) => page === slug && kpiIndex === index,
   );
   if (!catalog) throw new Error(`No KPI mapping for ${slug} index ${index}`);
-  const view = metricView(snapshot, catalog[2], locale);
+  const view = metricView(snapshot, catalog[2], locale, historical);
   if (!view) throw new Error(`Required KPI metric is stale: ${catalog[2]}`);
   return view;
 }
@@ -218,20 +229,23 @@ export function buildSourceBundles(snapshot: MarketSnapshot): Record<PageSlug, S
   ) as Record<PageSlug, SourceBundle>;
 }
 
-export function createMarketViewModel(snapshot: MarketSnapshot) {
+export function createMarketViewModel(
+  snapshot: MarketSnapshot,
+  options: { historical?: boolean } = {},
+) {
   const sourceBundles = buildSourceBundles(snapshot);
   return {
     snapshot,
     sourceBundles,
     getKpi(slug: PageSlug, index: number, locale: Locale) {
-      return kpiFor(snapshot, slug, index, locale);
+      return kpiFor(snapshot, slug, index, locale, options.historical);
     },
     getMetric(metricId: string, locale: Locale): MetricView | undefined {
-      return metricView(snapshot, metricId, locale);
+      return metricView(snapshot, metricId, locale, options.historical);
     },
     getStockMetric(ticker: string, field: StockMetricField, locale: Locale): MetricView | undefined {
       const metricId = stockMetricId(ticker, field);
-      return metricView(snapshot, metricId, locale);
+      return metricView(snapshot, metricId, locale, options.historical);
     },
     getMetricStatus(metricId: string): MetricStatus {
       const metric = snapshot.metrics[metricId];

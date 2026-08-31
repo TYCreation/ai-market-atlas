@@ -123,6 +123,20 @@ test("omits an optional stale stock observation", () => {
   assert.equal(view.getStockMetric("NVDA", "price", "en"), undefined);
 });
 
+test("renders required stale facts from an immutable historical edition without relaxing current reads", () => {
+  const snapshot = structuredClone(
+    JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,
+  );
+  snapshot.dataCutoff = "2026-08-01T01:00:00.000Z";
+  snapshot.metrics["pulse.infrastructure_spend"].asOf = "2026-01-01T00:00:00.000Z";
+
+  const historical = createMarketViewModel(snapshot, { historical: true }).getKpi("/", 0, "en");
+
+  assert.equal(historical.freshness, "dated");
+  assert.equal(historical.metricId, "pulse.infrastructure_spend");
+  assert.throws(() => createMarketViewModel(snapshot).getKpi("/", 0, "en"), /Required metric is stale/);
+});
+
 test("hydrates the stocks reader without loading stale per-ticker quotes", () => {
   const snapshot = structuredClone(
     JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,

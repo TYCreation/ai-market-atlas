@@ -107,6 +107,7 @@ export function MarketDashboard({
   edition,
   pageEdition,
   initialLocale = "zh",
+  alternateLocaleHref,
 }: {
   config: DashboardConfig;
   chineseConfig: DashboardConfig;
@@ -114,6 +115,7 @@ export function MarketDashboard({
   edition: LocalizedEditionMeta;
   pageEdition: LocalizedPageEdition;
   initialLocale?: Locale;
+  alternateLocaleHref?: string;
 }) {
   const [horizon, setHorizon] = useState<(typeof horizons)[number]>("Q3");
   const locale = initialLocale;
@@ -194,7 +196,7 @@ export function MarketDashboard({
   }, [activeConfig.slug]);
 
   const alternateLocale: Locale = locale === "zh" ? "en" : "zh";
-  const alternateHref = localizedPath(activeConfig.slug, alternateLocale);
+  const alternateHref = alternateLocaleHref ?? localizedPath(activeConfig.slug, alternateLocale);
 
   return (
     <div className="site-shell">

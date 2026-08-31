@@ -1,4 +1,5 @@
-import { loadMarketViewModel } from "../../market-data/view-model";
+import { createMarketViewModel, loadMarketViewModel } from "../../market-data/view-model";
+import type { MarketSnapshot } from "../../market-data/types";
 import { hydrateDashboard, type DashboardConfig } from "../content";
 import {
   dashboardHeadings,
@@ -10,6 +11,7 @@ import { MarketDashboard } from "./MarketDashboard";
 import { ReportStructuredData } from "./StructuredData";
 import { normalizeTaiwanCopy } from "../taiwan-copy";
 import type { EditionMeta, ReaderEditionMeta } from "../../market-data/view-model";
+import { BriefPillarIndex } from "./BriefPillarIndex";
 
 function toReaderEdition({
   cadence,
@@ -24,12 +26,22 @@ export async function MarketDashboardPage({
   config,
   chineseConfig,
   locale = "zh",
+  snapshot,
+  routePath,
+  alternateRoutePath,
+  showPillarIndex = true,
 }: {
   config: DashboardConfig;
   chineseConfig: DashboardConfig;
   locale?: "zh" | "en";
+  snapshot?: MarketSnapshot;
+  routePath?: string;
+  alternateRoutePath?: string;
+  showPillarIndex?: boolean;
 }) {
-  const viewModel = await loadMarketViewModel();
+  const viewModel = snapshot
+    ? createMarketViewModel(snapshot, { historical: true })
+    : await loadMarketViewModel();
   const edition = {
     en: toReaderEdition(viewModel.getEditionMeta("en")),
     zh: toReaderEdition(viewModel.getEditionMeta("zh")),
@@ -39,7 +51,7 @@ export async function MarketDashboardPage({
     zh: viewModel.getPageMeta(config.slug, "zh"),
   };
   const basePath = config.slug as DashboardPath;
-  const path = locale === "en" ? (basePath === "/" ? "/en" : `/en${basePath}`) : basePath;
+  const path = routePath ?? (locale === "en" ? (basePath === "/" ? "/en" : `/en${basePath}`) : basePath);
   const hydratedChineseConfig = normalizeTaiwanCopy(
     hydrateDashboard(chineseConfig, "zh", viewModel),
   );
@@ -49,6 +61,9 @@ export async function MarketDashboardPage({
 
   return (
     <>
+      {snapshot ? <span hidden data-market-route-identity>
+        {viewModel.snapshot.runId} {viewModel.snapshot.dataCutoff}
+      </span> : null}
       <ReportStructuredData
         path={path}
         headline={dashboardHeadings[basePath][locale]}
@@ -62,7 +77,9 @@ export async function MarketDashboardPage({
         edition={edition}
         pageEdition={pageEdition}
         initialLocale={locale}
+        alternateLocaleHref={alternateRoutePath}
       />
+      {showPillarIndex ? <BriefPillarIndex pillar={basePath} locale={locale} /> : null}
     </>
   );
 }

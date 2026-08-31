@@ -633,6 +633,32 @@ test("market brief verification fetches both HTML and canonical data.json", asyn
   assert.deepEqual(paths, ["/market-brief/", "/market-brief/data.json"]);
 });
 
+test("deployment verification binds a dated brief route to its retained snapshot identity", async () => {
+  const expectation = {
+    ...verificationExpectation,
+    routeIdentities: {
+      ...verificationExpectation.routeIdentities,
+      "/brief/2026-08-01/": {
+        kind: "brief-detail" as const,
+        briefDate: "2026-08-01",
+        runId: "2026-08-01-saturday",
+        dataCutoff: "2026-08-01T01:00:00.000Z",
+        sourceIds: ["atlas-model"],
+      },
+    },
+  };
+
+  await verifyDeployment(
+    "https://preview.pages.dev",
+    ["/brief/2026-08-01/"],
+    expectation,
+    async () => new Response(
+      '2026-08-01 2026-08-01-saturday 2026-08-01T01:00:00.000Z <article id="source-atlas-model"></article>',
+      { status: 200 },
+    ),
+  );
+});
+
 test("market brief verification rejects missing, stale, and corrupt data.json without content retries", async (t) => {
   const payload = verificationBrief;
   const expectation = {

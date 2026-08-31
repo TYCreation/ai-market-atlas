@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "2026-08-12-wednesday:87550a88a7027e9309f7ebae96537aafb3332fe589d14d8d4c8c0059719cee66",
+  "runId": "2026-08-12-wednesday",
+  "reviewedAt": "2026-08-12T01:12:11.726Z",
+  "candidateSha256": "87550a88a7027e9309f7ebae96537aafb3332fe589d14d8d4c8c0059719cee66",
+  "decision": "auto_publish",
+  "checks": [
+    {
+      "id": "schema",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "completed-session",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "required-data",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "source-health",
+      "status": "warn",
+      "issueCodes": [
+        "SOURCE_UNREACHABLE"
+      ]
+    },
+    {
+      "id": "source-conflict",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "anomaly",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "bilingual",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "narrative-evidence",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "no-change-integrity",
+      "status": "pass",
+      "issueCodes": []
+    }
+  ],
+  "issues": [
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "energy.vertiv_q2_revenue_growth",
+      "page": "/energy",
+      "message": "Source vertiv-q2-2026 denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "vertiv-q2-2026"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.market_2030_usd_b",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.wafer_frontier_mm",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    }
+  ],
+  "reviewedMetricCount": 67,
+  "reviewedSourceCount": 23
+}

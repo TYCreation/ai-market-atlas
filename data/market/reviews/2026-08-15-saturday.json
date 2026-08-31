@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "2026-08-15-saturday:a341e7ae21e126726f9bce46fd34042a9a9dcf4ff9c31a8bbdaf7e8401346129",
+  "runId": "2026-08-15-saturday",
+  "reviewedAt": "2026-08-16T12:49:27.592Z",
+  "candidateSha256": "a341e7ae21e126726f9bce46fd34042a9a9dcf4ff9c31a8bbdaf7e8401346129",
+  "decision": "auto_publish",
+  "checks": [
+    {
+      "id": "schema",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "completed-session",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "required-data",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "source-health",
+      "status": "warn",
+      "issueCodes": [
+        "SOURCE_UNREACHABLE"
+      ]
+    },
+    {
+      "id": "source-conflict",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "anomaly",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "bilingual",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "narrative-evidence",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "no-change-integrity",
+      "status": "pass",
+      "issueCodes": []
+    }
+  ],
+  "issues": [
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "compute.cisco_ai_infrastructure_orders",
+      "page": "/compute",
+      "message": "Source cisco-q4-fy26-sec denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "cisco-q4-fy26-sec"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "energy.vertiv_q2_revenue_growth",
+      "page": "/energy",
+      "message": "Source vertiv-q2-2026 denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "vertiv-q2-2026"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "pulse.cisco_ai_infrastructure_orders",
+      "page": "/",
+      "message": "Source cisco-q4-fy26-sec denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "cisco-q4-fy26-sec"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.market_2030_usd_b",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.wafer_frontier_mm",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    }
+  ],
+  "reviewedMetricCount": 69,
+  "reviewedSourceCount": 25
+}

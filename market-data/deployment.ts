@@ -75,6 +75,13 @@ export type RouteVerificationIdentity =
       sourceIds: string[];
     }
   | {
+      kind: "brief-detail";
+      briefDate: string;
+      runId: string;
+      dataCutoff: string;
+      sourceIds: string[];
+    }
+  | {
       kind: "market-brief";
       dataCutoff: string;
       sourceIds: string[];
@@ -266,6 +273,19 @@ function assertVerificationExpectation(
         throw new Error("deployment market brief identity is invalid");
       }
     }
+    if (candidate.kind === "brief-detail") {
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(String(candidate.briefDate)) ||
+        !isSafeMarketRunId(String(candidate.runId)) ||
+        !isCanonicalUtcTimestamp(candidate.dataCutoff) ||
+        !Array.isArray(candidate.sourceIds) ||
+        candidate.sourceIds.length === 0 ||
+        candidate.sourceIds.some((sourceId) => typeof sourceId !== "string" || !/^[a-z0-9][a-z0-9._-]*$/.test(sourceId)) ||
+        new Set(candidate.sourceIds).size !== candidate.sourceIds.length
+      ) {
+        throw new Error("deployment brief detail identity is invalid");
+      }
+    }
   }
 }
 
@@ -360,6 +380,21 @@ function assertVerificationContent(
       sourceCardIds(body, true),
       identity.sourceIds,
       `${route} archive sources`,
+    );
+    return undefined;
+  }
+  if (identity.kind === "brief-detail") {
+    if (
+      !body.includes(identity.briefDate) ||
+      !body.includes(identity.runId) ||
+      !body.includes(identity.dataCutoff)
+    ) {
+      throw new Error(`${route} dated brief identity is missing`);
+    }
+    assertExactValues(
+      sourceCardIds(body, false),
+      identity.sourceIds,
+      `${route} dated brief sources`,
     );
     return undefined;
   }

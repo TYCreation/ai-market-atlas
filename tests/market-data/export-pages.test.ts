@@ -137,6 +137,22 @@ test("exports every current/archive route and public asset without localhost met
       "/en/archive",
       "/archive/2026-07",
       "/en/archive/2026-07",
+      "/brief/2026-08-26/",
+      "/brief/2026-08-22/",
+      "/brief/2026-08-19/",
+      "/brief/2026-08-15/",
+      "/brief/2026-08-12/",
+      "/brief/2026-08-08/",
+      "/brief/2026-08-05/",
+      "/brief/2026-08-01/",
+      "/en/brief/2026-08-26/",
+      "/en/brief/2026-08-22/",
+      "/en/brief/2026-08-19/",
+      "/en/brief/2026-08-15/",
+      "/en/brief/2026-08-12/",
+      "/en/brief/2026-08-08/",
+      "/en/brief/2026-08-05/",
+      "/en/brief/2026-08-01/",
       "/market-brief/",
     ]);
     for (const path of [
@@ -148,6 +164,8 @@ test("exports every current/archive route and public asset without localhost met
       "sic/index.html",
       "archive/index.html",
       "archive/2026-07/index.html",
+      "brief/2026-08-26/index.html",
+      "en/brief/2026-08-26/index.html",
       "market-brief/index.html",
       "market-brief/data.json",
       "404.html",
@@ -185,6 +203,18 @@ test("exports every current/archive route and public asset without localhost met
     const sitemap = await readFile(join(isolatedOutput, "sitemap.xml"), "utf8");
     assert.doesNotMatch(sitemap, /market-brief/);
     assert.match(sitemap, /https:\/\/aimarketatlas\.net\/stocks\//);
+    assert.match(sitemap, /https:\/\/aimarketatlas\.net\/brief\/2026-08-26\/<\/loc><lastmod>2026-08-26T01:00:00\.000Z<\/lastmod>/);
+    assert.match(sitemap, /https:\/\/aimarketatlas\.net\/brief\/2026-08-01\/<\/loc><lastmod>2026-08-01T01:00:00\.000Z<\/lastmod>/);
+
+    const datedZh = await readFile(join(isolatedOutput, "brief", "2026-08-26", "index.html"), "utf8");
+    const datedEn = await readFile(join(isolatedOutput, "en", "brief", "2026-08-26", "index.html"), "utf8");
+    assert.match(datedZh, /rel="canonical" href="https:\/\/aimarketatlas\.net\/brief\/2026-08-26\/"/);
+    assert.match(datedZh, /hrefLang="en" href="https:\/\/aimarketatlas\.net\/en\/brief\/2026-08-26\/"/);
+    assert.match(datedEn, /rel="canonical" href="https:\/\/aimarketatlas\.net\/en\/brief\/2026-08-26\/"/);
+    assert.match(datedEn, /hrefLang="zh-Hant" href="https:\/\/aimarketatlas\.net\/brief\/2026-08-26\/"/);
+    assert.match(datedZh, /2026-08-26-wednesday/);
+    assert.match(datedEn, /2026-08-26-wednesday/);
+    assert.match(await readFile(join(isolatedOutput, "stocks", "index.html"), "utf8"), /Historical briefs for this pillar|本主題的歷史市場快報/);
 
     const brief = await readFile(
       join(isolatedOutput, "market-brief", "index.html"),
@@ -277,6 +307,13 @@ test("exports every current/archive route and public asset without localhost met
         "wolfspeed-ai",
       ],
       payloadSha256: result.routeIdentities["/market-brief/"].payloadSha256,
+    });
+    assert.deepEqual(result.routeIdentities["/brief/2026-08-26/"], {
+      kind: "brief-detail",
+      briefDate: "2026-08-26",
+      runId: "2026-08-26-wednesday",
+      dataCutoff: "2026-08-26T01:00:00.000Z",
+      sourceIds: result.routeIdentities["/brief/2026-08-26/"].sourceIds,
     });
   } finally {
     await rm(isolatedRoot, { recursive: true, force: true });

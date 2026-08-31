@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "2026-08-26-wednesday:99c1488711ea5bc0c97496bf7c83a67e02654274670c332f8760baaf96b97ce1",
+  "runId": "2026-08-26-wednesday",
+  "reviewedAt": "2026-08-26T01:12:42.329Z",
+  "candidateSha256": "99c1488711ea5bc0c97496bf7c83a67e02654274670c332f8760baaf96b97ce1",
+  "decision": "auto_publish",
+  "checks": [
+    {
+      "id": "schema",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "completed-session",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "required-data",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "source-health",
+      "status": "warn",
+      "issueCodes": [
+        "SOURCE_UNREACHABLE"
+      ]
+    },
+    {
+      "id": "source-conflict",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "anomaly",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "bilingual",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "narrative-evidence",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "no-change-integrity",
+      "status": "pass",
+      "issueCodes": []
+    }
+  ],
+  "issues": [
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.market_2030_usd_b",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    },
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "sic.wafer_frontier_mm",
+      "page": "/sic",
+      "message": "Source infineon-200mm denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "infineon-200mm"
+      ]
+    }
+  ],
+  "reviewedMetricCount": 77,
+  "reviewedSourceCount": 29
+}
