@@ -19,6 +19,7 @@ export type GateIssue = {
     | "METRIC_STAGNATION"
     | "NARRATIVE_STAGNATION"
     | "MISSING_OPPOSING_EVIDENCE"
+    | "INSUFFICIENT_PAGE_EVIDENCE"
     | "MODELED_MARKET_PRESENTATION";
   severity: "block" | "warn";
   metricId?: string;
@@ -37,6 +38,14 @@ export type GateResult = {
 const FINANCIAL_METRIC = /(?:revenue.*growth|growth.*revenue|valuation|forward[_-]?pe|software[_-]?spend[_-]?growth)/i;
 const FORECAST_METRIC = /(?:market.*(?:size|20\d{2})|forecast|long[_-]?range|market_20\d{2})/i;
 const FIRST_PARTY_KINDS = new Set(["official", "company"]);
+const PAGE_EVIDENCE_FLOORS: Record<PageSlug, { supporting: number; opposing: number }> = {
+  "/": { supporting: 1, opposing: 1 },
+  "/stocks": { supporting: 1, opposing: 1 },
+  "/compute": { supporting: 1, opposing: 1 },
+  "/energy": { supporting: 1, opposing: 1 },
+  "/models": { supporting: 1, opposing: 1 },
+  "/sic": { supporting: 1, opposing: 1 },
+};
 
 function exceeds(value: number, threshold: number): boolean {
   const tolerance = Number.EPSILON * Math.max(1, Math.abs(value), Math.abs(threshold)) * 4;
@@ -409,8 +418,21 @@ export function evaluateQualityGate(
   }
 
   for (const [page, state] of Object.entries(current.pages) as Array<[PageSlug, MarketSnapshot["pages"][PageSlug]]>) {
+    const floor = PAGE_EVIDENCE_FLOORS[page];
+    const supportingEvidenceIsInsufficient =
+      state.report.supportingEvidence.length < floor.supporting ||
+      state.report.supportingEvidence.some((item) => item.metricIds.length === 0);
+    if (supportingEvidenceIsInsufficient) {
+      issues.push({
+        code: "INSUFFICIENT_PAGE_EVIDENCE",
+        severity: "block",
+        page,
+        message: `Every page must cite at least ${floor.supporting} supporting evidence item with metric IDs.`,
+        sourceIds: [],
+      });
+    }
     if (
-      state.report.opposingEvidence.length === 0 ||
+      state.report.opposingEvidence.length < floor.opposing ||
       state.report.opposingEvidence.some((item) => item.metricIds.length === 0)
     ) {
       issues.push({
@@ -422,6 +444,16 @@ export function evaluateQualityGate(
       });
     }
     const priorStance = previous.pages?.[page]?.thesisStance ?? state.previousThesisStance;
+    const stanceChanged = priorStance !== state.thesisStance;
+    if (stanceChanged && (state.thesisMetricIds.length === 0 || !state.changed)) {
+      issues.push({
+        code: "MATERIAL_CHANGE_MISMATCH",
+        severity: "block",
+        page,
+        message: "A stance change must mark the page changed and cite the thesis metrics that drove it.",
+        sourceIds: state.thesisMetricIds.flatMap((id) => current.metrics[id]?.sourceIds ?? []).sort(),
+      });
+    }
     const restated = thesisChanged(current, previous, page);
     const declaredRestatement = state.changeReasons.includes("thesis-reexamined-restated");
     if (restated && (!state.changed || !declaredRestatement || state.thesisMetricIds.length === 0)) {

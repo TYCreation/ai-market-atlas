@@ -148,7 +148,7 @@ function createSnapshot(runId: string): MarketSnapshot {
   const pages = {} as MarketSnapshot["pages"];
   for (const page of Object.keys(dashboards) as PageSlug[]) {
     const thesisMetricIds = KPI_CATALOG.filter((entry) => entry[0] === page).map((entry) => entry[2]);
-    pages[page] = { changed: false, changeReasons: [], verifiedAt: timestamp, thesisStance: "neutral", previousThesisStance: "neutral", thesisMetricIds, report: report(dashboards[page], chineseDashboards[page], thesisMetricIds, metrics[thesisMetricIds[0]], timestamp) };
+    pages[page] = { changed: false, changeReasons: [], verifiedAt: timestamp, thesisStance: "bullish", previousThesisStance: "bullish", thesisMetricIds, report: report(dashboards[page], chineseDashboards[page], thesisMetricIds, metrics[thesisMetricIds[0]], timestamp) };
   }
   return { schemaVersion: 1, runId, cadence: runId.endsWith("wednesday") ? "wednesday" : runId.endsWith("month-end") ? "month-end" : "saturday", generatedAt: timestamp, dataCutoff: timestamp, pages, sources, metrics, keySignalIds: KPI_CATALOG.map((entry) => entry[2]) };
 }

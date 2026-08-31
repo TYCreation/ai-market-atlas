@@ -90,6 +90,7 @@ const GATE_ISSUE_CODES = new Set<GateIssue["code"]>([
   "METRIC_STAGNATION",
   "NARRATIVE_STAGNATION",
   "MISSING_OPPOSING_EVIDENCE",
+  "INSUFFICIENT_PAGE_EVIDENCE",
   "MODELED_MARKET_PRESENTATION",
 ]);
 
@@ -114,7 +115,7 @@ export const REVIEW_CHECK_CODES = {
     "NARRATIVE_STAGNATION",
   ],
   bilingual: ["BILINGUAL_MISMATCH"],
-  "narrative-evidence": ["MISSING_OPPOSING_EVIDENCE"],
+  "narrative-evidence": ["MISSING_OPPOSING_EVIDENCE", "INSUFFICIENT_PAGE_EVIDENCE"],
   "no-change-integrity": ["MATERIAL_CHANGE_MISMATCH"],
 } as const satisfies Record<CheckId, readonly GateIssue["code"][]>;
 
@@ -355,7 +356,7 @@ export async function reviewCandidate(
     : [];
   const narrativeIssues = snapshot ? validateNarrativeEvidence(snapshot) : [];
   const editorialIssues = gateIssues.filter(
-    (candidate) => candidate.code === "MISSING_OPPOSING_EVIDENCE",
+    (candidate) => ["MISSING_OPPOSING_EVIDENCE", "INSUFFICIENT_PAGE_EVIDENCE"].includes(candidate.code),
   );
   const issues = sortGateIssues([...schemaIssues, ...completedIssues, ...gateIssues, ...narrativeIssues]);
 

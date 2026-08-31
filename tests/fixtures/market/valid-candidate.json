@@ -9,8 +9,8 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
-      "previousThesisStance": "neutral",
+      "thesisStance": "bullish",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "pulse.infrastructure_spend",
         "pulse.accelerator_market",
@@ -56,7 +56,7 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [{"text":{"en":"Demand signals support the thesis.","zh":"需求信號支持此論點。"},"metricIds":["pulse.infrastructure_spend"]}],
         "opposingEvidence": [
           {
             "text": {
@@ -222,8 +222,8 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
-      "previousThesisStance": "neutral",
+      "thesisStance": "bullish",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "stocks.basket_30d",
         "stocks.positive_breadth",
@@ -269,7 +269,7 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [{"text":{"en":"Breadth signals support the thesis.","zh":"廣度信號支持此論點。"},"metricIds":["stocks.positive_breadth"]}],
         "opposingEvidence": [
           {
             "text": {
@@ -429,8 +429,8 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
-      "previousThesisStance": "neutral",
+      "thesisStance": "bullish",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "compute.accelerator_pool",
         "compute.hbm_demand",
@@ -476,7 +476,7 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [{"text":{"en":"Capacity signals support the thesis.","zh":"產能信號支持此論點。"},"metricIds":["compute.accelerator_pool"]}],
         "opposingEvidence": [
           {
             "text": {
@@ -642,8 +642,8 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
-      "previousThesisStance": "neutral",
+      "thesisStance": "bullish",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "energy.announced_power_gw",
         "energy.committed_power_gw",
@@ -689,7 +689,7 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [{"text":{"en":"Power signals support the thesis.","zh":"電力信號支持此論點。"},"metricIds":["energy.announced_power_gw"]}],
         "opposingEvidence": [
           {
             "text": {
@@ -849,8 +849,8 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
-      "previousThesisStance": "neutral",
+      "thesisStance": "bullish",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "models.production_agents",
         "models.software_spend_growth",
@@ -896,7 +896,7 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [{"text":{"en":"Production signals support the thesis.","zh":"生產信號支持此論點。"},"metricIds":["models.production_agents"]}],
         "opposingEvidence": [
           {
             "text": {
@@ -1056,8 +1056,8 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
-      "previousThesisStance": "neutral",
+      "thesisStance": "bullish",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "sic.market_2030_usd_b",
         "sic.wafer_frontier_mm",
@@ -1103,7 +1103,7 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [{"text":{"en":"Market signals support the thesis.","zh":"市場信號支持此論點。"},"metricIds":["sic.wafer_frontier_mm"]}],
         "opposingEvidence": [
           {
             "text": {

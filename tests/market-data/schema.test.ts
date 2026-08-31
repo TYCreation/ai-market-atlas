@@ -23,6 +23,16 @@ test("rejects legacy editorial strings for a newly authored candidate", () => {
   );
 });
 
+test("rejects a neutral stance for a newly authored candidate", () => {
+  const neutralCandidate = structuredClone(candidate);
+  neutralCandidate.pages["/"].thesisStance = "neutral";
+
+  assert.throws(
+    () => assertMarketSnapshot(neutralCandidate),
+    /pages\.\/\.thesisStance must be directional for a newly authored candidate/,
+  );
+});
+
 test("requires checkable falsification conditions and dated threshold observations", () => {
   const strictCandidate = structuredClone(candidate);
   assert.doesNotThrow(() => assertMarketSnapshot(strictCandidate));

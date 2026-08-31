@@ -34,13 +34,15 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
    say what will be read, give a real deadline, state the threshold or reading that changes the
    thesis, cite its compatible metric comparison, and state the bilingual thesis consequence. Do not use fixed counts;
    provide at least one analyst note, falsifiable risk, and dated threshold observation for each
-   page. Use a directional
-   `thesisStance` only when the evidence supports it; a neutral stance is
-   valid when the evidence does not support a directional conclusion. A restated or sharpened
-   thesis must set `changed` to `true`, add the exact `thesis-reexamined-restated` change reason,
-   and cite its supporting `thesisMetricIds`. A thesis that survives unchanged—including on a
+   page. Use a directional `thesisStance` (`bullish` or `bearish`) for every page; newly authored
+   candidates may not use `neutral`. If a stance changes from the previous edition, set
+   `changed` to `true` and cite the thesis metrics that drove the change in `thesisMetricIds`.
+   A restated or sharpened thesis must set `changed` to `true`, add the exact
+   `thesis-reexamined-restated` change reason, and cite its supporting `thesisMetricIds`. A thesis that survives unchanged—including on a
    page changed for another reason—must include an argued bilingual
    `report.thesisSurvivalRationale` with cited `metricIds`.
+   Every page must include at least one cited supporting and one cited opposing evidence item;
+   this floor prevents `/models` and `/sic` from shipping starved reports.
 4. Run `npm run market:validate -- --candidate data/market/candidate.json`.
 5. Run
    `npm run market:review -- --candidate data/market/candidate.json --previous data/market/current.json --reviews-directory data/market/reviews`.

@@ -9,7 +9,7 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
+      "thesisStance": "bullish",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
         "pulse.infrastructure_spend",
@@ -222,7 +222,7 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
+      "thesisStance": "bullish",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
         "stocks.basket_30d",
@@ -429,7 +429,7 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
+      "thesisStance": "bullish",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
         "compute.accelerator_pool",
@@ -633,7 +633,7 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
+      "thesisStance": "bullish",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
         "energy.announced_power_gw",
@@ -840,7 +840,7 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
+      "thesisStance": "bullish",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
         "models.production_agents",
@@ -1047,7 +1047,7 @@
       "changed": false,
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
-      "thesisStance": "neutral",
+      "thesisStance": "bullish",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
         "sic.market_2030_usd_b",

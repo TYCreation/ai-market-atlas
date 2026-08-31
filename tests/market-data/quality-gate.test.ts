@@ -292,6 +292,7 @@ test("blocks an unchanged thesis without a cited survival rationale", () => {
 test("blocks a neutral-to-bullish stance change marked unchanged", () => {
   const prior = structuredClone(valid);
   const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
   changed.pages["/models"].thesisStance = "bullish";
 
   const result = evaluateQualityGate(changed, prior);
@@ -299,6 +300,49 @@ test("blocks a neutral-to-bullish stance change marked unchanged", () => {
   assert.ok(result.issues.some(
     (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models",
   ));
+});
+
+test("blocks a stance change without cited thesis metrics", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
+  changed.pages["/models"].changed = true;
+  changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].thesisMetricIds = [];
+
+  assert.ok(evaluateQualityGate(changed, prior).issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models" &&
+      /stance change.*cite/i.test(issue.message),
+  ));
+});
+
+test("accepts a changed directional stance with cited thesis metrics", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
+  changed.pages["/models"].changed = true;
+  changed.pages["/models"].thesisStance = "bullish";
+
+  assert.equal(evaluateQualityGate(changed, prior).issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models" &&
+      /stance change.*cite/i.test(issue.message),
+  ), false);
+});
+
+test("blocks models and sic reports with no supporting or opposing evidence", () => {
+  const starved = structuredClone(valid);
+  for (const page of ["/models", "/sic"] as const) {
+    starved.pages[page].report.supportingEvidence = [];
+    starved.pages[page].report.opposingEvidence = [];
+  }
+
+  const result = evaluateQualityGate(starved, previousSnapshot);
+  assert.equal(result.publishable, false);
+  for (const page of ["/models", "/sic"] as const) {
+    assert.ok(result.issues.some(
+      (issue) => issue.code === "INSUFFICIENT_PAGE_EVIDENCE" && issue.page === page,
+    ));
+  }
 });
 
 test("blocks thesis citation changes marked unchanged", () => {
@@ -434,6 +478,8 @@ test("does not warn when a stance or thesis citation set changes across editions
   const prior = structuredClone(valid);
   const older = structuredClone(valid);
   const revisedStance = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
+  older.pages["/models"].thesisStance = "neutral";
   revisedStance.pages["/models"].thesisStance = "bullish";
 
   assert.equal(evaluateQualityGate(revisedStance, prior, [], [older]).issues.some(

@@ -123,13 +123,16 @@ explicitly explains why that thesis survives unchanged. Each page must include a
 one cited `opposingEvidence` item with the
 metric IDs that support the observation. Each risk must state an observable, falsifiable
 metric, event, or time-based condition that could disprove or materially weaken the
-thesis; a risk that only gives methodological advice is not sufficient. Use a directional
-`thesisStance` only when the evidence supports it; retain `neutral` when the evidence does not
-support a directional conclusion. Mark a page `changed` when an evidenced thesis or stance
+thesis; a risk that only gives methodological advice is not sufficient. Every newly authored
+page must take a directional `thesisStance` (`bullish` or `bearish`); `neutral` is retained only
+for legacy published snapshots. If a stance changes, mark the page `changed` and cite the thesis
+metrics that drove it in `thesisMetricIds`. Mark a page `changed` when an evidenced thesis or stance
 revision occurs. A restated or sharpened thesis must use the exact
 `thesis-reexamined-restated` change reason and cite its `thesisMetricIds`. A thesis that
 survives unchanged, including on a page changed for another reason, must include an argued
 bilingual `report.thesisSurvivalRationale` with cited `metricIds`.
+Every page must publish at least one cited supporting and one cited opposing evidence item; this
+floor blocks evidence-starved `/models` and `/sic` reports.
 
 Paid data can be added later by implementing the existing source-adapter
 boundary in `market-data/adapters/`. A paid adapter may collect candidate data,
