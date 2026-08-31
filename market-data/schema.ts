@@ -322,9 +322,6 @@ function assertPage(
   for (const stance of ["thesisStance", "previousThesisStance"] as const) {
     if (!STANCES.has(requireString(page[stance], `pages.${key}.${stance}`))) fail(`pages.${key}.${stance} is unsupported`);
   }
-  if (!allowLegacyEditorialPayload && page.thesisStance === "neutral") {
-    fail(`pages.${key}.thesisStance must be directional for a newly authored candidate`);
-  }
   const thesisMetricIds = requireStringArray(page.thesisMetricIds, `pages.${key}.thesisMetricIds`);
   if (declaresThesisRestatement && thesisMetricIds.length === 0) {
     fail(`pages.${key}.thesisMetricIds must cite at least one metric for thesis-reexamined-restated`);
@@ -380,6 +377,9 @@ function assertPage(
     metrics,
     !allowLegacyEditorialPayload,
   );
+  if (!allowLegacyEditorialPayload && page.thesisStance === "neutral") {
+    fail(`pages.${key}.thesisStance must be directional for a newly authored candidate`);
+  }
 }
 
 function assertSnapshot(

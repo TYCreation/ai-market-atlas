@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { projectMonthlyArchive } from "../../market-data/storage.ts";
 import { hashCandidate } from "../../market-data/review.ts";
 import validCandidate from "../fixtures/market/valid-candidate.json" with { type: "json" };
+import previousFull from "../fixtures/market/previous-full.json" with { type: "json" };
 import { exportPages } from "../../scripts/export-pages.ts";
 import {
   generateMarketBriefAssets,
@@ -677,7 +678,7 @@ test("exports a month-end candidate with its prospective archive without mutatin
     metric.asOf = candidate.dataCutoff;
   }
   const review = autoPublishReview(candidate);
-  const prospectiveArchive = projectMonthlyArchive(candidate, review);
+  const prospectiveArchive = projectMonthlyArchive(candidate, review, previousFull as unknown as MarketSnapshot);
   await writeFile(candidatePath, `${JSON.stringify(candidate, null, 2)}\n`);
 
   try {

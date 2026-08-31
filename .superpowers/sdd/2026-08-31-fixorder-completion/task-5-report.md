@@ -6,3 +6,8 @@ Implemented directional stance enforcement for new candidates, with explicit cha
 
 Tests: focused schema/quality-gate tests pass; npm run test:market passes (325/325); npm run test passes (20/20).
 Concerns: none identified.
+
+Fix round 1 RED: focused tests exposed that stance transitions could pass on the transition alone, seed output bypassed evidence balance, archive `from` trusted candidate self-declaration, and previous-stance mismatches were accepted.
+Fix round 1 GREEN: stance citations now require same-page IDs, changed supporting/opposing evidence, and a real current/prior metric delta; seed runs schema plus quality gates before writing; archive projection and gate use the trusted prior snapshot; legacy neutral fixture/read validation is restored.
+Tests: focused gate/schema/seed/storage/export/monthly tests pass (98/98); npm run test:market passes (328/328); npm run test passes (20/20).
+Concerns: none identified.

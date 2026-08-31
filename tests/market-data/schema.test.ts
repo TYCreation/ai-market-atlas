@@ -105,6 +105,7 @@ test("requires a survival rationale when another page change leaves the thesis u
 
 test("keeps historical snapshots readable while validating newly authored candidates strictly", () => {
   assert.doesNotThrow(() => assertPublishedMarketSnapshot(previousFull));
+  assert.equal(Object.values(previousFull.pages).every((page) => page.thesisStance === "neutral"), true);
   assert.throws(
     () => assertMarketSnapshot(previousFull),
     /pages\.\/\.report\.thesisSurvivalRationale must be an object/,

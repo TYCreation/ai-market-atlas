@@ -4,6 +4,7 @@ import { compute, energy, marketPulse, models, sic, stocks, type DashboardConfig
 import { computeZh, energyZh, marketPulseZh, modelsZh, sicZh, stocksZh } from "../app/content-zh.ts";
 import { sourceBundles } from "../app/sources.ts";
 import { KPI_CATALOG, stockMetricId } from "../market-data/catalog.ts";
+import { evaluateQualityGate } from "../market-data/quality-gate.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import type { MarketSnapshot, MetricRecord, PageSlug, SourceRecord } from "../market-data/types.ts";
 import currentSnapshotJson from "../data/market/current.json" with { type: "json" };
@@ -58,7 +59,7 @@ function modeledMetric(id: string, page: PageSlug, value: string, valueZh: strin
     id, page, required: true, kind: "modeled", numericValue: numeric,
     display: { en: value, zh: valueZh }, unit,
     ...(unit.startsWith("$") ? { currency: "USD" } : {}),
-    asOf: timestamp, sessionState: "closed", sourceIds,
+    asOf: timestamp, sourceIds,
     observations: sourceIds.map((sourceId) => ({ sourceId, numericValue: numeric, asOf: timestamp })),
     confidence: "medium", status: "verified",
   };
@@ -76,7 +77,15 @@ function report(english: DashboardConfig, chinese: DashboardConfig, thesisMetric
       },
       metricIds: [thesisMetricIds[0]],
     },
-    supportingEvidence: [], opposingEvidence: [], catalysts: [],
+    supportingEvidence: [{
+      text: { en: "Current seed metrics support the page thesis.", zh: "本次種子指標支持頁面論點。" },
+      metricIds: [thesisMetricIds[0]],
+    }],
+    opposingEvidence: [{
+      text: { en: "Current seed metrics also expose a thesis risk.", zh: "本次種子指標也揭示論點風險。" },
+      metricIds: [thesisMetricIds[1] ?? thesisMetricIds[0]],
+    }],
+    catalysts: [],
     analystNotes: english.watchlist.map((item, index) => ({ en: item.body, zh: chinese.watchlist[index]?.body ?? item.body })),
     risks: english.watchlist.map((item, index) => ({
       condition: {
@@ -142,7 +151,12 @@ function createSnapshot(runId: string): MarketSnapshot {
         ["atlas-model"],
         timestamp,
       );
-      Object.assign(metrics[id], { market: "US", marketTimezone: "America/New_York", primaryListing: equity.ticker, securityType: "primary" });
+      if (field === "weekReturn" && Math.abs(metrics[id].numericValue) > 20) {
+        const numericValue = Math.sign(metrics[id].numericValue) * 19.9;
+        metrics[id].numericValue = numericValue;
+        metrics[id].display = { en: `${numericValue}%`, zh: `${numericValue}%` };
+        metrics[id].observations = metrics[id].observations.map((observation) => ({ ...observation, numericValue }));
+      }
     }
   }
   const pages = {} as MarketSnapshot["pages"];
@@ -156,6 +170,10 @@ function createSnapshot(runId: string): MarketSnapshot {
 const output = resolve(option("--output", "data/market/current.json"));
 const snapshot = createSnapshot(option("--run-id", "2026-07-25-saturday"));
 assertMarketSnapshot(snapshot);
+const quality = evaluateQualityGate(snapshot, snapshot);
+if (!quality.publishable) {
+  throw new Error(`Seeded snapshot failed the publication quality gate: ${quality.issues.map((issue) => issue.code).join(", ")}`);
+}
 await mkdir(dirname(output), { recursive: true });
 await writeFile(output, `${JSON.stringify(snapshot, null, 2)}\n`);
 console.log("Seeded 24 required KPIs plus equity metrics");

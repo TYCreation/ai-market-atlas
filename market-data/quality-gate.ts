@@ -181,6 +181,47 @@ function sameMetricIdSet(left: string[], right: string[]): boolean {
   );
 }
 
+function metricChanged(current: MarketSnapshot, previous: MarketSnapshot, metricId: string): boolean {
+  const metric = current.metrics[metricId];
+  const prior = previous.metrics?.[metricId];
+  if (metric === undefined || prior === undefined) return false;
+  return metric.numericValue !== prior.numericValue ||
+    metric.asOf !== prior.asOf ||
+    !sameMetricIdSet(metric.sourceIds, prior.sourceIds) ||
+    !isDeepStrictEqual(metric.observations, prior.observations);
+}
+
+function changedEvidenceCites(
+  current: MarketSnapshot,
+  previous: MarketSnapshot,
+  page: PageSlug,
+  thesisMetricIds: string[],
+): boolean {
+  const priorEvidence = [
+    ...(previous.pages?.[page]?.report.supportingEvidence ?? []),
+    ...(previous.pages?.[page]?.report.opposingEvidence ?? []),
+  ];
+  const priorIds = new Set(thesisMetricIds);
+  const currentEvidence = [
+    ...current.pages[page].report.supportingEvidence,
+    ...current.pages[page].report.opposingEvidence,
+  ];
+  return currentEvidence.some((item) =>
+    item.metricIds.some((metricId) => priorIds.has(metricId)) &&
+    !priorEvidence.some((priorItem) => isDeepStrictEqual(priorItem, item)),
+  );
+}
+
+function hasCausalStanceEvidence(
+  current: MarketSnapshot,
+  previous: MarketSnapshot,
+  page: PageSlug,
+  thesisMetricIds: string[],
+): boolean {
+  return thesisMetricIds.some((metricId) => metricChanged(current, previous, metricId)) &&
+    changedEvidenceCites(current, previous, page, thesisMetricIds);
+}
+
 function editorialState(page: MarketSnapshot["pages"][PageSlug]): {
   report: MarketSnapshot["pages"][PageSlug]["report"];
   thesisStance: MarketSnapshot["pages"][PageSlug]["thesisStance"];
@@ -261,13 +302,15 @@ function hasPageChangeEvidence(
       issue.page === page &&
       ["SOURCE_CONFLICT", "UNEXPLAINED_PRICE_MOVE", "FINANCIAL_DELTA", "FORECAST_DELTA"].includes(issue.code),
   );
-  const conclusionChanged =
-    priorPage !== undefined && priorPage.thesisStance !== current.pages[page].thesisStance;
+  const stanceEvidence =
+    priorPage !== undefined &&
+    priorPage.thesisStance !== current.pages[page].thesisStance &&
+    hasCausalStanceEvidence(current, previous, page, current.pages[page].thesisMetricIds);
   const thesisRestated =
     current.pages[page].changeReasons.includes("thesis-reexamined-restated") &&
     thesisChanged(current, previous, page) &&
     current.pages[page].thesisMetricIds.length > 0;
-  return newFirstPartyEvent || roundedValueChange || gateWorthyMovement || conclusionChanged || thesisRestated;
+  return newFirstPartyEvent || roundedValueChange || gateWorthyMovement || stanceEvidence || thesisRestated;
 }
 
 export function evaluateQualityGate(
@@ -444,13 +487,31 @@ export function evaluateQualityGate(
       });
     }
     const priorStance = previous.pages?.[page]?.thesisStance ?? state.previousThesisStance;
-    const stanceChanged = priorStance !== state.thesisStance;
-    if (stanceChanged && (state.thesisMetricIds.length === 0 || !state.changed)) {
+    const priorPage = previous.pages?.[page];
+    if (priorPage !== undefined && state.previousThesisStance !== priorPage.thesisStance) {
       issues.push({
         code: "MATERIAL_CHANGE_MISMATCH",
         severity: "block",
         page,
-        message: "A stance change must mark the page changed and cite the thesis metrics that drove it.",
+        message: "Candidate previousThesisStance must match the trusted prior snapshot.",
+        sourceIds: [],
+      });
+    }
+    const thesisMetricsOnPage = state.thesisMetricIds.every(
+      (metricId) => current.metrics[metricId]?.page === page,
+    );
+    const stanceChanged = priorStance !== state.thesisStance;
+    if (stanceChanged && (
+      state.thesisMetricIds.length === 0 ||
+      !thesisMetricsOnPage ||
+      !state.changed ||
+      !hasCausalStanceEvidence(current, previous, page, state.thesisMetricIds)
+    )) {
+      issues.push({
+        code: "MATERIAL_CHANGE_MISMATCH",
+        severity: "block",
+        page,
+        message: "A stance change must cite same-page thesis metrics, changed supporting/opposing evidence, and a current-vs-prior metric difference.",
         sourceIds: state.thesisMetricIds.flatMap((id) => current.metrics[id]?.sourceIds ?? []).sort(),
       });
     }
@@ -501,7 +562,6 @@ export function evaluateQualityGate(
         sourceIds: [],
       });
     }
-    const priorPage = previous.pages?.[page];
     if (
       !state.changed &&
       priorPage !== undefined &&

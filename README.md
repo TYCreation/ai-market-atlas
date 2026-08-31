@@ -142,6 +142,9 @@ never enter snapshots, reviews, logs, or reports.
 
 ### Validate and review locally
 
+The one-time seed command runs the same schema and editorial quality gate before
+writing its output; it cannot create a publishable snapshot with starved evidence.
+
 ```bash
 npm run market:validate -- --candidate data/market/candidate.json
 npm run market:review -- \

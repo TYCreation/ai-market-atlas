@@ -8,6 +8,9 @@ import test from "node:test";
 import fixture from "../fixtures/market/valid-candidate.json" with { type: "json" };
 import { stocks } from "../../app/content.ts";
 import { EQUITY_UNIVERSE, REQUIRED_STOCK_METRIC_IDS, stockMetricId } from "../../market-data/catalog.ts";
+import { evaluateQualityGate } from "../../market-data/quality-gate.ts";
+import { assertMarketSnapshot } from "../../market-data/schema.ts";
+import type { MarketSnapshot } from "../../market-data/types.ts";
 
 const seedScript = fileURLToPath(new URL("../../scripts/seed-market-snapshot.ts", import.meta.url));
 
@@ -31,6 +34,14 @@ test("default seed uses the scheduled Saturday run at 09:00 Asia/Taipei", async 
   assert.equal(snapshot.metrics["stocks.nvda.price"].display.en, "$194.70");
   assert.equal(snapshot.metrics["stocks.nvda.weekReturn"].display.en, "+5.8%");
   assert.equal(snapshot.metrics["stocks.nvda.monthReturn"].display.en, "+12.4%");
+});
+
+test("seeded output is checked by the editorial quality gate before writing current data", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "market-seed-quality-"));
+  await runSeed(workspace);
+  const snapshot = JSON.parse(await readFile(join(workspace, "data/market/current.json"), "utf8")) as MarketSnapshot;
+  assertMarketSnapshot(snapshot);
+  assert.equal(evaluateQualityGate(snapshot, snapshot).publishable, true);
 });
 
 test("deterministic fixture uses the scheduled Saturday timestamp", () => {

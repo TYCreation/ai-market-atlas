@@ -1067,6 +1067,7 @@ async function runLockedDeployPagesAtProjectRoot(
     }
   }
   await validateLastGoodDirectory(lastGoodDirectory, lastGoodAnchor);
+  const currentSnapshot = await readSnapshot(currentPath, "current snapshot", "published");
 
   const candidateExport = await runtime.exportPages({
     projectRoot,
@@ -1078,11 +1079,11 @@ async function runLockedDeployPagesAtProjectRoot(
           prospectiveArchive: projectMonthlyArchive(
             authorization.candidate,
             authorization.review,
+            currentSnapshot,
           ),
         }
       : {}),
   });
-  const currentSnapshot = await readSnapshot(currentPath, "current snapshot", "published");
   const snapshotAlreadyCurrent =
     hashCandidate(currentSnapshot) === candidateExport.candidateSha256;
   const activeDirectoryByUrl = new Map<

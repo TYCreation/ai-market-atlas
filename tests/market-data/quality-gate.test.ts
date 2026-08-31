@@ -308,6 +308,7 @@ test("blocks a stance change without cited thesis metrics", () => {
   prior.pages["/models"].thesisStance = "neutral";
   changed.pages["/models"].changed = true;
   changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].previousThesisStance = "neutral";
   changed.pages["/models"].thesisMetricIds = [];
 
   assert.ok(evaluateQualityGate(changed, prior).issues.some(
@@ -322,11 +323,44 @@ test("accepts a changed directional stance with cited thesis metrics", () => {
   prior.pages["/models"].thesisStance = "neutral";
   changed.pages["/models"].changed = true;
   changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].previousThesisStance = "neutral";
+  changed.metrics["models.production_agents"].numericValue += 1;
+  changed.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  changed.pages["/models"].report.supportingEvidence = [{
+    text: { en: "New production evidence supports the thesis.", zh: "新的生產證據支持此論點。" },
+    metricIds: ["models.production_agents"],
+  }];
 
-  assert.equal(evaluateQualityGate(changed, prior).issues.some(
+  assert.equal(evaluateQualityGate(changed, prior).publishable, true);
+});
+
+test("blocks a stance change when cited metrics do not causally change", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "neutral";
+  changed.pages["/models"].changed = true;
+  changed.pages["/models"].thesisStance = "bullish";
+  changed.pages["/models"].report.supportingEvidence = [{
+    text: { en: "New production evidence supports the thesis.", zh: "新的生產證據支持此論點。" },
+    metricIds: ["models.production_agents"],
+  }];
+
+  assert.ok(evaluateQualityGate(changed, prior).issues.some(
     (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models" &&
-      /stance change.*cite/i.test(issue.message),
-  ), false);
+      /causal|current.*prior|changed metric/i.test(issue.message),
+  ));
+});
+
+test("rejects a candidate whose previous stance disagrees with the trusted prior page", () => {
+  const prior = structuredClone(valid);
+  const changed = structuredClone(valid);
+  prior.pages["/models"].thesisStance = "bearish";
+  changed.pages["/models"].previousThesisStance = "bullish";
+
+  assert.ok(evaluateQualityGate(changed, prior).issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/models" &&
+      /previous.*stance|trusted prior/i.test(issue.message),
+  ));
 });
 
 test("blocks models and sic reports with no supporting or opposing evidence", () => {

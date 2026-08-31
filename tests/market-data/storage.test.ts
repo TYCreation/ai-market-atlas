@@ -236,6 +236,7 @@ test("month-end promotion persists exactly the pure prospective archive projecti
   ) as MarketSnapshot;
   candidate.runId = "2026-08-29-month-end";
   candidate.cadence = "month-end";
+  candidate.pages["/models"].previousThesisStance = "bearish";
   await writeFile(paths.candidatePath, `${JSON.stringify(candidate)}\n`);
   paths.reviewPath = join(paths.root, "reviews", `${candidate.runId}.json`);
   await writePublishableReview(paths.candidatePath, paths.reviewPath);
@@ -243,7 +244,9 @@ test("month-end promotion persists exactly the pure prospective archive projecti
   const storage = await import("../../market-data/storage.ts");
 
   assert.equal(typeof storage.projectMonthlyArchive, "function");
-  const projected = storage.projectMonthlyArchive(candidate, review);
+  const previous = JSON.parse(await readFile(paths.currentPath, "utf8")) as MarketSnapshot;
+  const projected = storage.projectMonthlyArchive(candidate, review, previous);
+  assert.equal(projected.thesisChanges.find((change) => change.page === "/models")?.from, "neutral");
   await promoteReviewed(paths);
   const index = JSON.parse(
     await readFile(paths.monthlyIndexPath, "utf8"),

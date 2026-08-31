@@ -170,6 +170,7 @@ function monthFor(snapshot: MarketSnapshot): string {
 export function projectMonthlyArchive(
   snapshot: MarketSnapshot,
   review: AutomatedReview,
+  previous: MarketSnapshot,
 ): MonthlyArchiveRecord {
   const root = snapshot.pages["/"];
   const sources: SourceRecord[] = Object.values(snapshot.sources)
@@ -185,10 +186,10 @@ export function projectMonthlyArchive(
       .filter((metric) => metric.id.startsWith("stocks.") && metric.id.endsWith(".monthReturn"))
       .sort((left, right) => left.id.localeCompare(right.id)),
     thesisChanges: (Object.entries(snapshot.pages) as Array<[keyof MarketSnapshot["pages"], MarketSnapshot["pages"]["/"]]>)
-      .filter(([, page]) => page.thesisStance !== page.previousThesisStance)
+      .filter(([page, state]) => previous.pages[page]?.thesisStance !== state.thesisStance)
       .map(([page, state]) => ({
         page,
-        from: state.previousThesisStance,
+        from: previous.pages[page]!.thesisStance,
         to: state.thesisStance,
         explanation: state.report.thesis.body,
         metricIds: [...state.thesisMetricIds],
@@ -266,7 +267,7 @@ export async function promoteCandidate(
     if (monthlyArchiveMonth !== undefined) {
       await writeMonthlyIndex(paths.monthlyIndexPath, {
         ...monthlyIndex,
-        [monthlyArchiveMonth]: projectMonthlyArchive(normalized, review),
+        [monthlyArchiveMonth]: projectMonthlyArchive(normalized, review, previous),
       });
     }
   } catch (error) {

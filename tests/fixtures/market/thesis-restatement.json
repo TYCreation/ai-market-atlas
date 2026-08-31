@@ -10,7 +10,7 @@
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "bullish",
-      "previousThesisStance": "neutral",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "pulse.infrastructure_spend",
         "pulse.accelerator_market",
@@ -223,7 +223,7 @@
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "bullish",
-      "previousThesisStance": "neutral",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "stocks.basket_30d",
         "stocks.positive_breadth",
@@ -432,7 +432,7 @@
       ],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "bullish",
-      "previousThesisStance": "neutral",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "compute.accelerator_pool",
         "compute.hbm_demand",
@@ -636,7 +636,7 @@
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "bullish",
-      "previousThesisStance": "neutral",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "energy.announced_power_gw",
         "energy.committed_power_gw",
@@ -843,7 +843,7 @@
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "bullish",
-      "previousThesisStance": "neutral",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "models.production_agents",
         "models.software_spend_growth",
@@ -1050,7 +1050,7 @@
       "changeReasons": [],
       "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "bullish",
-      "previousThesisStance": "neutral",
+      "previousThesisStance": "bullish",
       "thesisMetricIds": [
         "sic.market_2030_usd_b",
         "sic.wafer_frontier_mm",
