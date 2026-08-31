@@ -73,3 +73,55 @@ git diff --check:                        clean
 and `market-data/storage.ts`; this task introduced no lint warnings. The static prompt
 test is intentionally lightweight; behavioral enforcement is covered by schema,
 review, quality-gate, pipeline, storage, export, and end-to-end tests.
+
+## Fix round 1 — market brief validation scope
+
+### Finding and regression
+
+The generator selected permissive published validation for every snapshot whose
+basename was not `candidate.json`.  Consequently, a newly authored arbitrary path
+such as `draft.json` could omit an unchanged-thesis survival rationale and still
+overwrite brief assets.
+
+Added a failing regression test before the fix.  Its initial focused run was red:
+
+```text
+node --experimental-strip-types --test tests/market-data/market-brief.test.ts
+1 failed: rejects an arbitrary draft snapshot that omits a thesis survival rationale
+Failure: Missing expected rejection.
+```
+
+### Fix
+
+- Defaulted `buildMarketBrief` and semantic brief matching to strict candidate
+  validation.
+- Added an explicit `SnapshotValidationMode`; generator callers can request the
+  legacy published validator only deliberately.
+- Kept automatic legacy recognition limited to the repository's persisted
+  `data/market/current.json` and scheduled `data/market/runs/*.json` archive paths.
+- Passed published mode explicitly through the fixture pipeline and isolated
+  current-snapshot export fixtures, and threaded that mode through export brief
+  semantic verification.
+- Added coverage that `draft.json` with a missing rationale is rejected, while
+  persisted current and run archive paths select published compatibility.
+
+### Verification
+
+```text
+Focused market brief/export/pipeline tests:
+node --experimental-strip-types --test tests/market-data/market-brief.test.ts \
+  tests/market-data/export-pages.test.ts tests/market-data/end-to-end.test.ts
+62 passed, 0 failed
+
+Full required checks:
+npm run test:market: 313 passed, 0 failed
+npm run test:        20 passed, 0 failed
+npm run lint:        0 errors, 2 pre-existing warnings
+git diff --check:    clean
+```
+
+### Self-review
+
+Verified that arbitrary paths are strict by default, exact persisted paths are the
+only auto-detected compatibility cases, and every internal non-production legacy
+read now opts in explicitly rather than relying on a filename heuristic.

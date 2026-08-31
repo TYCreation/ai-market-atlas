@@ -1,5 +1,5 @@
 import { realpath, readFile, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { evaluateMetricFreshness } from "../market-data/freshness.ts";
@@ -50,13 +50,29 @@ export type MarketBriefPayload = {
 
 export type MarketBriefAssetPaths = {
   snapshotPath: string;
+  validationMode?: SnapshotValidationMode;
   canonicalData: string;
   publicData: string;
   canonicalHtml: string;
   publicHtml: string;
 };
 
+export type SnapshotValidationMode = "candidate" | "published";
+
 const CANONICAL_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+const RUN_ARCHIVE_FILENAME = /^\d{4}-\d{2}-\d{2}-(wednesday|saturday|month-end)\.json$/;
+
+export function marketBriefSnapshotValidationMode(path: string): SnapshotValidationMode {
+  const marketRoot = resolve(fileURLToPath(new URL("../data/market", import.meta.url)));
+  if (path === join(marketRoot, "current.json")) return "published";
+  if (
+    dirname(path) === join(marketRoot, "runs") &&
+    RUN_ARCHIVE_FILENAME.test(basename(path))
+  ) {
+    return "published";
+  }
+  return "candidate";
+}
 
 export function isCanonicalUtcTimestamp(value: unknown): value is string {
   return (
@@ -236,8 +252,15 @@ function nextWeekObservations(snapshot: MarketSnapshot): BilingualText[] {
   return PAGE_ORDER.flatMap((page) => snapshot.pages[page].report.nextObservations.slice(0, 1));
 }
 
-export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
-  assertPublishedMarketSnapshot(snapshot);
+export function buildMarketBrief(
+  snapshot: MarketSnapshot,
+  validationMode: SnapshotValidationMode = "candidate",
+): MarketBriefPayload {
+  if (validationMode === "candidate") {
+    assertMarketSnapshot(snapshot);
+  } else {
+    assertPublishedMarketSnapshot(snapshot);
+  }
   assertSnapshotBriefCardinality(snapshot);
   const freshSignals = freshKeySignals(snapshot);
   const signals = freshSignals.map((metric): MarketBriefSignal => {
@@ -397,11 +420,12 @@ export function assertMarketBriefMatchesSnapshot(
   value: unknown,
   snapshot: MarketSnapshot,
   label = "Market brief",
+  validationMode: SnapshotValidationMode = "candidate",
 ): asserts value is MarketBriefPayload {
   if (!isMarketBriefPayload(value)) {
     throw new Error(`${label} is not a valid market brief payload`);
   }
-  const canonical = buildMarketBrief(snapshot);
+  const canonical = buildMarketBrief(snapshot, validationMode);
   if (!isDeepStrictEqual(value, canonical)) {
     throw new Error(`${label} semantics do not match snapshot`);
   }
@@ -453,24 +477,28 @@ function hardenBriefValidation(html: string): string {
   return hardened;
 }
 
-async function loadSnapshot(path: string): Promise<MarketSnapshot> {
+async function loadSnapshot(
+  path: string,
+  requestedValidationMode?: SnapshotValidationMode,
+): Promise<{ snapshot: MarketSnapshot; validationMode: SnapshotValidationMode }> {
   const resolved = await realpath(resolve(path));
   const file = await stat(resolved);
   if (!file.isFile()) throw new Error(`Market snapshot path is not a regular file: ${path}`);
   const value = JSON.parse(await readFile(resolved, "utf8")) as unknown;
-  if (basename(resolved) === "candidate.json") {
+  const validationMode = requestedValidationMode ?? marketBriefSnapshotValidationMode(resolved);
+  if (validationMode === "candidate") {
     assertMarketSnapshot(value);
   } else {
     assertPublishedMarketSnapshot(value);
   }
-  return value;
+  return { snapshot: value, validationMode };
 }
 
 export async function generateMarketBriefAssets(paths: MarketBriefAssetPaths): Promise<void> {
-  const snapshot = await loadSnapshot(paths.snapshotPath);
+  const { snapshot, validationMode } = await loadSnapshot(paths.snapshotPath, paths.validationMode);
   assertSnapshotBriefCardinality(snapshot);
-  const brief = buildMarketBrief(snapshot);
-  assertMarketBriefMatchesSnapshot(brief, snapshot, "Generated market brief");
+  const brief = buildMarketBrief(snapshot, validationMode);
+  assertMarketBriefMatchesSnapshot(brief, snapshot, "Generated market brief", validationMode);
   const data = serializeBrief(brief);
   const canonicalHtml = await readFile(paths.canonicalHtml, "utf8");
   const html = hardenBriefValidation(upsertEmbeddedBrief(canonicalHtml, brief));

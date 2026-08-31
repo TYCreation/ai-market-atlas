@@ -4,10 +4,13 @@ import { copyFile, cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promi
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import missingThesisRationale from "../fixtures/market/missing-thesis-survival-rationale.json" with { type: "json" };
+import previousFull from "../fixtures/market/previous-full.json" with { type: "json" };
 import {
   assertMarketBriefMatchesSnapshot,
   buildMarketBrief,
   generateMarketBriefAssets,
+  marketBriefSnapshotValidationMode,
   marketBriefPayloadSha256,
   isMarketBriefPayload,
   type MarketBriefAssetPaths,
@@ -144,6 +147,28 @@ test("generates one bilingual brief from the promoted snapshot", async () => {
   assert.ok(brief.nextWeekObservations.length > 0);
   assert.match(brief.methodology.en, /modeled/i);
   assert.match(brief.notInvestmentAdvice.en, /not investment advice/i);
+});
+
+test("rejects an arbitrary draft snapshot that omits a thesis survival rationale", async () => {
+  const paths = await makeAssetWorkspace(missingThesisRationale as unknown as MarketSnapshot);
+  const draftPath = join(dirname(paths.snapshotPath), "draft.json");
+  await writeFile(draftPath, await readFile(paths.snapshotPath));
+  paths.snapshotPath = draftPath;
+
+  await assert.rejects(
+    generateMarketBriefAssets(paths),
+    /thesisSurvivalRationale must be an object/,
+  );
+});
+
+test("retains legacy validation only for persisted current and run archive paths", () => {
+  const marketRoot = new URL("../../data/market/", import.meta.url).pathname;
+  const currentPath = join(marketRoot, "current.json");
+  const runPath = join(marketRoot, "runs", "2026-07-25-saturday.json");
+
+  assert.equal(marketBriefSnapshotValidationMode(currentPath), "published");
+  assert.equal(marketBriefSnapshotValidationMode(runPath), "published");
+  assert.doesNotThrow(() => buildMarketBrief(previousFull as unknown as MarketSnapshot, "published"));
 });
 
 test("omits an optional stale key signal without presenting it as current", async () => {

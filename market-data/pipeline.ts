@@ -233,6 +233,7 @@ export async function runFixturePipeline(
     );
     await dependencies.generateBrief({
       snapshotPath: currentPath,
+      validationMode: "published",
       canonicalData: join(
         root,
         "hyperframes/weekly-ai-market-brief/data.json",

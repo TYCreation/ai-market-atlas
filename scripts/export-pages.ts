@@ -29,6 +29,7 @@ import {
   isMarketBriefPayload,
   marketBriefPayloadSha256,
   type MarketBriefPayload,
+  type SnapshotValidationMode,
 } from "./generate-market-brief.ts";
 
 type WorkerModule = {
@@ -354,6 +355,7 @@ function assertMarketBriefIdentity(
 async function loadBoundMarketBrief(
   projectRoot: string,
   snapshot: MarketSnapshot,
+  validationMode: SnapshotValidationMode,
 ): Promise<MarketBriefPayload> {
   const canonicalDataPath = join(
     projectRoot,
@@ -388,6 +390,7 @@ async function loadBoundMarketBrief(
     canonicalData,
     snapshot,
     "canonical market brief",
+    validationMode,
   );
   const expectedSha256 = hashCandidate(canonicalData);
   if (
@@ -429,12 +432,18 @@ export async function exportPages(
   await assertOutputPathSafe(projectRoot, outputDirectory);
   await assertRegularFile(snapshotPath, "market snapshot");
   const snapshot: unknown = JSON.parse(await readFile(snapshotPath, "utf8"));
-  if (basename(snapshotPath) === "candidate.json") {
+  const validationMode: SnapshotValidationMode =
+    basename(snapshotPath) === "candidate.json" ? "candidate" : "published";
+  if (validationMode === "candidate") {
     assertMarketSnapshot(snapshot);
   } else {
     assertPublishedMarketSnapshot(snapshot);
   }
-  const canonicalBrief = await loadBoundMarketBrief(projectRoot, snapshot);
+  const canonicalBrief = await loadBoundMarketBrief(
+    projectRoot,
+    snapshot,
+    validationMode,
+  );
   const candidateSha256 = hashCandidate(snapshot);
   if (
     options.authorizedCandidateSha256 !== undefined &&

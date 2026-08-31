@@ -72,6 +72,7 @@ async function isolatedExportProject(build: boolean): Promise<string> {
   );
   await generateMarketBriefAssets({
     snapshotPath: join(isolatedRoot, "data", "market", "current.json"),
+    validationMode: "published",
     canonicalData: join(
       isolatedRoot,
       "hyperframes",
@@ -599,6 +600,7 @@ test("exports the canonical changed-sic Wednesday brief without reconstructing a
   try {
     await generateMarketBriefAssets({
       snapshotPath: isolatedSnapshotPath,
+      validationMode: "published",
       canonicalData,
       canonicalHtml,
       publicData,
