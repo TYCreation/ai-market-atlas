@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-15-saturday",
-  "cadence": "saturday",
-  "generatedAt": "2026-08-15T01:00:00.000Z",
-  "dataCutoff": "2026-08-15T01:00:00.000Z",
+  "runId": "2026-08-19-wednesday",
+  "cadence": "wednesday",
+  "generatedAt": "2026-08-19T01:00:00.000Z",
+  "dataCutoff": "2026-08-19T01:00:00.000Z",
   "pages": {
     "/": {
       "changed": true,
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-15T01:00:00.000Z",
+      "verifiedAt": "2026-08-19T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -76,6 +76,15 @@
             "metricIds": [
               "pulse.cisco_ai_infrastructure_orders"
             ]
+          },
+          {
+            "text": {
+              "en": "OpenAI agreed to secure approximately 8 IT-GW at Ohio's PORTS-Pike campus, with capacity scheduled to be delivered over time.",
+              "zh": "OpenAI 同意在俄亥俄州 PORTS-Pike 園區取得約 8 IT-GW 容量，並按進度分期交付。"
+            },
+            "metricIds": [
+              "pulse.openai_ports_capacity"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -113,7 +122,7 @@
     "/stocks": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-15T01:00:00.000Z",
+      "verifiedAt": "2026-08-19T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -219,7 +228,7 @@
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-15T01:00:00.000Z",
+      "verifiedAt": "2026-08-19T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -296,6 +305,15 @@
             "metricIds": [
               "compute.cisco_ai_infrastructure_orders"
             ]
+          },
+          {
+            "text": {
+              "en": "OpenAI contracted for approximately 8 IT-GW at PORTS-Pike, which will exclusively host NVIDIA AI compute infrastructure.",
+              "zh": "OpenAI 已簽約取得 PORTS-Pike 約 8 IT-GW 容量；該園區將專門部署 NVIDIA AI 算力基礎設施。"
+            },
+            "metricIds": [
+              "compute.openai_ports_capacity"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -331,9 +349,11 @@
       }
     },
     "/energy": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-15T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-19T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -399,6 +419,15 @@
             "metricIds": [
               "energy.vistra_helix_commitment"
             ]
+          },
+          {
+            "text": {
+              "en": "OpenAI agreed to secure approximately 8 IT-GW at PORTS-Pike, while later phases remain dependent on new generation and transmission.",
+              "zh": "OpenAI 同意在 PORTS-Pike 取得約 8 IT-GW 容量，後續階段仍取決於新建發電與輸電設施。"
+            },
+            "metricIds": [
+              "energy.openai_ports_capacity"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -423,8 +452,8 @@
             "zh": "下一讀 · Helix 專案轉化"
           },
           {
-            "en": "Next read · signed power capacity",
-            "zh": "下一讀 · 已簽約電力容量"
+            "en": "Next read · PORTS-Pike commissioning",
+            "zh": "下一讀 · PORTS-Pike 啟用進度"
           },
           {
             "en": "Next read · PPA quality",
@@ -434,9 +463,11 @@
       }
     },
     "/models": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-15T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-19T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -484,7 +515,17 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "OpenAI estimated that its expanded safety monitoring adds roughly 20% inference-compute overhead to monitored frontier training and evaluation workloads.",
+              "zh": "OpenAI 估計，擴充後的安全監控會讓受監控的前沿訓練與評估工作負載增加約 20% 推論算力負擔。"
+            },
+            "metricIds": [
+              "models.openai_monitoring_overhead"
+            ]
+          }
+        ],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -511,8 +552,8 @@
             "zh": "下一讀 · 資料飛輪"
           },
           {
-            "en": "Next read · gross margin",
-            "zh": "下一讀 · 毛利率"
+            "en": "Next read · monitoring overhead",
+            "zh": "下一讀 · 監控算力負擔"
           }
         ]
       }
@@ -520,7 +561,7 @@
     "/sic": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-15T01:00:00.000Z",
+      "verifiedAt": "2026-08-19T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -814,6 +855,32 @@
         "en": "Official SEC Form 8-K filing for onsemi's second-quarter financial results and exhibits."
       }
     },
+    "openai-cyber-pacing": {
+      "id": "openai-cyber-pacing",
+      "kind": "company",
+      "publisher": "OpenAI",
+      "title": "Pacing model development in an era of cyber-critical capabilities",
+      "url": "https://openai.com/index/pacing-model-development-cyber-capabilities/",
+      "publishedAt": "2026-08-18T00:00:00.000Z",
+      "retrievedAt": "2026-08-19T01:00:00.000Z",
+      "scope": {
+        "zh": "OpenAI 對前沿模型訓練節奏、安全監控架構與約 20% 監控推論算力負擔的第一方揭露。",
+        "en": "OpenAI's first-party disclosure on frontier-model training pace, safety monitoring architecture, and roughly 20% inference-compute monitoring overhead."
+      }
+    },
+    "openai-ports-pike": {
+      "id": "openai-ports-pike",
+      "kind": "company",
+      "publisher": "OpenAI",
+      "title": "OpenAI joins PORTS-Pike project",
+      "url": "https://openai.com/index/openai-joins-ports-pike-project/",
+      "publishedAt": "2026-08-17T00:00:00.000Z",
+      "retrievedAt": "2026-08-19T01:00:00.000Z",
+      "scope": {
+        "zh": "OpenAI 在俄亥俄州 PORTS-Pike 園區的約 8 IT-GW 容量協議、20 年租約、首批 800 MW 時程與電力基礎設施條件。",
+        "en": "OpenAI's approximately 8 IT-GW PORTS-Pike capacity agreement, 20-year lease, initial 800 MW timeline, and power-infrastructure conditions."
+      }
+    },
     "openai-pricing": {
       "id": "openai-pricing",
       "kind": "pricing",
@@ -1079,7 +1146,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 9.3
     },
     "compute.hbm_demand": {
       "id": "compute.hbm_demand",
@@ -1146,6 +1214,32 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": -58
+    },
+    "compute.openai_ports_capacity": {
+      "id": "compute.openai_ports_capacity",
+      "page": "/compute",
+      "required": false,
+      "kind": "published",
+      "numericValue": 8,
+      "display": {
+        "en": "~8 IT-GW",
+        "zh": "約 8 IT-GW"
+      },
+      "unit": "IT-GW",
+      "asOf": "2026-08-17T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "openai-ports-pike"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-ports-pike",
+          "numericValue": 8,
+          "asOf": "2026-08-17T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "compute.packaging_lead_weeks": {
       "id": "compute.packaging_lead_weeks",
@@ -1318,6 +1412,32 @@
       "status": "verified",
       "previousNumericValue": 42
     },
+    "energy.openai_ports_capacity": {
+      "id": "energy.openai_ports_capacity",
+      "page": "/energy",
+      "required": false,
+      "kind": "published",
+      "numericValue": 8,
+      "display": {
+        "en": "~8 IT-GW",
+        "zh": "約 8 IT-GW"
+      },
+      "unit": "IT-GW",
+      "asOf": "2026-08-17T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "openai-ports-pike"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-ports-pike",
+          "numericValue": 8,
+          "asOf": "2026-08-17T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "energy.vertiv_q2_revenue_growth": {
       "id": "energy.vertiv_q2_revenue_growth",
       "page": "/energy",
@@ -1450,6 +1570,32 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 1800
+    },
+    "models.openai_monitoring_overhead": {
+      "id": "models.openai_monitoring_overhead",
+      "page": "/models",
+      "required": false,
+      "kind": "published",
+      "numericValue": 20,
+      "display": {
+        "en": "~20%",
+        "zh": "約 20%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-18T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "openai-cyber-pacing"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-cyber-pacing",
+          "numericValue": 20,
+          "asOf": "2026-08-18T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "models.production_agents": {
       "id": "models.production_agents",
@@ -1622,7 +1768,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 9.3
     },
     "pulse.enterprise_agents": {
       "id": "pulse.enterprise_agents",
@@ -1690,6 +1837,32 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 2800
+    },
+    "pulse.openai_ports_capacity": {
+      "id": "pulse.openai_ports_capacity",
+      "page": "/",
+      "required": false,
+      "kind": "published",
+      "numericValue": 8,
+      "display": {
+        "en": "~8 IT-GW",
+        "zh": "約 8 IT-GW"
+      },
+      "unit": "IT-GW",
+      "asOf": "2026-08-17T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "openai-ports-pike"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-ports-pike",
+          "numericValue": 8,
+          "asOf": "2026-08-17T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "pulse.power_queue": {
       "id": "pulse.power_queue",
@@ -3240,11 +3413,9 @@
     }
   },
   "keySignalIds": [
-    "pulse.cisco_ai_infrastructure_orders",
-    "stocks.basket_30d",
-    "compute.cisco_ai_infrastructure_orders",
-    "energy.vertiv_q2_revenue_growth",
-    "models.api_deployment_share",
-    "sic.market_2030_usd_b"
+    "pulse.openai_ports_capacity",
+    "compute.openai_ports_capacity",
+    "energy.openai_ports_capacity",
+    "models.openai_monitoring_overhead"
   ]
 }

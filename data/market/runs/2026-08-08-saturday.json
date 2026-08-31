@@ -1,16 +1,14 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-05-wednesday",
-  "cadence": "wednesday",
-  "generatedAt": "2026-08-05T01:00:00.000Z",
-  "dataCutoff": "2026-08-05T01:00:00.000Z",
+  "runId": "2026-08-08-saturday",
+  "cadence": "saturday",
+  "generatedAt": "2026-08-08T01:00:00.000Z",
+  "dataCutoff": "2026-08-08T01:00:00.000Z",
   "pages": {
     "/": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-05T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-08T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -102,11 +100,9 @@
       }
     },
     "/stocks": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-05T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-08T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -208,11 +204,9 @@
       }
     },
     "/compute": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-05T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-08T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -315,9 +309,11 @@
       }
     },
     "/energy": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-05T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-08T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -365,7 +361,17 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "Vistra disclosed an initial commitment of up to $1.0B to Helix Digital Infrastructure and confirmed its role as Helix's preferred power provider.",
+              "zh": "Vistra 揭露對 Helix Digital Infrastructure 的初始承諾最高達 $1.0B，並確認其為 Helix 的優先電力供應商。"
+            },
+            "metricIds": [
+              "energy.vistra_helix_commitment"
+            ]
+          }
+        ],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -384,12 +390,12 @@
         ],
         "nextObservations": [
           {
-            "en": "Next read · project conversion",
-            "zh": "下一讀 · 專案轉化"
+            "en": "Next read · Helix project conversion",
+            "zh": "下一讀 · Helix 專案轉化"
           },
           {
-            "en": "Next read · design wins",
-            "zh": "下一讀 · 設計導入"
+            "en": "Next read · signed power capacity",
+            "zh": "下一讀 · 已簽約電力容量"
           },
           {
             "en": "Next read · PPA quality",
@@ -401,7 +407,7 @@
     "/models": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-05T01:00:00.000Z",
+      "verifiedAt": "2026-08-08T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -483,11 +489,9 @@
       }
     },
     "/sic": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-05T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-08T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -816,6 +820,19 @@
         "en": "Second-quarter revenue and margins, third-quarter guidance, and advanced-node capacity outlook."
       }
     },
+    "vistra-q2-2026": {
+      "id": "vistra-q2-2026",
+      "kind": "company",
+      "publisher": "Vistra Investor Relations",
+      "title": "Vistra Reports Second Quarter 2026 Results",
+      "url": "https://investor.vistracorp.com/2026-08-07-Vistra-Reports-Second-Quarter-2026-Results",
+      "publishedAt": "2026-08-07T00:00:00.000Z",
+      "retrievedAt": "2026-08-08T01:00:00.000Z",
+      "scope": {
+        "zh": "第二季財務結果、Vistra 對 Helix Digital Infrastructure 的初始資本承諾，以及其優先電力供應商角色。",
+        "en": "Second-quarter results, Vistra's initial capital commitment to Helix Digital Infrastructure, and its preferred-power-provider role."
+      }
+    },
     "wolfspeed-ai": {
       "id": "wolfspeed-ai",
       "kind": "company",
@@ -907,7 +924,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 107
     },
     "compute.amd_data_center_revenue": {
       "id": "compute.amd_data_center_revenue",
@@ -946,7 +964,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 6.7
     },
     "compute.hbm_demand": {
       "id": "compute.hbm_demand",
@@ -1185,6 +1204,33 @@
       "status": "verified",
       "previousNumericValue": 42
     },
+    "energy.vistra_helix_commitment": {
+      "id": "energy.vistra_helix_commitment",
+      "page": "/energy",
+      "required": false,
+      "kind": "published",
+      "numericValue": 1,
+      "display": {
+        "en": "up to $1.0B",
+        "zh": "最高 $1.0B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-07T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "vistra-q2-2026"
+      ],
+      "observations": [
+        {
+          "sourceId": "vistra-q2-2026",
+          "numericValue": 1,
+          "asOf": "2026-08-07T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "models.api_deployment_share": {
       "id": "models.api_deployment_share",
       "page": "/models",
@@ -1394,7 +1440,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 6.7
     },
     "pulse.enterprise_agents": {
       "id": "pulse.enterprise_agents",
@@ -1618,7 +1665,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 1.6035
     },
     "sic.packaging_watts": {
       "id": "sic.packaging_watts",
@@ -1728,7 +1776,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 50
     },
     "stocks.amd.monthReturn": {
       "id": "stocks.amd.monthReturn",
@@ -3010,9 +3059,11 @@
     }
   },
   "keySignalIds": [
+    "energy.vistra_helix_commitment",
     "pulse.amd_data_center_revenue",
     "stocks.amd_q2_revenue_growth",
     "compute.amd_data_center_growth",
+    "models.api_deployment_share",
     "sic.onsemi_q2_revenue"
   ]
 }

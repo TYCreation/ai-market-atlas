@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-22-saturday",
-  "cadence": "saturday",
-  "generatedAt": "2026-08-22T01:00:00.000Z",
-  "dataCutoff": "2026-08-22T01:00:00.000Z",
+  "runId": "2026-08-26-wednesday",
+  "cadence": "wednesday",
+  "generatedAt": "2026-08-26T01:00:00.000Z",
+  "dataCutoff": "2026-08-26T01:00:00.000Z",
   "pages": {
     "/": {
       "changed": true,
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-22T01:00:00.000Z",
+      "verifiedAt": "2026-08-26T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -94,6 +94,15 @@
             "metricIds": [
               "pulse.sharon_ai_contract_value"
             ]
+          },
+          {
+            "text": {
+              "en": "OpenAI reported that its coding agent at maximum reasoning used 54% fewer output tokens than another leading model on the Artificial Analysis Coding Agent Index.",
+              "zh": "OpenAI 表示，其程式代理在最高推理設定下，於 Artificial Analysis Coding Agent Index 使用的輸出 Token 比另一個領先模型少 54%。"
+            },
+            "metricIds": [
+              "pulse.openai_coding_token_efficiency"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -122,8 +131,8 @@
             "zh": "下一讀 · API 定價"
           },
           {
-            "en": "Next read · accepted deployments",
-            "zh": "下一讀 · 已驗收部署"
+            "en": "Next read · coding-token efficiency",
+            "zh": "下一讀 · 程式代理 Token 效率"
           }
         ]
       }
@@ -131,7 +140,7 @@
     "/stocks": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-22T01:00:00.000Z",
+      "verifiedAt": "2026-08-26T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -233,11 +242,9 @@
       }
     },
     "/compute": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-22T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-26T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -369,7 +376,7 @@
     "/energy": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-22T01:00:00.000Z",
+      "verifiedAt": "2026-08-26T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -479,9 +486,11 @@
       }
     },
     "/models": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-22T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-26T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -538,6 +547,15 @@
             "metricIds": [
               "models.openai_monitoring_overhead"
             ]
+          },
+          {
+            "text": {
+              "en": "OpenAI reported 54% fewer output tokens for its coding agent at maximum reasoning versus another leading model on the Artificial Analysis Coding Agent Index.",
+              "zh": "OpenAI 表示，其程式代理在最高推理設定下，於 Artificial Analysis Coding Agent Index 的輸出 Token 比另一個領先模型少 54%。"
+            },
+            "metricIds": [
+              "models.openai_coding_token_efficiency"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -566,8 +584,8 @@
             "zh": "下一讀 · 資料飛輪"
           },
           {
-            "en": "Next read · monitoring overhead",
-            "zh": "下一讀 · 監控算力負擔"
+            "en": "Next read · coding-token efficiency",
+            "zh": "下一讀 · 程式代理 Token 效率"
           }
         ]
       }
@@ -575,7 +593,7 @@
     "/sic": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-22T01:00:00.000Z",
+      "verifiedAt": "2026-08-26T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -880,6 +898,19 @@
       "scope": {
         "zh": "OpenAI 對前沿模型訓練節奏、安全監控架構與約 20% 監控推論算力負擔的第一方揭露。",
         "en": "OpenAI's first-party disclosure on frontier-model training pace, safety monitoring architecture, and roughly 20% inference-compute monitoring overhead."
+      }
+    },
+    "openai-full-stack": {
+      "id": "openai-full-stack",
+      "kind": "company",
+      "publisher": "OpenAI",
+      "title": "The full stack behind abundant intelligence",
+      "url": "https://openai.com/index/the-full-stack-behind-abundant-intelligence/",
+      "publishedAt": "2026-08-25T00:00:00.000Z",
+      "retrievedAt": "2026-08-26T01:00:00.000Z",
+      "scope": {
+        "zh": "OpenAI 對整合式算力策略、Jalapeño 自研推論晶片首批測量結果，以及 GPT-5.6 Sol 程式代理基準輸出 Token 效率的第一方說明。",
+        "en": "OpenAI's first-party account of its integrated compute strategy, initial measured Jalapeño custom-inference-chip results, and GPT-5.6 Sol coding-agent output-token efficiency."
       }
     },
     "openai-ports-pike": {
@@ -1327,7 +1358,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 950
     },
     "energy.announced_power_gw": {
       "id": "energy.announced_power_gw",
@@ -1627,6 +1659,32 @@
       "status": "verified",
       "previousNumericValue": 1800
     },
+    "models.openai_coding_token_efficiency": {
+      "id": "models.openai_coding_token_efficiency",
+      "page": "/models",
+      "required": false,
+      "kind": "published",
+      "numericValue": 54,
+      "display": {
+        "en": "54% fewer",
+        "zh": "少 54%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-25T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "openai-full-stack"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-full-stack",
+          "numericValue": 54,
+          "asOf": "2026-08-25T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "models.openai_monitoring_overhead": {
       "id": "models.openai_monitoring_overhead",
       "page": "/models",
@@ -1895,6 +1953,32 @@
       "status": "verified",
       "previousNumericValue": 2800
     },
+    "pulse.openai_coding_token_efficiency": {
+      "id": "pulse.openai_coding_token_efficiency",
+      "page": "/",
+      "required": false,
+      "kind": "published",
+      "numericValue": 54,
+      "display": {
+        "en": "54% fewer",
+        "zh": "少 54%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-25T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "openai-full-stack"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-full-stack",
+          "numericValue": 54,
+          "asOf": "2026-08-25T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "pulse.openai_ports_capacity": {
       "id": "pulse.openai_ports_capacity",
       "page": "/",
@@ -1986,7 +2070,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 950
     },
     "sic.ev_penetration": {
       "id": "sic.ev_penetration",
@@ -3498,10 +3583,8 @@
     }
   },
   "keySignalIds": [
-    "pulse.sharon_ai_contract_value",
-    "compute.sharon_ai_contract_value",
-    "compute.openai_ports_capacity",
+    "pulse.openai_coding_token_efficiency",
     "energy.openai_ports_capacity",
-    "models.openai_monitoring_overhead"
+    "models.openai_coding_token_efficiency"
   ]
 }

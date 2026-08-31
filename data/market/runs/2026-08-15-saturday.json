@@ -1,14 +1,16 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-12-wednesday",
-  "cadence": "wednesday",
-  "generatedAt": "2026-08-12T01:00:00.000Z",
-  "dataCutoff": "2026-08-12T01:00:00.000Z",
+  "runId": "2026-08-15-saturday",
+  "cadence": "saturday",
+  "generatedAt": "2026-08-15T01:00:00.000Z",
+  "dataCutoff": "2026-08-15T01:00:00.000Z",
   "pages": {
     "/": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-12T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-15T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -65,6 +67,15 @@
             "metricIds": [
               "pulse.amd_data_center_revenue"
             ]
+          },
+          {
+            "text": {
+              "en": "Cisco reported $9.3B of hyperscaler AI infrastructure orders in its latest fiscal year, providing a new conversion signal from AI capacity plans to networking demand.",
+              "zh": "Cisco 公布最新會計年度超大規模客戶 AI 基礎設施訂單達 $9.3B，為 AI 容量規畫轉化成網路需求提供新的落地信號。"
+            },
+            "metricIds": [
+              "pulse.cisco_ai_infrastructure_orders"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -102,7 +113,7 @@
     "/stocks": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-12T01:00:00.000Z",
+      "verifiedAt": "2026-08-15T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -204,9 +215,11 @@
       }
     },
     "/compute": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-12T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-15T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -274,6 +287,15 @@
               "compute.hbm_demand",
               "compute.packaging_lead_weeks"
             ]
+          },
+          {
+            "text": {
+              "en": "Cisco took $9.3B of hyperscaler AI infrastructure orders in its latest fiscal year, reinforcing the conversion of AI capacity plans into networking demand.",
+              "zh": "Cisco 於最新會計年度取得 $9.3B 超大規模客戶 AI 基礎設施訂單，進一步支持 AI 容量規畫正轉化為網路需求。"
+            },
+            "metricIds": [
+              "compute.cisco_ai_infrastructure_orders"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -309,11 +331,9 @@
       }
     },
     "/energy": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-12T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-15T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -416,7 +436,7 @@
     "/models": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-12T01:00:00.000Z",
+      "verifiedAt": "2026-08-15T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -500,7 +520,7 @@
     "/sic": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-12T01:00:00.000Z",
+      "verifiedAt": "2026-08-15T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -654,6 +674,32 @@
       "scope": {
         "zh": "客製 AI 加速器、AI 網路與半導體營收的公司揭露。",
         "en": "Company disclosures on custom AI accelerators, AI networking, and semiconductor revenue."
+      }
+    },
+    "cisco-q4-fy26": {
+      "id": "cisco-q4-fy26",
+      "kind": "company",
+      "publisher": "Cisco Investor Relations",
+      "title": "Cisco Reports Fourth Quarter and Fiscal Year 2026 Earnings",
+      "url": "https://investor.cisco.com/files/doc_news/CISCO-REPORTS-FOURTH-QUARTER-AND-FISCAL-YEAR-2026-EARNINGS-2026.pdf",
+      "publishedAt": "2026-08-12T20:00:00.000Z",
+      "retrievedAt": "2026-08-15T01:00:00.000Z",
+      "scope": {
+        "zh": "Cisco 第四季與全年營收，以及超大規模客戶 AI 基礎設施訂單與營收的公司財報發布。",
+        "en": "Cisco's company-issued fourth-quarter and full-year results, including hyperscaler AI infrastructure orders and revenue."
+      }
+    },
+    "cisco-q4-fy26-sec": {
+      "id": "cisco-q4-fy26-sec",
+      "kind": "official",
+      "publisher": "U.S. Securities and Exchange Commission",
+      "title": "Cisco Form 8-K filed August 12, 2026",
+      "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000106/csco-20260812.htm",
+      "publishedAt": "2026-08-12T20:07:06.000Z",
+      "retrievedAt": "2026-08-15T01:00:00.000Z",
+      "scope": {
+        "zh": "Cisco 第四季與全年營收，以及超大規模客戶 AI 基礎設施訂單與營收的 SEC 官方財報附件。",
+        "en": "Official SEC earnings exhibit covering Cisco's fourth-quarter and full-year revenue and hyperscaler AI infrastructure orders and revenue."
       }
     },
     "doe-data-centers": {
@@ -1002,6 +1048,39 @@
       "status": "verified",
       "previousNumericValue": 6.7
     },
+    "compute.cisco_ai_infrastructure_orders": {
+      "id": "compute.cisco_ai_infrastructure_orders",
+      "page": "/compute",
+      "required": false,
+      "kind": "published",
+      "numericValue": 9.3,
+      "display": {
+        "en": "$9.3B FY26",
+        "zh": "FY26 $9.3B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-12T20:07:06.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "cisco-q4-fy26-sec",
+          "numericValue": 9.3,
+          "asOf": "2026-08-12T20:07:06.000Z"
+        },
+        {
+          "sourceId": "cisco-q4-fy26",
+          "numericValue": 9.3,
+          "asOf": "2026-08-12T20:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "compute.hbm_demand": {
       "id": "compute.hbm_demand",
       "page": "/compute",
@@ -1269,7 +1348,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 24
     },
     "energy.vistra_helix_commitment": {
       "id": "energy.vistra_helix_commitment",
@@ -1510,6 +1590,39 @@
       "confidence": "high",
       "status": "verified",
       "previousNumericValue": 6.7
+    },
+    "pulse.cisco_ai_infrastructure_orders": {
+      "id": "pulse.cisco_ai_infrastructure_orders",
+      "page": "/",
+      "required": false,
+      "kind": "published",
+      "numericValue": 9.3,
+      "display": {
+        "en": "$9.3B FY26",
+        "zh": "FY26 $9.3B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-12T20:07:06.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "cisco-q4-fy26-sec",
+          "numericValue": 9.3,
+          "asOf": "2026-08-12T20:07:06.000Z"
+        },
+        {
+          "sourceId": "cisco-q4-fy26",
+          "numericValue": 9.3,
+          "asOf": "2026-08-12T20:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "pulse.enterprise_agents": {
       "id": "pulse.enterprise_agents",
@@ -3127,9 +3240,11 @@
     }
   },
   "keySignalIds": [
-    "energy.vertiv_q2_revenue_growth",
-    "pulse.accelerator_market",
+    "pulse.cisco_ai_infrastructure_orders",
     "stocks.basket_30d",
-    "compute.accelerator_pool"
+    "compute.cisco_ai_infrastructure_orders",
+    "energy.vertiv_q2_revenue_growth",
+    "models.api_deployment_share",
+    "sic.market_2030_usd_b"
   ]
 }

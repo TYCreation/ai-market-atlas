@@ -95,7 +95,7 @@ test("rejects a matching accepted review whose run ID does not bind to the snaps
     review.runId = "2026-08-05-wednesday";
     review.reviewId = `${review.runId}:${review.candidateSha256}`;
     await Promise.all([
-      writeFile(join(runs, "2026-08-05-wednesday.json"), JSON.stringify(value)),
+      writeFile(join(runs, "2026-08-01-saturday.json"), JSON.stringify(value)),
       writeFile(join(reviews, "2026-08-05-wednesday.json"), JSON.stringify(review)),
     ]);
 
@@ -152,6 +152,24 @@ test("rejects a retained run whose filename is not a safe market run ID", async 
     const value = snapshot("2026-08-01-saturday", "2026-08-01T01:00:00.000Z");
     await Promise.all([
       writeFile(join(runs, "untrusted.json"), JSON.stringify(value)),
+      writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(acceptedReview(value))),
+    ]);
+
+    await assert.rejects(loadPublishedBriefs(runs, reviews), /filename.*run ID/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a selected snapshot whose safe run filename names a different run", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-briefs-filename-binding-"));
+  const runs = join(root, "runs");
+  const reviews = join(root, "reviews");
+  try {
+    await Promise.all([mkdir(runs), mkdir(reviews)]);
+    const value = snapshot("2026-08-01-saturday", "2026-08-01T01:00:00.000Z");
+    await Promise.all([
+      writeFile(join(runs, "2026-08-05-wednesday.json"), JSON.stringify(value)),
       writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(acceptedReview(value))),
     ]);
 

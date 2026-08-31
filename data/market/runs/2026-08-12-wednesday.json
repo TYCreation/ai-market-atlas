@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-08-saturday",
-  "cadence": "saturday",
-  "generatedAt": "2026-08-08T01:00:00.000Z",
-  "dataCutoff": "2026-08-08T01:00:00.000Z",
+  "runId": "2026-08-12-wednesday",
+  "cadence": "wednesday",
+  "generatedAt": "2026-08-12T01:00:00.000Z",
+  "dataCutoff": "2026-08-12T01:00:00.000Z",
   "pages": {
     "/": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-08T01:00:00.000Z",
+      "verifiedAt": "2026-08-12T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -102,7 +102,7 @@
     "/stocks": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-08T01:00:00.000Z",
+      "verifiedAt": "2026-08-12T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -206,7 +206,7 @@
     "/compute": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-08T01:00:00.000Z",
+      "verifiedAt": "2026-08-12T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -313,7 +313,7 @@
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-08T01:00:00.000Z",
+      "verifiedAt": "2026-08-12T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -364,6 +364,15 @@
         "supportingEvidence": [
           {
             "text": {
+              "en": "Vertiv reported second-quarter net sales growth of 24% year over year as demand for AI and general-compute power and thermal infrastructure intensified.",
+              "zh": "Vertiv 公布第二季淨銷售額年增 24%，反映 AI 與一般運算的電力及散熱基礎設施需求升溫。"
+            },
+            "metricIds": [
+              "energy.vertiv_q2_revenue_growth"
+            ]
+          },
+          {
+            "text": {
               "en": "Vistra disclosed an initial commitment of up to $1.0B to Helix Digital Infrastructure and confirmed its role as Helix's preferred power provider.",
               "zh": "Vistra 揭露對 Helix Digital Infrastructure 的初始承諾最高達 $1.0B，並確認其為 Helix 的優先電力供應商。"
             },
@@ -407,7 +416,7 @@
     "/models": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-08T01:00:00.000Z",
+      "verifiedAt": "2026-08-12T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -491,7 +500,7 @@
     "/sic": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-08T01:00:00.000Z",
+      "verifiedAt": "2026-08-12T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -818,6 +827,32 @@
       "scope": {
         "zh": "第二季營收、毛利率、第三季指引，以及先進製程與產能展望。",
         "en": "Second-quarter revenue and margins, third-quarter guidance, and advanced-node capacity outlook."
+      }
+    },
+    "vertiv-q2-2026": {
+      "id": "vertiv-q2-2026",
+      "kind": "company",
+      "publisher": "Vertiv Investor Relations",
+      "title": "Vertiv Reports Strong Second Quarter 2026 and Raises Full-Year Guidance",
+      "url": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Second-Quarter-2026-with-Diluted-EPS-Growth-of-53-Adjusted-Diluted-EPS-Growth-of-60-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
+      "publishedAt": "2026-07-29T00:00:00.000Z",
+      "retrievedAt": "2026-08-12T01:00:00.000Z",
+      "scope": {
+        "zh": "Vertiv 第二季淨銷售額、成長、現金流與上調後的 2026 全年指引。",
+        "en": "Vertiv second-quarter net sales, growth, cash flow, and raised full-year 2026 guidance."
+      }
+    },
+    "vertiv-q2-2026-prn": {
+      "id": "vertiv-q2-2026-prn",
+      "kind": "company",
+      "publisher": "Vertiv Holdings Co via PR Newswire",
+      "title": "Vertiv Reports Strong Second Quarter 2026 and Raises Full-Year Guidance",
+      "url": "https://www.prnewswire.com/news-releases/vertiv-reports-strong-second-quarter-2026-with-diluted-eps-growth-of-53-adjusted-diluted-eps-growth-of-60-raises-full-year-2026-guidance-across-all-key-metrics-302837598.html",
+      "publishedAt": "2026-07-29T00:00:00.000Z",
+      "retrievedAt": "2026-08-12T01:00:00.000Z",
+      "scope": {
+        "zh": "Vertiv 公司發布之第二季結果公開鏡像，涵蓋淨銷售額、成長與上調後的全年指引。",
+        "en": "Company-issued public mirror of Vertiv's second-quarter results, covering net sales, growth, and raised full-year guidance."
       }
     },
     "vistra-q2-2026": {
@@ -1204,6 +1239,38 @@
       "status": "verified",
       "previousNumericValue": 42
     },
+    "energy.vertiv_q2_revenue_growth": {
+      "id": "energy.vertiv_q2_revenue_growth",
+      "page": "/energy",
+      "required": false,
+      "kind": "published",
+      "numericValue": 24,
+      "display": {
+        "en": "+24% YoY",
+        "zh": "年增 24%"
+      },
+      "unit": "%",
+      "asOf": "2026-07-29T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "vertiv-q2-2026",
+          "numericValue": 24,
+          "asOf": "2026-07-29T00:00:00.000Z"
+        },
+        {
+          "sourceId": "vertiv-q2-2026-prn",
+          "numericValue": 24,
+          "asOf": "2026-07-29T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "energy.vistra_helix_commitment": {
       "id": "energy.vistra_helix_commitment",
       "page": "/energy",
@@ -1229,7 +1296,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 1
     },
     "models.api_deployment_share": {
       "id": "models.api_deployment_share",
@@ -3059,11 +3127,9 @@
     }
   },
   "keySignalIds": [
-    "energy.vistra_helix_commitment",
-    "pulse.amd_data_center_revenue",
-    "stocks.amd_q2_revenue_growth",
-    "compute.amd_data_center_growth",
-    "models.api_deployment_share",
-    "sic.onsemi_q2_revenue"
+    "energy.vertiv_q2_revenue_growth",
+    "pulse.accelerator_market",
+    "stocks.basket_30d",
+    "compute.accelerator_pool"
   ]
 }

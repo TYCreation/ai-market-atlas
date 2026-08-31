@@ -1,14 +1,16 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-01-saturday",
-  "cadence": "saturday",
-  "generatedAt": "2026-08-01T01:00:00.000Z",
-  "dataCutoff": "2026-08-01T01:00:00.000Z",
+  "runId": "2026-08-05-wednesday",
+  "cadence": "wednesday",
+  "generatedAt": "2026-08-05T01:00:00.000Z",
+  "dataCutoff": "2026-08-05T01:00:00.000Z",
   "pages": {
     "/": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-05T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -56,7 +58,17 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "AMD reported $6.7B of second-quarter data-center revenue, with demand spanning EPYC processors and Instinct accelerators.",
+              "zh": "AMD 公布第二季資料中心營收為 $6.7B，需求涵蓋 EPYC 處理器與 Instinct 加速器。"
+            },
+            "metricIds": [
+              "pulse.amd_data_center_revenue"
+            ]
+          }
+        ],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -92,10 +104,9 @@
     "/stocks": {
       "changed": true,
       "changeReasons": [
-        "first-party-event",
-        "conclusion-changing-evidence"
+        "first-party-event"
       ],
-      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "verifiedAt": "2026-08-05T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -146,6 +157,15 @@
         "supportingEvidence": [
           {
             "text": {
+              "en": "AMD's second-quarter revenue increased 50% year over year, while data-center revenue more than doubled, adding first-party earnings breadth to AI equity leadership.",
+              "zh": "AMD 第二季營收年增 50%，資料中心營收更成長逾一倍，為 AI 股票領漲結構增添第一方獲利擴散證據。"
+            },
+            "metricIds": [
+              "stocks.amd_q2_revenue_growth"
+            ]
+          },
+          {
+            "text": {
               "en": "TSMC's second-quarter revenue reached the top of its guidance range and its third-quarter outlook stepped higher, reinforcing earnings support for advanced-node and AI infrastructure exposure.",
               "zh": "台積電第二季營收達到指引區間上緣，第三季展望再向上推進，進一步支持先進製程與 AI 基礎設施相關標的的獲利動能。"
             },
@@ -190,10 +210,9 @@
     "/compute": {
       "changed": true,
       "changeReasons": [
-        "first-party-event",
-        "conclusion-changing-evidence"
+        "first-party-event"
       ],
-      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "verifiedAt": "2026-08-05T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -244,6 +263,16 @@
         "supportingEvidence": [
           {
             "text": {
+              "en": "AMD reported $6.7B in second-quarter data-center revenue, up 107% year over year, as EPYC demand and Instinct deployments scaled.",
+              "zh": "AMD 公布第二季資料中心營收 $6.7B、年增 107%，EPYC 需求與 Instinct 部署同步擴大。"
+            },
+            "metricIds": [
+              "compute.amd_data_center_revenue",
+              "compute.amd_data_center_growth"
+            ]
+          },
+          {
+            "text": {
               "en": "TSMC's second-quarter revenue reached the top of its guidance range while its third-quarter outlook moved higher; the result supports continued strength in the advanced compute supply chain.",
               "zh": "台積電第二季營收達到指引區間上緣，第三季展望並向上推進，支持先進算力供應鏈需求仍強的判斷。"
             },
@@ -288,7 +317,7 @@
     "/energy": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "verifiedAt": "2026-08-05T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -372,7 +401,7 @@
     "/models": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "verifiedAt": "2026-08-05T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -458,7 +487,7 @@
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-01T01:00:00.000Z",
+      "verifiedAt": "2026-08-05T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -506,7 +535,17 @@
             ]
           }
         },
-        "supportingEvidence": [],
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "onsemi reported $1.604B of second-quarter revenue and said AI data-center revenue is expected to more than double this year as high-voltage power adoption broadens.",
+              "zh": "onsemi 公布第二季營收 $1.604B，並表示隨高電壓電力方案採用擴大，今年 AI 資料中心營收預期成長逾一倍。"
+            },
+            "metricIds": [
+              "sic.onsemi_q2_revenue"
+            ]
+          }
+        ],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -541,6 +580,45 @@
     }
   },
   "sources": {
+    "amd-q2-2026": {
+      "id": "amd-q2-2026",
+      "kind": "company",
+      "publisher": "AMD Investor Relations",
+      "title": "AMD Reports Second Quarter 2026 Financial Results",
+      "url": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
+      "publishedAt": "2026-08-04T20:15:00.000Z",
+      "retrievedAt": "2026-08-05T01:00:00.000Z",
+      "scope": {
+        "zh": "第二季公司與資料中心營收、年增率、Instinct 與 EPYC 部署，以及第三季展望的公司揭露。",
+        "en": "Company disclosures on second-quarter corporate and data-center revenue, growth, Instinct and EPYC deployments, and third-quarter outlook."
+      }
+    },
+    "amd-q2-2026-gnw": {
+      "id": "amd-q2-2026-gnw",
+      "kind": "company",
+      "publisher": "Advanced Micro Devices, Inc. via GlobeNewswire",
+      "title": "AMD Reports Second Quarter 2026 Financial Results",
+      "url": "https://www.globenewswire.com/news-release/2026/08/04/3338848/0/en/amd-reports-second-quarter-2026-financial-results.html",
+      "publishedAt": "2026-08-04T20:15:00.000Z",
+      "retrievedAt": "2026-08-05T01:00:00.000Z",
+      "scope": {
+        "zh": "由 AMD 發布的第二季財務結果全文，包括資料中心營收與年增率。",
+        "en": "AMD-issued second-quarter financial results, including data-center revenue and growth."
+      }
+    },
+    "amd-q2-2026-sec": {
+      "id": "amd-q2-2026-sec",
+      "kind": "official",
+      "publisher": "U.S. Securities and Exchange Commission",
+      "title": "AMD Form 8-K filed August 4, 2026",
+      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000121/amd-20260804.htm",
+      "publishedAt": "2026-08-04T20:16:24.000Z",
+      "retrievedAt": "2026-08-05T01:00:00.000Z",
+      "scope": {
+        "zh": "AMD 第二季財務結果與附件的 SEC 8-K 官方申報。",
+        "en": "Official SEC Form 8-K filing for AMD's second-quarter financial results and exhibits."
+      }
+    },
     "atlas-model": {
       "id": "atlas-model",
       "kind": "atlas",
@@ -649,6 +727,32 @@
       "scope": {
         "zh": "AI 資料中心的矽、SiC 與 GaN 功率產品及供應鏈觀點。",
         "en": "Silicon, SiC, and GaN power products and supply-chain context for AI data centers."
+      }
+    },
+    "onsemi-q2-2026-gnw": {
+      "id": "onsemi-q2-2026-gnw",
+      "kind": "company",
+      "publisher": "onsemi via GlobeNewswire",
+      "title": "onsemi Reports Second Quarter 2026 Results",
+      "url": "https://www.globenewswire.com/news-release/2026/08/03/3337876/0/en/onsemi-reports-second-quarter-2026-results.html",
+      "publishedAt": "2026-08-03T20:05:00.000Z",
+      "retrievedAt": "2026-08-05T01:00:00.000Z",
+      "scope": {
+        "zh": "由 onsemi 發布的第二季財務結果全文，包括公司營收與 AI 資料中心成長說明。",
+        "en": "onsemi-issued second-quarter financial results, including corporate revenue and AI data-center growth commentary."
+      }
+    },
+    "onsemi-q2-2026-sec": {
+      "id": "onsemi-q2-2026-sec",
+      "kind": "official",
+      "publisher": "U.S. Securities and Exchange Commission",
+      "title": "onsemi Form 8-K filed August 3, 2026",
+      "url": "https://www.sec.gov/Archives/edgar/data/1097864/000114036126030989/ef20079200_8k.htm",
+      "publishedAt": "2026-08-03T20:54:23.000Z",
+      "retrievedAt": "2026-08-05T01:00:00.000Z",
+      "scope": {
+        "zh": "onsemi 第二季財務結果與附件的 SEC 8-K 官方申報。",
+        "en": "Official SEC Form 8-K filing for onsemi's second-quarter financial results and exhibits."
       }
     },
     "openai-pricing": {
@@ -766,6 +870,83 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 242
+    },
+    "compute.amd_data_center_growth": {
+      "id": "compute.amd_data_center_growth",
+      "page": "/compute",
+      "required": false,
+      "kind": "published",
+      "numericValue": 107,
+      "display": {
+        "en": "+107% YoY",
+        "zh": "年增 107%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-04T20:15:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "amd-q2-2026",
+          "numericValue": 107,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-sec",
+          "numericValue": 107,
+          "asOf": "2026-08-04T20:16:24.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-gnw",
+          "numericValue": 107,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "compute.amd_data_center_revenue": {
+      "id": "compute.amd_data_center_revenue",
+      "page": "/compute",
+      "required": false,
+      "kind": "published",
+      "numericValue": 6.7,
+      "display": {
+        "en": "$6.7B",
+        "zh": "$6.7B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-04T20:15:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "amd-q2-2026",
+          "numericValue": 6.7,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-sec",
+          "numericValue": 6.7,
+          "asOf": "2026-08-04T20:16:24.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-gnw",
+          "numericValue": 6.7,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "compute.hbm_demand": {
       "id": "compute.hbm_demand",
@@ -1176,6 +1357,45 @@
       "status": "verified",
       "previousNumericValue": 242
     },
+    "pulse.amd_data_center_revenue": {
+      "id": "pulse.amd_data_center_revenue",
+      "page": "/",
+      "required": false,
+      "kind": "published",
+      "numericValue": 6.7,
+      "display": {
+        "en": "$6.7B",
+        "zh": "$6.7B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-04T20:15:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "amd-q2-2026",
+          "numericValue": 6.7,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-sec",
+          "numericValue": 6.7,
+          "asOf": "2026-08-04T20:16:24.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-gnw",
+          "numericValue": 6.7,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "pulse.enterprise_agents": {
       "id": "pulse.enterprise_agents",
       "page": "/",
@@ -1367,6 +1587,39 @@
       "status": "verified",
       "previousNumericValue": 23
     },
+    "sic.onsemi_q2_revenue": {
+      "id": "sic.onsemi_q2_revenue",
+      "page": "/sic",
+      "required": false,
+      "kind": "published",
+      "numericValue": 1.6035,
+      "display": {
+        "en": "$1.604B",
+        "zh": "$1.604B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-03T20:05:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "onsemi-q2-2026-gnw",
+        "onsemi-q2-2026-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "onsemi-q2-2026-sec",
+          "numericValue": 1.6035,
+          "asOf": "2026-08-03T20:54:23.000Z"
+        },
+        {
+          "sourceId": "onsemi-q2-2026-gnw",
+          "numericValue": 1.6035,
+          "asOf": "2026-08-03T20:05:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
     "sic.packaging_watts": {
       "id": "sic.packaging_watts",
       "page": "/sic",
@@ -1438,6 +1691,44 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 300
+    },
+    "stocks.amd_q2_revenue_growth": {
+      "id": "stocks.amd_q2_revenue_growth",
+      "page": "/stocks",
+      "required": false,
+      "kind": "published",
+      "numericValue": 50,
+      "display": {
+        "en": "+50% YoY",
+        "zh": "年增 50%"
+      },
+      "unit": "%",
+      "asOf": "2026-08-04T20:15:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec"
+      ],
+      "observations": [
+        {
+          "sourceId": "amd-q2-2026",
+          "numericValue": 50,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-sec",
+          "numericValue": 50,
+          "asOf": "2026-08-04T20:16:24.000Z"
+        },
+        {
+          "sourceId": "amd-q2-2026-gnw",
+          "numericValue": 50,
+          "asOf": "2026-08-04T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "stocks.amd.monthReturn": {
       "id": "stocks.amd.monthReturn",
@@ -2719,11 +3010,9 @@
     }
   },
   "keySignalIds": [
-    "pulse.infrastructure_spend",
-    "stocks.median_forward_pe",
-    "compute.hbm_demand",
-    "energy.committed_power_gw",
-    "models.production_agents",
-    "sic.packaging_watts"
+    "pulse.amd_data_center_revenue",
+    "stocks.amd_q2_revenue_growth",
+    "compute.amd_data_center_growth",
+    "sic.onsemi_q2_revenue"
   ]
 }

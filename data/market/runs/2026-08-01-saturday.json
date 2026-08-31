@@ -1,16 +1,14 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-26-wednesday",
-  "cadence": "wednesday",
-  "generatedAt": "2026-08-26T01:00:00.000Z",
-  "dataCutoff": "2026-08-26T01:00:00.000Z",
+  "runId": "2026-08-01-saturday",
+  "cadence": "saturday",
+  "generatedAt": "2026-08-01T01:00:00.000Z",
+  "dataCutoff": "2026-08-01T01:00:00.000Z",
   "pages": {
     "/": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-26T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -58,53 +56,7 @@
             ]
           }
         },
-        "supportingEvidence": [
-          {
-            "text": {
-              "en": "AMD reported $6.7B of second-quarter data-center revenue, with demand spanning EPYC processors and Instinct accelerators.",
-              "zh": "AMD 公布第二季資料中心營收為 $6.7B，需求涵蓋 EPYC 處理器與 Instinct 加速器。"
-            },
-            "metricIds": [
-              "pulse.amd_data_center_revenue"
-            ]
-          },
-          {
-            "text": {
-              "en": "Cisco reported $9.3B of hyperscaler AI infrastructure orders in its latest fiscal year, providing a new conversion signal from AI capacity plans to networking demand.",
-              "zh": "Cisco 公布最新會計年度超大規模客戶 AI 基礎設施訂單達 $9.3B，為 AI 容量規畫轉化成網路需求提供新的落地信號。"
-            },
-            "metricIds": [
-              "pulse.cisco_ai_infrastructure_orders"
-            ]
-          },
-          {
-            "text": {
-              "en": "OpenAI agreed to secure approximately 8 IT-GW at Ohio's PORTS-Pike campus, with capacity scheduled to be delivered over time.",
-              "zh": "OpenAI 同意在俄亥俄州 PORTS-Pike 園區取得約 8 IT-GW 容量，並按進度分期交付。"
-            },
-            "metricIds": [
-              "pulse.openai_ports_capacity"
-            ]
-          },
-          {
-            "text": {
-              "en": "Sharon AI completed customer acceptance of an initial AI Cloud deployment under a five-year agreement with an approximately $950M initial contract value.",
-              "zh": "Sharon AI 完成首階段 AI Cloud 部署的客戶驗收；該五年期協議的初始合約總值約為 $950M。"
-            },
-            "metricIds": [
-              "pulse.sharon_ai_contract_value"
-            ]
-          },
-          {
-            "text": {
-              "en": "OpenAI reported that its coding agent at maximum reasoning used 54% fewer output tokens than another leading model on the Artificial Analysis Coding Agent Index.",
-              "zh": "OpenAI 表示，其程式代理在最高推理設定下，於 Artificial Analysis Coding Agent Index 使用的輸出 Token 比另一個領先模型少 54%。"
-            },
-            "metricIds": [
-              "pulse.openai_coding_token_efficiency"
-            ]
-          }
-        ],
+        "supportingEvidence": [],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -131,16 +83,19 @@
             "zh": "下一讀 · API 定價"
           },
           {
-            "en": "Next read · coding-token efficiency",
-            "zh": "下一讀 · 程式代理 Token 效率"
+            "en": "Next read · production cohort",
+            "zh": "下一讀 · 正式環境群組"
           }
         ]
       }
     },
     "/stocks": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-26T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -191,15 +146,6 @@
         "supportingEvidence": [
           {
             "text": {
-              "en": "AMD's second-quarter revenue increased 50% year over year, while data-center revenue more than doubled, adding first-party earnings breadth to AI equity leadership.",
-              "zh": "AMD 第二季營收年增 50%，資料中心營收更成長逾一倍，為 AI 股票領漲結構增添第一方獲利擴散證據。"
-            },
-            "metricIds": [
-              "stocks.amd_q2_revenue_growth"
-            ]
-          },
-          {
-            "text": {
               "en": "TSMC's second-quarter revenue reached the top of its guidance range and its third-quarter outlook stepped higher, reinforcing earnings support for advanced-node and AI infrastructure exposure.",
               "zh": "台積電第二季營收達到指引區間上緣，第三季展望再向上推進，進一步支持先進製程與 AI 基礎設施相關標的的獲利動能。"
             },
@@ -242,9 +188,12 @@
       }
     },
     "/compute": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-26T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -295,49 +244,12 @@
         "supportingEvidence": [
           {
             "text": {
-              "en": "AMD reported $6.7B in second-quarter data-center revenue, up 107% year over year, as EPYC demand and Instinct deployments scaled.",
-              "zh": "AMD 公布第二季資料中心營收 $6.7B、年增 107%，EPYC 需求與 Instinct 部署同步擴大。"
-            },
-            "metricIds": [
-              "compute.amd_data_center_revenue",
-              "compute.amd_data_center_growth"
-            ]
-          },
-          {
-            "text": {
               "en": "TSMC's second-quarter revenue reached the top of its guidance range while its third-quarter outlook moved higher; the result supports continued strength in the advanced compute supply chain.",
               "zh": "台積電第二季營收達到指引區間上緣，第三季展望並向上推進，支持先進算力供應鏈需求仍強的判斷。"
             },
             "metricIds": [
               "compute.hbm_demand",
               "compute.packaging_lead_weeks"
-            ]
-          },
-          {
-            "text": {
-              "en": "Cisco took $9.3B of hyperscaler AI infrastructure orders in its latest fiscal year, reinforcing the conversion of AI capacity plans into networking demand.",
-              "zh": "Cisco 於最新會計年度取得 $9.3B 超大規模客戶 AI 基礎設施訂單，進一步支持 AI 容量規畫正轉化為網路需求。"
-            },
-            "metricIds": [
-              "compute.cisco_ai_infrastructure_orders"
-            ]
-          },
-          {
-            "text": {
-              "en": "OpenAI contracted for approximately 8 IT-GW at PORTS-Pike, which will exclusively host NVIDIA AI compute infrastructure.",
-              "zh": "OpenAI 已簽約取得 PORTS-Pike 約 8 IT-GW 容量；該園區將專門部署 NVIDIA AI 算力基礎設施。"
-            },
-            "metricIds": [
-              "compute.openai_ports_capacity"
-            ]
-          },
-          {
-            "text": {
-              "en": "Sharon AI achieved customer acceptance for an initial NVIDIA GPU cluster deployment tied to an approximately $950M five-year AI Cloud agreement.",
-              "zh": "Sharon AI 的首階段 NVIDIA GPU 叢集部署已通過客戶驗收，對應約 $950M 的五年期 AI Cloud 協議。"
-            },
-            "metricIds": [
-              "compute.sharon_ai_contract_value"
             ]
           }
         ],
@@ -367,8 +279,8 @@
             "zh": "下一讀 · 工作負載密度"
           },
           {
-            "en": "Next read · Sharon revenue start",
-            "zh": "下一讀 · Sharon 營收啟動"
+            "en": "Next read · volume ramps",
+            "zh": "下一讀 · 出貨放量"
           }
         ]
       }
@@ -376,7 +288,7 @@
     "/energy": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-26T01:00:00.000Z",
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -424,35 +336,7 @@
             ]
           }
         },
-        "supportingEvidence": [
-          {
-            "text": {
-              "en": "Vertiv reported second-quarter net sales growth of 24% year over year as demand for AI and general-compute power and thermal infrastructure intensified.",
-              "zh": "Vertiv 公布第二季淨銷售額年增 24%，反映 AI 與一般運算的電力及散熱基礎設施需求升溫。"
-            },
-            "metricIds": [
-              "energy.vertiv_q2_revenue_growth"
-            ]
-          },
-          {
-            "text": {
-              "en": "Vistra disclosed an initial commitment of up to $1.0B to Helix Digital Infrastructure and confirmed its role as Helix's preferred power provider.",
-              "zh": "Vistra 揭露對 Helix Digital Infrastructure 的初始承諾最高達 $1.0B，並確認其為 Helix 的優先電力供應商。"
-            },
-            "metricIds": [
-              "energy.vistra_helix_commitment"
-            ]
-          },
-          {
-            "text": {
-              "en": "OpenAI agreed to secure approximately 8 IT-GW at PORTS-Pike, while later phases remain dependent on new generation and transmission.",
-              "zh": "OpenAI 同意在 PORTS-Pike 取得約 8 IT-GW 容量，後續階段仍取決於新建發電與輸電設施。"
-            },
-            "metricIds": [
-              "energy.openai_ports_capacity"
-            ]
-          }
-        ],
+        "supportingEvidence": [],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -471,12 +355,12 @@
         ],
         "nextObservations": [
           {
-            "en": "Next read · Helix project conversion",
-            "zh": "下一讀 · Helix 專案轉化"
+            "en": "Next read · project conversion",
+            "zh": "下一讀 · 專案轉化"
           },
           {
-            "en": "Next read · PORTS-Pike commissioning",
-            "zh": "下一讀 · PORTS-Pike 啟用進度"
+            "en": "Next read · design wins",
+            "zh": "下一讀 · 設計導入"
           },
           {
             "en": "Next read · PPA quality",
@@ -486,11 +370,9 @@
       }
     },
     "/models": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-26T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -538,26 +420,7 @@
             ]
           }
         },
-        "supportingEvidence": [
-          {
-            "text": {
-              "en": "OpenAI estimated that its expanded safety monitoring adds roughly 20% inference-compute overhead to monitored frontier training and evaluation workloads.",
-              "zh": "OpenAI 估計，擴充後的安全監控會讓受監控的前沿訓練與評估工作負載增加約 20% 推論算力負擔。"
-            },
-            "metricIds": [
-              "models.openai_monitoring_overhead"
-            ]
-          },
-          {
-            "text": {
-              "en": "OpenAI reported 54% fewer output tokens for its coding agent at maximum reasoning versus another leading model on the Artificial Analysis Coding Agent Index.",
-              "zh": "OpenAI 表示，其程式代理在最高推理設定下，於 Artificial Analysis Coding Agent Index 的輸出 Token 比另一個領先模型少 54%。"
-            },
-            "metricIds": [
-              "models.openai_coding_token_efficiency"
-            ]
-          }
-        ],
+        "supportingEvidence": [],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -584,16 +447,18 @@
             "zh": "下一讀 · 資料飛輪"
           },
           {
-            "en": "Next read · coding-token efficiency",
-            "zh": "下一讀 · 程式代理 Token 效率"
+            "en": "Next read · gross margin",
+            "zh": "下一讀 · 毛利率"
           }
         ]
       }
     },
     "/sic": {
-      "changed": false,
-      "changeReasons": [],
-      "verifiedAt": "2026-08-26T01:00:00.000Z",
+      "changed": true,
+      "changeReasons": [
+        "first-party-event"
+      ],
+      "verifiedAt": "2026-08-01T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -641,17 +506,7 @@
             ]
           }
         },
-        "supportingEvidence": [
-          {
-            "text": {
-              "en": "onsemi reported $1.604B of second-quarter revenue and said AI data-center revenue is expected to more than double this year as high-voltage power adoption broadens.",
-              "zh": "onsemi 公布第二季營收 $1.604B，並表示隨高電壓電力方案採用擴大，今年 AI 資料中心營收預期成長逾一倍。"
-            },
-            "metricIds": [
-              "sic.onsemi_q2_revenue"
-            ]
-          }
-        ],
+        "supportingEvidence": [],
         "opposingEvidence": [],
         "catalysts": [],
         "risks": [
@@ -686,45 +541,6 @@
     }
   },
   "sources": {
-    "amd-q2-2026": {
-      "id": "amd-q2-2026",
-      "kind": "company",
-      "publisher": "AMD Investor Relations",
-      "title": "AMD Reports Second Quarter 2026 Financial Results",
-      "url": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
-      "publishedAt": "2026-08-04T20:15:00.000Z",
-      "retrievedAt": "2026-08-05T01:00:00.000Z",
-      "scope": {
-        "zh": "第二季公司與資料中心營收、年增率、Instinct 與 EPYC 部署，以及第三季展望的公司揭露。",
-        "en": "Company disclosures on second-quarter corporate and data-center revenue, growth, Instinct and EPYC deployments, and third-quarter outlook."
-      }
-    },
-    "amd-q2-2026-gnw": {
-      "id": "amd-q2-2026-gnw",
-      "kind": "company",
-      "publisher": "Advanced Micro Devices, Inc. via GlobeNewswire",
-      "title": "AMD Reports Second Quarter 2026 Financial Results",
-      "url": "https://www.globenewswire.com/news-release/2026/08/04/3338848/0/en/amd-reports-second-quarter-2026-financial-results.html",
-      "publishedAt": "2026-08-04T20:15:00.000Z",
-      "retrievedAt": "2026-08-05T01:00:00.000Z",
-      "scope": {
-        "zh": "由 AMD 發布的第二季財務結果全文，包括資料中心營收與年增率。",
-        "en": "AMD-issued second-quarter financial results, including data-center revenue and growth."
-      }
-    },
-    "amd-q2-2026-sec": {
-      "id": "amd-q2-2026-sec",
-      "kind": "official",
-      "publisher": "U.S. Securities and Exchange Commission",
-      "title": "AMD Form 8-K filed August 4, 2026",
-      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000121/amd-20260804.htm",
-      "publishedAt": "2026-08-04T20:16:24.000Z",
-      "retrievedAt": "2026-08-05T01:00:00.000Z",
-      "scope": {
-        "zh": "AMD 第二季財務結果與附件的 SEC 8-K 官方申報。",
-        "en": "Official SEC Form 8-K filing for AMD's second-quarter financial results and exhibits."
-      }
-    },
     "atlas-model": {
       "id": "atlas-model",
       "kind": "atlas",
@@ -747,32 +563,6 @@
       "scope": {
         "zh": "客製 AI 加速器、AI 網路與半導體營收的公司揭露。",
         "en": "Company disclosures on custom AI accelerators, AI networking, and semiconductor revenue."
-      }
-    },
-    "cisco-q4-fy26": {
-      "id": "cisco-q4-fy26",
-      "kind": "company",
-      "publisher": "Cisco Investor Relations",
-      "title": "Cisco Reports Fourth Quarter and Fiscal Year 2026 Earnings",
-      "url": "https://investor.cisco.com/files/doc_news/CISCO-REPORTS-FOURTH-QUARTER-AND-FISCAL-YEAR-2026-EARNINGS-2026.pdf",
-      "publishedAt": "2026-08-12T20:00:00.000Z",
-      "retrievedAt": "2026-08-15T01:00:00.000Z",
-      "scope": {
-        "zh": "Cisco 第四季與全年營收，以及超大規模客戶 AI 基礎設施訂單與營收的公司財報發布。",
-        "en": "Cisco's company-issued fourth-quarter and full-year results, including hyperscaler AI infrastructure orders and revenue."
-      }
-    },
-    "cisco-q4-fy26-sec": {
-      "id": "cisco-q4-fy26-sec",
-      "kind": "official",
-      "publisher": "U.S. Securities and Exchange Commission",
-      "title": "Cisco Form 8-K filed August 12, 2026",
-      "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000106/csco-20260812.htm",
-      "publishedAt": "2026-08-12T20:07:06.000Z",
-      "retrievedAt": "2026-08-15T01:00:00.000Z",
-      "scope": {
-        "zh": "Cisco 第四季與全年營收，以及超大規模客戶 AI 基礎設施訂單與營收的 SEC 官方財報附件。",
-        "en": "Official SEC earnings exhibit covering Cisco's fourth-quarter and full-year revenue and hyperscaler AI infrastructure orders and revenue."
       }
     },
     "doe-data-centers": {
@@ -861,71 +651,6 @@
         "en": "Silicon, SiC, and GaN power products and supply-chain context for AI data centers."
       }
     },
-    "onsemi-q2-2026-gnw": {
-      "id": "onsemi-q2-2026-gnw",
-      "kind": "company",
-      "publisher": "onsemi via GlobeNewswire",
-      "title": "onsemi Reports Second Quarter 2026 Results",
-      "url": "https://www.globenewswire.com/news-release/2026/08/03/3337876/0/en/onsemi-reports-second-quarter-2026-results.html",
-      "publishedAt": "2026-08-03T20:05:00.000Z",
-      "retrievedAt": "2026-08-05T01:00:00.000Z",
-      "scope": {
-        "zh": "由 onsemi 發布的第二季財務結果全文，包括公司營收與 AI 資料中心成長說明。",
-        "en": "onsemi-issued second-quarter financial results, including corporate revenue and AI data-center growth commentary."
-      }
-    },
-    "onsemi-q2-2026-sec": {
-      "id": "onsemi-q2-2026-sec",
-      "kind": "official",
-      "publisher": "U.S. Securities and Exchange Commission",
-      "title": "onsemi Form 8-K filed August 3, 2026",
-      "url": "https://www.sec.gov/Archives/edgar/data/1097864/000114036126030989/ef20079200_8k.htm",
-      "publishedAt": "2026-08-03T20:54:23.000Z",
-      "retrievedAt": "2026-08-05T01:00:00.000Z",
-      "scope": {
-        "zh": "onsemi 第二季財務結果與附件的 SEC 8-K 官方申報。",
-        "en": "Official SEC Form 8-K filing for onsemi's second-quarter financial results and exhibits."
-      }
-    },
-    "openai-cyber-pacing": {
-      "id": "openai-cyber-pacing",
-      "kind": "company",
-      "publisher": "OpenAI",
-      "title": "Pacing model development in an era of cyber-critical capabilities",
-      "url": "https://openai.com/index/pacing-model-development-cyber-capabilities/",
-      "publishedAt": "2026-08-18T00:00:00.000Z",
-      "retrievedAt": "2026-08-19T01:00:00.000Z",
-      "scope": {
-        "zh": "OpenAI 對前沿模型訓練節奏、安全監控架構與約 20% 監控推論算力負擔的第一方揭露。",
-        "en": "OpenAI's first-party disclosure on frontier-model training pace, safety monitoring architecture, and roughly 20% inference-compute monitoring overhead."
-      }
-    },
-    "openai-full-stack": {
-      "id": "openai-full-stack",
-      "kind": "company",
-      "publisher": "OpenAI",
-      "title": "The full stack behind abundant intelligence",
-      "url": "https://openai.com/index/the-full-stack-behind-abundant-intelligence/",
-      "publishedAt": "2026-08-25T00:00:00.000Z",
-      "retrievedAt": "2026-08-26T01:00:00.000Z",
-      "scope": {
-        "zh": "OpenAI 對整合式算力策略、Jalapeño 自研推論晶片首批測量結果，以及 GPT-5.6 Sol 程式代理基準輸出 Token 效率的第一方說明。",
-        "en": "OpenAI's first-party account of its integrated compute strategy, initial measured Jalapeño custom-inference-chip results, and GPT-5.6 Sol coding-agent output-token efficiency."
-      }
-    },
-    "openai-ports-pike": {
-      "id": "openai-ports-pike",
-      "kind": "company",
-      "publisher": "OpenAI",
-      "title": "OpenAI joins PORTS-Pike project",
-      "url": "https://openai.com/index/openai-joins-ports-pike-project/",
-      "publishedAt": "2026-08-17T00:00:00.000Z",
-      "retrievedAt": "2026-08-19T01:00:00.000Z",
-      "scope": {
-        "zh": "OpenAI 在俄亥俄州 PORTS-Pike 園區的約 8 IT-GW 容量協議、20 年租約、首批 800 MW 時程與電力基礎設施條件。",
-        "en": "OpenAI's approximately 8 IT-GW PORTS-Pike capacity agreement, 20-year lease, initial 800 MW timeline, and power-infrastructure conditions."
-      }
-    },
     "openai-pricing": {
       "id": "openai-pricing",
       "kind": "pricing",
@@ -936,19 +661,6 @@
       "scope": {
         "zh": "官方 API 定價；價格變動時以供應商頁面為準。",
         "en": "Official API list pricing; the provider page governs when prices change."
-      }
-    },
-    "sharon-ai-deployment-acceptance": {
-      "id": "sharon-ai-deployment-acceptance",
-      "kind": "company",
-      "publisher": "Sharon AI",
-      "title": "Sharon AI Successfully Delivers AI Cloud Deployment for Global Technology Customer",
-      "url": "https://sharonai.com/press-releases/sharon-ai-successfully-delivers-ai-cloud-deployment-for-global-technology-customer/",
-      "publishedAt": "2026-08-20T00:00:00.000Z",
-      "retrievedAt": "2026-08-22T01:00:00.000Z",
-      "scope": {
-        "zh": "首階段 AI Cloud 部署的客戶驗收、約 $950M 五年期協議初始總值，以及後續 NVIDIA GPU 叢集交付。",
-        "en": "Customer acceptance of an initial AI Cloud deployment, the approximately $950M initial value of the five-year agreement, and follow-on NVIDIA GPU cluster delivery."
       }
     },
     "stanford-economy": {
@@ -998,45 +710,6 @@
       "scope": {
         "zh": "第二季營收、毛利率、第三季指引，以及先進製程與產能展望。",
         "en": "Second-quarter revenue and margins, third-quarter guidance, and advanced-node capacity outlook."
-      }
-    },
-    "vertiv-q2-2026": {
-      "id": "vertiv-q2-2026",
-      "kind": "company",
-      "publisher": "Vertiv Investor Relations",
-      "title": "Vertiv Reports Strong Second Quarter 2026 and Raises Full-Year Guidance",
-      "url": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Second-Quarter-2026-with-Diluted-EPS-Growth-of-53-Adjusted-Diluted-EPS-Growth-of-60-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
-      "publishedAt": "2026-07-29T00:00:00.000Z",
-      "retrievedAt": "2026-08-12T01:00:00.000Z",
-      "scope": {
-        "zh": "Vertiv 第二季淨銷售額、成長、現金流與上調後的 2026 全年指引。",
-        "en": "Vertiv second-quarter net sales, growth, cash flow, and raised full-year 2026 guidance."
-      }
-    },
-    "vertiv-q2-2026-prn": {
-      "id": "vertiv-q2-2026-prn",
-      "kind": "company",
-      "publisher": "Vertiv Holdings Co via PR Newswire",
-      "title": "Vertiv Reports Strong Second Quarter 2026 and Raises Full-Year Guidance",
-      "url": "https://www.prnewswire.com/news-releases/vertiv-reports-strong-second-quarter-2026-with-diluted-eps-growth-of-53-adjusted-diluted-eps-growth-of-60-raises-full-year-2026-guidance-across-all-key-metrics-302837598.html",
-      "publishedAt": "2026-07-29T00:00:00.000Z",
-      "retrievedAt": "2026-08-12T01:00:00.000Z",
-      "scope": {
-        "zh": "Vertiv 公司發布之第二季結果公開鏡像，涵蓋淨銷售額、成長與上調後的全年指引。",
-        "en": "Company-issued public mirror of Vertiv's second-quarter results, covering net sales, growth, and raised full-year guidance."
-      }
-    },
-    "vistra-q2-2026": {
-      "id": "vistra-q2-2026",
-      "kind": "company",
-      "publisher": "Vistra Investor Relations",
-      "title": "Vistra Reports Second Quarter 2026 Results",
-      "url": "https://investor.vistracorp.com/2026-08-07-Vistra-Reports-Second-Quarter-2026-Results",
-      "publishedAt": "2026-08-07T00:00:00.000Z",
-      "retrievedAt": "2026-08-08T01:00:00.000Z",
-      "scope": {
-        "zh": "第二季財務結果、Vistra 對 Helix Digital Infrastructure 的初始資本承諾，以及其優先電力供應商角色。",
-        "en": "Second-quarter results, Vistra's initial capital commitment to Helix Digital Infrastructure, and its preferred-power-provider role."
       }
     },
     "wolfspeed-ai": {
@@ -1093,119 +766,6 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 242
-    },
-    "compute.amd_data_center_growth": {
-      "id": "compute.amd_data_center_growth",
-      "page": "/compute",
-      "required": false,
-      "kind": "published",
-      "numericValue": 107,
-      "display": {
-        "en": "+107% YoY",
-        "zh": "年增 107%"
-      },
-      "unit": "%",
-      "asOf": "2026-08-04T20:15:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "amd-q2-2026",
-          "numericValue": 107,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-sec",
-          "numericValue": 107,
-          "asOf": "2026-08-04T20:16:24.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-gnw",
-          "numericValue": 107,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 107
-    },
-    "compute.amd_data_center_revenue": {
-      "id": "compute.amd_data_center_revenue",
-      "page": "/compute",
-      "required": false,
-      "kind": "published",
-      "numericValue": 6.7,
-      "display": {
-        "en": "$6.7B",
-        "zh": "$6.7B"
-      },
-      "unit": "$B",
-      "currency": "USD",
-      "asOf": "2026-08-04T20:15:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "amd-q2-2026",
-          "numericValue": 6.7,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-sec",
-          "numericValue": 6.7,
-          "asOf": "2026-08-04T20:16:24.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-gnw",
-          "numericValue": 6.7,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 6.7
-    },
-    "compute.cisco_ai_infrastructure_orders": {
-      "id": "compute.cisco_ai_infrastructure_orders",
-      "page": "/compute",
-      "required": false,
-      "kind": "published",
-      "numericValue": 9.3,
-      "display": {
-        "en": "$9.3B FY26",
-        "zh": "FY26 $9.3B"
-      },
-      "unit": "$B",
-      "currency": "USD",
-      "asOf": "2026-08-12T20:07:06.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "cisco-q4-fy26",
-        "cisco-q4-fy26-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "cisco-q4-fy26-sec",
-          "numericValue": 9.3,
-          "asOf": "2026-08-12T20:07:06.000Z"
-        },
-        {
-          "sourceId": "cisco-q4-fy26",
-          "numericValue": 9.3,
-          "asOf": "2026-08-12T20:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 9.3
     },
     "compute.hbm_demand": {
       "id": "compute.hbm_demand",
@@ -1273,33 +833,6 @@
       "status": "verified",
       "previousNumericValue": -58
     },
-    "compute.openai_ports_capacity": {
-      "id": "compute.openai_ports_capacity",
-      "page": "/compute",
-      "required": false,
-      "kind": "published",
-      "numericValue": 8,
-      "display": {
-        "en": "~8 IT-GW",
-        "zh": "約 8 IT-GW"
-      },
-      "unit": "IT-GW",
-      "asOf": "2026-08-17T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "openai-ports-pike"
-      ],
-      "observations": [
-        {
-          "sourceId": "openai-ports-pike",
-          "numericValue": 8,
-          "asOf": "2026-08-17T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 8
-    },
     "compute.packaging_lead_weeks": {
       "id": "compute.packaging_lead_weeks",
       "page": "/compute",
@@ -1332,34 +865,6 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 28
-    },
-    "compute.sharon_ai_contract_value": {
-      "id": "compute.sharon_ai_contract_value",
-      "page": "/compute",
-      "required": false,
-      "kind": "published",
-      "numericValue": 950,
-      "display": {
-        "en": "~$950M",
-        "zh": "約 $950M"
-      },
-      "unit": "$M",
-      "currency": "USD",
-      "asOf": "2026-08-20T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "sharon-ai-deployment-acceptance"
-      ],
-      "observations": [
-        {
-          "sourceId": "sharon-ai-deployment-acceptance",
-          "numericValue": 950,
-          "asOf": "2026-08-20T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 950
     },
     "energy.announced_power_gw": {
       "id": "energy.announced_power_gw",
@@ -1499,94 +1004,6 @@
       "status": "verified",
       "previousNumericValue": 42
     },
-    "energy.openai_ports_capacity": {
-      "id": "energy.openai_ports_capacity",
-      "page": "/energy",
-      "required": false,
-      "kind": "published",
-      "numericValue": 8,
-      "display": {
-        "en": "~8 IT-GW",
-        "zh": "約 8 IT-GW"
-      },
-      "unit": "IT-GW",
-      "asOf": "2026-08-17T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "openai-ports-pike"
-      ],
-      "observations": [
-        {
-          "sourceId": "openai-ports-pike",
-          "numericValue": 8,
-          "asOf": "2026-08-17T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 8
-    },
-    "energy.vertiv_q2_revenue_growth": {
-      "id": "energy.vertiv_q2_revenue_growth",
-      "page": "/energy",
-      "required": false,
-      "kind": "published",
-      "numericValue": 24,
-      "display": {
-        "en": "+24% YoY",
-        "zh": "年增 24%"
-      },
-      "unit": "%",
-      "asOf": "2026-07-29T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "vertiv-q2-2026",
-        "vertiv-q2-2026-prn"
-      ],
-      "observations": [
-        {
-          "sourceId": "vertiv-q2-2026",
-          "numericValue": 24,
-          "asOf": "2026-07-29T00:00:00.000Z"
-        },
-        {
-          "sourceId": "vertiv-q2-2026-prn",
-          "numericValue": 24,
-          "asOf": "2026-07-29T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 24
-    },
-    "energy.vistra_helix_commitment": {
-      "id": "energy.vistra_helix_commitment",
-      "page": "/energy",
-      "required": false,
-      "kind": "published",
-      "numericValue": 1,
-      "display": {
-        "en": "up to $1.0B",
-        "zh": "最高 $1.0B"
-      },
-      "unit": "$B",
-      "currency": "USD",
-      "asOf": "2026-08-07T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "vistra-q2-2026"
-      ],
-      "observations": [
-        {
-          "sourceId": "vistra-q2-2026",
-          "numericValue": 1,
-          "asOf": "2026-08-07T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 1
-    },
     "models.api_deployment_share": {
       "id": "models.api_deployment_share",
       "page": "/models",
@@ -1658,59 +1075,6 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 1800
-    },
-    "models.openai_coding_token_efficiency": {
-      "id": "models.openai_coding_token_efficiency",
-      "page": "/models",
-      "required": false,
-      "kind": "published",
-      "numericValue": 54,
-      "display": {
-        "en": "54% fewer",
-        "zh": "少 54%"
-      },
-      "unit": "%",
-      "asOf": "2026-08-25T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "openai-full-stack"
-      ],
-      "observations": [
-        {
-          "sourceId": "openai-full-stack",
-          "numericValue": 54,
-          "asOf": "2026-08-25T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified"
-    },
-    "models.openai_monitoring_overhead": {
-      "id": "models.openai_monitoring_overhead",
-      "page": "/models",
-      "required": false,
-      "kind": "published",
-      "numericValue": 20,
-      "display": {
-        "en": "~20%",
-        "zh": "約 20%"
-      },
-      "unit": "%",
-      "asOf": "2026-08-18T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "openai-cyber-pacing"
-      ],
-      "observations": [
-        {
-          "sourceId": "openai-cyber-pacing",
-          "numericValue": 20,
-          "asOf": "2026-08-18T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 20
     },
     "models.production_agents": {
       "id": "models.production_agents",
@@ -1812,80 +1176,6 @@
       "status": "verified",
       "previousNumericValue": 242
     },
-    "pulse.amd_data_center_revenue": {
-      "id": "pulse.amd_data_center_revenue",
-      "page": "/",
-      "required": false,
-      "kind": "published",
-      "numericValue": 6.7,
-      "display": {
-        "en": "$6.7B",
-        "zh": "$6.7B"
-      },
-      "unit": "$B",
-      "currency": "USD",
-      "asOf": "2026-08-04T20:15:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "amd-q2-2026",
-          "numericValue": 6.7,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-sec",
-          "numericValue": 6.7,
-          "asOf": "2026-08-04T20:16:24.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-gnw",
-          "numericValue": 6.7,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 6.7
-    },
-    "pulse.cisco_ai_infrastructure_orders": {
-      "id": "pulse.cisco_ai_infrastructure_orders",
-      "page": "/",
-      "required": false,
-      "kind": "published",
-      "numericValue": 9.3,
-      "display": {
-        "en": "$9.3B FY26",
-        "zh": "FY26 $9.3B"
-      },
-      "unit": "$B",
-      "currency": "USD",
-      "asOf": "2026-08-12T20:07:06.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "cisco-q4-fy26",
-        "cisco-q4-fy26-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "cisco-q4-fy26-sec",
-          "numericValue": 9.3,
-          "asOf": "2026-08-12T20:07:06.000Z"
-        },
-        {
-          "sourceId": "cisco-q4-fy26",
-          "numericValue": 9.3,
-          "asOf": "2026-08-12T20:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 9.3
-    },
     "pulse.enterprise_agents": {
       "id": "pulse.enterprise_agents",
       "page": "/",
@@ -1953,59 +1243,6 @@
       "status": "verified",
       "previousNumericValue": 2800
     },
-    "pulse.openai_coding_token_efficiency": {
-      "id": "pulse.openai_coding_token_efficiency",
-      "page": "/",
-      "required": false,
-      "kind": "published",
-      "numericValue": 54,
-      "display": {
-        "en": "54% fewer",
-        "zh": "少 54%"
-      },
-      "unit": "%",
-      "asOf": "2026-08-25T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "openai-full-stack"
-      ],
-      "observations": [
-        {
-          "sourceId": "openai-full-stack",
-          "numericValue": 54,
-          "asOf": "2026-08-25T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified"
-    },
-    "pulse.openai_ports_capacity": {
-      "id": "pulse.openai_ports_capacity",
-      "page": "/",
-      "required": false,
-      "kind": "published",
-      "numericValue": 8,
-      "display": {
-        "en": "~8 IT-GW",
-        "zh": "約 8 IT-GW"
-      },
-      "unit": "IT-GW",
-      "asOf": "2026-08-17T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "openai-ports-pike"
-      ],
-      "observations": [
-        {
-          "sourceId": "openai-ports-pike",
-          "numericValue": 8,
-          "asOf": "2026-08-17T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 8
-    },
     "pulse.power_queue": {
       "id": "pulse.power_queue",
       "page": "/",
@@ -2044,34 +1281,6 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 36.2
-    },
-    "pulse.sharon_ai_contract_value": {
-      "id": "pulse.sharon_ai_contract_value",
-      "page": "/",
-      "required": false,
-      "kind": "published",
-      "numericValue": 950,
-      "display": {
-        "en": "~$950M",
-        "zh": "約 $950M"
-      },
-      "unit": "$M",
-      "currency": "USD",
-      "asOf": "2026-08-20T00:00:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "sharon-ai-deployment-acceptance"
-      ],
-      "observations": [
-        {
-          "sourceId": "sharon-ai-deployment-acceptance",
-          "numericValue": 950,
-          "asOf": "2026-08-20T00:00:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 950
     },
     "sic.ev_penetration": {
       "id": "sic.ev_penetration",
@@ -2158,40 +1367,6 @@
       "status": "verified",
       "previousNumericValue": 23
     },
-    "sic.onsemi_q2_revenue": {
-      "id": "sic.onsemi_q2_revenue",
-      "page": "/sic",
-      "required": false,
-      "kind": "published",
-      "numericValue": 1.6035,
-      "display": {
-        "en": "$1.604B",
-        "zh": "$1.604B"
-      },
-      "unit": "$B",
-      "currency": "USD",
-      "asOf": "2026-08-03T20:05:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "onsemi-q2-2026-gnw",
-        "onsemi-q2-2026-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "onsemi-q2-2026-sec",
-          "numericValue": 1.6035,
-          "asOf": "2026-08-03T20:54:23.000Z"
-        },
-        {
-          "sourceId": "onsemi-q2-2026-gnw",
-          "numericValue": 1.6035,
-          "asOf": "2026-08-03T20:05:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 1.6035
-    },
     "sic.packaging_watts": {
       "id": "sic.packaging_watts",
       "page": "/sic",
@@ -2263,45 +1438,6 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 300
-    },
-    "stocks.amd_q2_revenue_growth": {
-      "id": "stocks.amd_q2_revenue_growth",
-      "page": "/stocks",
-      "required": false,
-      "kind": "published",
-      "numericValue": 50,
-      "display": {
-        "en": "+50% YoY",
-        "zh": "年增 50%"
-      },
-      "unit": "%",
-      "asOf": "2026-08-04T20:15:00.000Z",
-      "sessionState": "closed",
-      "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
-      ],
-      "observations": [
-        {
-          "sourceId": "amd-q2-2026",
-          "numericValue": 50,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-sec",
-          "numericValue": 50,
-          "asOf": "2026-08-04T20:16:24.000Z"
-        },
-        {
-          "sourceId": "amd-q2-2026-gnw",
-          "numericValue": 50,
-          "asOf": "2026-08-04T20:15:00.000Z"
-        }
-      ],
-      "confidence": "high",
-      "status": "verified",
-      "previousNumericValue": 50
     },
     "stocks.amd.monthReturn": {
       "id": "stocks.amd.monthReturn",
@@ -3583,8 +2719,11 @@
     }
   },
   "keySignalIds": [
-    "pulse.openai_coding_token_efficiency",
-    "energy.openai_ports_capacity",
-    "models.openai_coding_token_efficiency"
+    "pulse.infrastructure_spend",
+    "stocks.median_forward_pe",
+    "compute.hbm_demand",
+    "energy.committed_power_gw",
+    "models.production_agents",
+    "sic.packaging_watts"
   ]
 }

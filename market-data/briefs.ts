@@ -54,20 +54,14 @@ export async function loadPublishedBriefs(
     readDirectJsonFiles(reviewsDirectory, "brief reviews"),
   ]);
   const reviews = reviewFiles.map(({ name, value }) => {
-    const filenameRunId = retainedRunIdFromFilename(name, "brief review");
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
       throw new Error(`Invalid brief review file ${name}`);
     }
-    const review = value as AutomatedReview;
-    if (review.runId !== filenameRunId) {
-      throw new Error(`Brief review filename does not match its run ID: ${name}`);
-    }
-    return { name, review };
+    return { name, review: value as AutomatedReview };
   });
   const dates = new Set<string>();
   const briefs: PublishedBrief[] = [];
   for (const { name, value } of runFiles) {
-    retainedRunIdFromFilename(name, "brief run");
     try {
       assertPublishedMarketSnapshot(value);
     } catch (error) {
@@ -88,17 +82,29 @@ export async function loadPublishedBriefs(
     if (matching.length !== 1) {
       throw new Error(`Brief run ${snapshot.runId} must have exactly one matching accepted review`);
     }
+    const filenameRunId = retainedRunIdFromFilename(name, "brief run");
+    if (filenameRunId !== snapshot.runId) {
+      throw new Error(`Brief run filename does not match its run ID: ${name}`);
+    }
+    const matchingReview = matching[0];
+    const reviewFilenameRunId = retainedRunIdFromFilename(
+      matchingReview.name,
+      "brief review",
+    );
+    if (matchingReview.review.runId !== reviewFilenameRunId) {
+      throw new Error(`Brief review filename does not match its run ID: ${matchingReview.name}`);
+    }
     try {
-      assertAutoPublishReview(matching[0].review, snapshot);
+      assertAutoPublishReview(matchingReview.review, snapshot);
     } catch (error) {
-      throw new Error(`Brief review ${matching[0].name} is not bound to ${snapshot.runId}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Brief review ${matchingReview.name} is not bound to ${snapshot.runId}: ${error instanceof Error ? error.message : String(error)}`);
     }
     const date = snapshot.dataCutoff.slice(0, 10);
     if (!BRIEF_DATE.test(date) || dates.has(date)) {
       throw new Error(`Brief cutoff date is invalid or duplicated: ${date}`);
     }
     dates.add(date);
-    briefs.push({ date, snapshot, review: matching[0].review });
+    briefs.push({ date, snapshot, review: matchingReview.review });
   }
   return briefs.sort((left, right) => right.date.localeCompare(left.date));
 }

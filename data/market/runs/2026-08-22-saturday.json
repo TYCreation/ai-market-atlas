@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "runId": "2026-08-19-wednesday",
-  "cadence": "wednesday",
-  "generatedAt": "2026-08-19T01:00:00.000Z",
-  "dataCutoff": "2026-08-19T01:00:00.000Z",
+  "runId": "2026-08-22-saturday",
+  "cadence": "saturday",
+  "generatedAt": "2026-08-22T01:00:00.000Z",
+  "dataCutoff": "2026-08-22T01:00:00.000Z",
   "pages": {
     "/": {
       "changed": true,
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-19T01:00:00.000Z",
+      "verifiedAt": "2026-08-22T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -85,6 +85,15 @@
             "metricIds": [
               "pulse.openai_ports_capacity"
             ]
+          },
+          {
+            "text": {
+              "en": "Sharon AI completed customer acceptance of an initial AI Cloud deployment under a five-year agreement with an approximately $950M initial contract value.",
+              "zh": "Sharon AI 完成首階段 AI Cloud 部署的客戶驗收；該五年期協議的初始合約總值約為 $950M。"
+            },
+            "metricIds": [
+              "pulse.sharon_ai_contract_value"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -113,8 +122,8 @@
             "zh": "下一讀 · API 定價"
           },
           {
-            "en": "Next read · production cohort",
-            "zh": "下一讀 · 正式環境群組"
+            "en": "Next read · accepted deployments",
+            "zh": "下一讀 · 已驗收部署"
           }
         ]
       }
@@ -122,7 +131,7 @@
     "/stocks": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-19T01:00:00.000Z",
+      "verifiedAt": "2026-08-22T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -228,7 +237,7 @@
       "changeReasons": [
         "first-party-event"
       ],
-      "verifiedAt": "2026-08-19T01:00:00.000Z",
+      "verifiedAt": "2026-08-22T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -314,6 +323,15 @@
             "metricIds": [
               "compute.openai_ports_capacity"
             ]
+          },
+          {
+            "text": {
+              "en": "Sharon AI achieved customer acceptance for an initial NVIDIA GPU cluster deployment tied to an approximately $950M five-year AI Cloud agreement.",
+              "zh": "Sharon AI 的首階段 NVIDIA GPU 叢集部署已通過客戶驗收，對應約 $950M 的五年期 AI Cloud 協議。"
+            },
+            "metricIds": [
+              "compute.sharon_ai_contract_value"
+            ]
           }
         ],
         "opposingEvidence": [],
@@ -342,18 +360,16 @@
             "zh": "下一讀 · 工作負載密度"
           },
           {
-            "en": "Next read · volume ramps",
-            "zh": "下一讀 · 出貨放量"
+            "en": "Next read · Sharon revenue start",
+            "zh": "下一讀 · Sharon 營收啟動"
           }
         ]
       }
     },
     "/energy": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-19T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-22T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -463,11 +479,9 @@
       }
     },
     "/models": {
-      "changed": true,
-      "changeReasons": [
-        "first-party-event"
-      ],
-      "verifiedAt": "2026-08-19T01:00:00.000Z",
+      "changed": false,
+      "changeReasons": [],
+      "verifiedAt": "2026-08-22T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -561,7 +575,7 @@
     "/sic": {
       "changed": false,
       "changeReasons": [],
-      "verifiedAt": "2026-08-19T01:00:00.000Z",
+      "verifiedAt": "2026-08-22T01:00:00.000Z",
       "thesisStance": "neutral",
       "previousThesisStance": "neutral",
       "thesisMetricIds": [
@@ -891,6 +905,19 @@
       "scope": {
         "zh": "官方 API 定價；價格變動時以供應商頁面為準。",
         "en": "Official API list pricing; the provider page governs when prices change."
+      }
+    },
+    "sharon-ai-deployment-acceptance": {
+      "id": "sharon-ai-deployment-acceptance",
+      "kind": "company",
+      "publisher": "Sharon AI",
+      "title": "Sharon AI Successfully Delivers AI Cloud Deployment for Global Technology Customer",
+      "url": "https://sharonai.com/press-releases/sharon-ai-successfully-delivers-ai-cloud-deployment-for-global-technology-customer/",
+      "publishedAt": "2026-08-20T00:00:00.000Z",
+      "retrievedAt": "2026-08-22T01:00:00.000Z",
+      "scope": {
+        "zh": "首階段 AI Cloud 部署的客戶驗收、約 $950M 五年期協議初始總值，以及後續 NVIDIA GPU 叢集交付。",
+        "en": "Customer acceptance of an initial AI Cloud deployment, the approximately $950M initial value of the five-year agreement, and follow-on NVIDIA GPU cluster delivery."
       }
     },
     "stanford-economy": {
@@ -1239,7 +1266,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 8
     },
     "compute.packaging_lead_weeks": {
       "id": "compute.packaging_lead_weeks",
@@ -1273,6 +1301,33 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 28
+    },
+    "compute.sharon_ai_contract_value": {
+      "id": "compute.sharon_ai_contract_value",
+      "page": "/compute",
+      "required": false,
+      "kind": "published",
+      "numericValue": 950,
+      "display": {
+        "en": "~$950M",
+        "zh": "約 $950M"
+      },
+      "unit": "$M",
+      "currency": "USD",
+      "asOf": "2026-08-20T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "sharon-ai-deployment-acceptance"
+      ],
+      "observations": [
+        {
+          "sourceId": "sharon-ai-deployment-acceptance",
+          "numericValue": 950,
+          "asOf": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "energy.announced_power_gw": {
       "id": "energy.announced_power_gw",
@@ -1436,7 +1491,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 8
     },
     "energy.vertiv_q2_revenue_growth": {
       "id": "energy.vertiv_q2_revenue_growth",
@@ -1595,7 +1651,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 20
     },
     "models.production_agents": {
       "id": "models.production_agents",
@@ -1862,7 +1919,8 @@
         }
       ],
       "confidence": "high",
-      "status": "verified"
+      "status": "verified",
+      "previousNumericValue": 8
     },
     "pulse.power_queue": {
       "id": "pulse.power_queue",
@@ -1902,6 +1960,33 @@
       "confidence": "medium",
       "status": "verified",
       "previousNumericValue": 36.2
+    },
+    "pulse.sharon_ai_contract_value": {
+      "id": "pulse.sharon_ai_contract_value",
+      "page": "/",
+      "required": false,
+      "kind": "published",
+      "numericValue": 950,
+      "display": {
+        "en": "~$950M",
+        "zh": "約 $950M"
+      },
+      "unit": "$M",
+      "currency": "USD",
+      "asOf": "2026-08-20T00:00:00.000Z",
+      "sessionState": "closed",
+      "sourceIds": [
+        "sharon-ai-deployment-acceptance"
+      ],
+      "observations": [
+        {
+          "sourceId": "sharon-ai-deployment-acceptance",
+          "numericValue": 950,
+          "asOf": "2026-08-20T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
     },
     "sic.ev_penetration": {
       "id": "sic.ev_penetration",
@@ -3413,7 +3498,8 @@
     }
   },
   "keySignalIds": [
-    "pulse.openai_ports_capacity",
+    "pulse.sharon_ai_contract_value",
+    "compute.sharon_ai_contract_value",
     "compute.openai_ports_capacity",
     "energy.openai_ports_capacity",
     "models.openai_monitoring_overhead"
