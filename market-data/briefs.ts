@@ -1,6 +1,6 @@
 import { lstat, readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { assertArchivedAutoPublishReview, hashCandidate, type AutomatedReview } from "./review.ts";
+import { assertAutoPublishReview, hashCandidate, isSafeMarketRunId, type AutomatedReview } from "./review.ts";
 import { assertPublishedMarketSnapshot } from "./schema.ts";
 import type { MarketSnapshot } from "./types.ts";
 
@@ -11,6 +11,14 @@ export type PublishedBrief = {
 };
 
 const BRIEF_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function retainedRunIdFromFilename(name: string, label: string): string {
+  const runId = name.slice(0, -".json".length);
+  if (!isSafeMarketRunId(runId)) {
+    throw new Error(`${label} filename must be a safe market run ID: ${name}`);
+  }
+  return runId;
+}
 
 async function readDirectJsonFiles(directory: string, label: string): Promise<Array<{ name: string; value: unknown }>> {
   const directoryMetadata = await lstat(directory);
@@ -46,20 +54,32 @@ export async function loadPublishedBriefs(
     readDirectJsonFiles(reviewsDirectory, "brief reviews"),
   ]);
   const reviews = reviewFiles.map(({ name, value }) => {
+    const filenameRunId = retainedRunIdFromFilename(name, "brief review");
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
       throw new Error(`Invalid brief review file ${name}`);
     }
-    return { name, review: value as AutomatedReview };
+    const review = value as AutomatedReview;
+    if (review.runId !== filenameRunId) {
+      throw new Error(`Brief review filename does not match its run ID: ${name}`);
+    }
+    return { name, review };
   });
   const dates = new Set<string>();
   const briefs: PublishedBrief[] = [];
   for (const { name, value } of runFiles) {
+    retainedRunIdFromFilename(name, "brief run");
     try {
       assertPublishedMarketSnapshot(value);
     } catch (error) {
       throw new Error(`Invalid brief run file ${name}: ${error instanceof Error ? error.message : String(error)}`);
     }
     const snapshot = value as MarketSnapshot;
+    if (snapshot.cadence !== "wednesday" && snapshot.cadence !== "saturday") {
+      throw new Error(`Brief snapshot must have weekly cadence: ${snapshot.runId}`);
+    }
+    if (!isSafeMarketRunId(snapshot.runId, snapshot.cadence)) {
+      throw new Error(`Brief snapshot run ID and cadence do not match: ${snapshot.runId}`);
+    }
     const matching = reviews.filter(({ review }) => review.candidateSha256 === hashCandidate(snapshot));
     // A retained run without an exact accepted review is not a permanent brief.
     // This permits current pipeline workspaces to retain unrelated prior runs while
@@ -69,7 +89,7 @@ export async function loadPublishedBriefs(
       throw new Error(`Brief run ${snapshot.runId} must have exactly one matching accepted review`);
     }
     try {
-      assertArchivedAutoPublishReview(matching[0].review, matching[0].review.runId);
+      assertAutoPublishReview(matching[0].review, snapshot);
     } catch (error) {
       throw new Error(`Brief review ${matching[0].name} is not bound to ${snapshot.runId}: ${error instanceof Error ? error.message : String(error)}`);
     }

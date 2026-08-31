@@ -13,6 +13,7 @@ const valid = validCandidate as unknown as MarketSnapshot;
 function snapshot(runId: string, dataCutoff: string): MarketSnapshot {
   const result = structuredClone(valid);
   result.runId = runId;
+  result.cadence = runId.endsWith("-wednesday") ? "wednesday" : runId.endsWith("-saturday") ? "saturday" : "month-end";
   result.dataCutoff = dataCutoff;
   result.generatedAt = dataCutoff;
   for (const page of Object.values(result.pages)) page.verifiedAt = dataCutoff;
@@ -47,10 +48,10 @@ test("loads only published snapshots bound to a matching accepted review and ind
     const older = snapshot("2026-08-01-saturday", "2026-08-01T01:00:00.000Z");
     const newer = snapshot("2026-08-05-wednesday", "2026-08-05T01:00:00.000Z");
     await Promise.all([
-      writeFile(join(runs, "candidate-1.json"), JSON.stringify(older)),
-      writeFile(join(runs, "candidate-2.json"), JSON.stringify(newer)),
-      writeFile(join(reviews, "review-1.json"), JSON.stringify(acceptedReview(older))),
-      writeFile(join(reviews, "review-2.json"), JSON.stringify(acceptedReview(newer))),
+      writeFile(join(runs, "2026-08-01-saturday.json"), JSON.stringify(older)),
+      writeFile(join(runs, "2026-08-05-wednesday.json"), JSON.stringify(newer)),
+      writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(acceptedReview(older))),
+      writeFile(join(reviews, "2026-08-05-wednesday.json"), JSON.stringify(acceptedReview(newer))),
     ]);
 
     const briefs = await loadPublishedBriefs(runs, reviews);
@@ -74,10 +75,87 @@ test("fails closed by excluding a snapshot without a review bound to its bytes",
     const review = acceptedReview(value);
     review.candidateSha256 = "0".repeat(64);
     await Promise.all([
-      writeFile(join(runs, "candidate.json"), JSON.stringify(value)),
-      writeFile(join(reviews, "review.json"), JSON.stringify(review)),
+      writeFile(join(runs, "2026-08-01-saturday.json"), JSON.stringify(value)),
+      writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(review)),
     ]);
     assert.deepEqual(await loadPublishedBriefs(runs, reviews), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a matching accepted review whose run ID does not bind to the snapshot", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-briefs-review-run-id-"));
+  const runs = join(root, "runs");
+  const reviews = join(root, "reviews");
+  try {
+    await Promise.all([mkdir(runs), mkdir(reviews)]);
+    const value = snapshot("2026-08-01-saturday", "2026-08-01T01:00:00.000Z");
+    const review = acceptedReview(value);
+    review.runId = "2026-08-05-wednesday";
+    review.reviewId = `${review.runId}:${review.candidateSha256}`;
+    await Promise.all([
+      writeFile(join(runs, "2026-08-05-wednesday.json"), JSON.stringify(value)),
+      writeFile(join(reviews, "2026-08-05-wednesday.json"), JSON.stringify(review)),
+    ]);
+
+    await assert.rejects(loadPublishedBriefs(runs, reviews), /not bound|identity does not match/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects an otherwise accepted month-end snapshot", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-briefs-month-end-"));
+  const runs = join(root, "runs");
+  const reviews = join(root, "reviews");
+  try {
+    await Promise.all([mkdir(runs), mkdir(reviews)]);
+    const value = snapshot("2026-08-29-month-end", "2026-08-29T01:00:00.000Z");
+    value.cadence = "month-end";
+    await Promise.all([
+      writeFile(join(runs, "2026-08-29-month-end.json"), JSON.stringify(value)),
+      writeFile(join(reviews, "2026-08-29-month-end.json"), JSON.stringify(acceptedReview(value))),
+    ]);
+
+    await assert.rejects(loadPublishedBriefs(runs, reviews), /weekly cadence/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a snapshot whose run ID and cadence disagree", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-briefs-cadence-"));
+  const runs = join(root, "runs");
+  const reviews = join(root, "reviews");
+  try {
+    await Promise.all([mkdir(runs), mkdir(reviews)]);
+    const value = snapshot("2026-08-01-saturday", "2026-08-01T01:00:00.000Z");
+    value.cadence = "wednesday";
+    await Promise.all([
+      writeFile(join(runs, "2026-08-05-wednesday.json"), JSON.stringify(value)),
+      writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(acceptedReview(value))),
+    ]);
+
+    await assert.rejects(loadPublishedBriefs(runs, reviews), /run ID and cadence/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a retained run whose filename is not a safe market run ID", async () => {
+  const root = await mkdtemp(join(tmpdir(), "market-briefs-filename-"));
+  const runs = join(root, "runs");
+  const reviews = join(root, "reviews");
+  try {
+    await Promise.all([mkdir(runs), mkdir(reviews)]);
+    const value = snapshot("2026-08-01-saturday", "2026-08-01T01:00:00.000Z");
+    await Promise.all([
+      writeFile(join(runs, "untrusted.json"), JSON.stringify(value)),
+      writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(acceptedReview(value))),
+    ]);
+
+    await assert.rejects(loadPublishedBriefs(runs, reviews), /filename.*run ID/i);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -93,8 +171,8 @@ test("rejects symlinked provenance files rather than following a path outside th
     const target = join(root, "snapshot.json");
     await writeFile(target, JSON.stringify(value));
     await Promise.all([
-      symlink(target, join(runs, "candidate.json")),
-      writeFile(join(reviews, "review.json"), JSON.stringify(acceptedReview(value))),
+      symlink(target, join(runs, "2026-08-01-saturday.json")),
+      writeFile(join(reviews, "2026-08-01-saturday.json"), JSON.stringify(acceptedReview(value))),
     ]);
     await assert.rejects(loadPublishedBriefs(runs, reviews), /symlink/i);
   } finally {
