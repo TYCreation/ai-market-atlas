@@ -6,6 +6,9 @@ import { sourceBundles } from "../app/sources.ts";
 import { KPI_CATALOG, stockMetricId } from "../market-data/catalog.ts";
 import { assertMarketSnapshot } from "../market-data/schema.ts";
 import type { MarketSnapshot, MetricRecord, PageSlug, SourceRecord } from "../market-data/types.ts";
+import currentSnapshotJson from "../data/market/current.json" with { type: "json" };
+
+const currentSnapshot = currentSnapshotJson as MarketSnapshot;
 
 const dashboards: Record<PageSlug, DashboardConfig> = { "/": marketPulse, "/stocks": stocks, "/compute": compute, "/energy": energy, "/models": models, "/sic": sic };
 const chineseDashboards: Record<PageSlug, DashboardConfig> = { "/": marketPulseZh, "/stocks": stocksZh, "/compute": computeZh, "/energy": energyZh, "/models": modelsZh, "/sic": sicZh };
@@ -83,9 +86,19 @@ function createSnapshot(runId: string): MarketSnapshot {
     metrics[id] = modeledMetric(id, page, dashboards[page].kpis[index].value, chineseDashboards[page].kpis[index].value, unit, sourceBundles[page].kpiSources[index], timestamp);
   }
   for (const equity of stocks.equityDive?.equities ?? []) {
-    for (const [field, value, unit] of [["price", equity.price, "USD"], ["weekReturn", equity.week, "%"], ["monthReturn", equity.month, "%"]] as const) {
+    for (const [field, unit] of [["price", "USD"], ["weekReturn", "%"], ["monthReturn", "%"]] as const) {
       const id = stockMetricId(equity.ticker, field);
-      metrics[id] = modeledMetric(id, "/stocks", value, value, unit, ["atlas-model"], timestamp);
+      const currentMetric = currentSnapshot.metrics[id];
+      if (!currentMetric) throw new Error(`Current snapshot is missing seed metric ${id}`);
+      metrics[id] = modeledMetric(
+        id,
+        "/stocks",
+        currentMetric.display.en,
+        currentMetric.display.zh,
+        unit,
+        ["atlas-model"],
+        timestamp,
+      );
       Object.assign(metrics[id], { market: "US", marketTimezone: "America/New_York", primaryListing: equity.ticker, securityType: "primary" });
     }
   }

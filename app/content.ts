@@ -1,5 +1,5 @@
-import type { createMarketViewModel, LocalizedPageReport } from "../market-data/view-model";
-import type { Locale, PageSlug } from "../market-data/types";
+import type { createMarketViewModel, LocalizedPageReport, MetricView } from "../market-data/view-model";
+import type { Locale, MetricStatus, PageSlug } from "../market-data/types";
 
 type MarketViewModel = ReturnType<typeof createMarketViewModel>;
 

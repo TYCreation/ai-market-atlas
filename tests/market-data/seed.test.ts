@@ -28,6 +28,9 @@ test("default seed uses the scheduled Saturday run at 09:00 Asia/Taipei", async 
   assert.equal(snapshot.cadence, "saturday");
   assert.equal(snapshot.generatedAt, "2026-07-25T01:00:00.000Z");
   assert.equal(snapshot.dataCutoff, "2026-07-25T01:00:00.000Z");
+  assert.equal(snapshot.metrics["stocks.nvda.price"].display.en, "$194.70");
+  assert.equal(snapshot.metrics["stocks.nvda.weekReturn"].display.en, "+5.8%");
+  assert.equal(snapshot.metrics["stocks.nvda.monthReturn"].display.en, "+12.4%");
 });
 
 test("deterministic fixture uses the scheduled Saturday timestamp", () => {
