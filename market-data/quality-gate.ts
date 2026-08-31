@@ -141,7 +141,28 @@ function previousValue(metric: MetricRecord, previous: MarketSnapshot): number |
 
 function reportChanged(current: MarketSnapshot, previous: MarketSnapshot, page: PageSlug): boolean {
   const prior = previous.pages?.[page];
-  return prior !== undefined && !isDeepStrictEqual(current.pages[page].report, prior.report);
+  if (prior === undefined) return false;
+  const withoutSurvivalRationale = (report: MarketSnapshot["pages"][PageSlug]["report"]) =>
+    Object.fromEntries(
+      Object.entries(report).filter(([key]) => key !== "thesisSurvivalRationale"),
+    );
+  return !isDeepStrictEqual(
+    withoutSurvivalRationale(current.pages[page].report),
+    withoutSurvivalRationale(prior.report),
+  );
+}
+
+function thesisChanged(current: MarketSnapshot, previous: MarketSnapshot, page: PageSlug): boolean {
+  const prior = previous.pages?.[page];
+  return prior !== undefined && !isDeepStrictEqual(current.pages[page].report.thesis, prior.report.thesis);
+}
+
+function hasSurvivalRationale(state: MarketSnapshot["pages"][PageSlug]): boolean {
+  const rationale = state.report.thesisSurvivalRationale;
+  return rationale !== undefined &&
+    rationale.text.en.trim().length > 0 &&
+    rationale.text.zh.trim().length > 0 &&
+    rationale.metricIds.length > 0;
 }
 
 function sameMetricIdSet(left: string[], right: string[]): boolean {
@@ -233,7 +254,11 @@ function hasPageChangeEvidence(
   );
   const conclusionChanged =
     priorPage !== undefined && priorPage.thesisStance !== current.pages[page].thesisStance;
-  return newFirstPartyEvent || roundedValueChange || gateWorthyMovement || conclusionChanged;
+  const thesisRestated =
+    current.pages[page].changeReasons.includes("thesis-reexamined-restated") &&
+    thesisChanged(current, previous, page) &&
+    current.pages[page].thesisMetricIds.length > 0;
+  return newFirstPartyEvent || roundedValueChange || gateWorthyMovement || conclusionChanged || thesisRestated;
 }
 
 export function evaluateQualityGate(
@@ -397,6 +422,35 @@ export function evaluateQualityGate(
       });
     }
     const priorStance = previous.pages?.[page]?.thesisStance ?? state.previousThesisStance;
+    const restated = thesisChanged(current, previous, page);
+    const declaredRestatement = state.changeReasons.includes("thesis-reexamined-restated");
+    if (restated && (!state.changed || !declaredRestatement || state.thesisMetricIds.length === 0)) {
+      issues.push({
+        code: "MATERIAL_CHANGE_MISMATCH",
+        severity: "block",
+        page,
+        message: "A restated thesis must mark the page changed, use the exact thesis re-examination reason, and cite thesis metrics.",
+        sourceIds: [],
+      });
+    }
+    if (!restated && declaredRestatement) {
+      issues.push({
+        code: "MATERIAL_CHANGE_MISMATCH",
+        severity: "block",
+        page,
+        message: "The thesis re-examination restatement reason requires an actual thesis rewrite.",
+        sourceIds: [],
+      });
+    }
+    if (!restated && !hasSurvivalRationale(state)) {
+      issues.push({
+        code: "MATERIAL_CHANGE_MISMATCH",
+        severity: "block",
+        page,
+        message: "A thesis that survives unchanged requires an argued rationale with cited metric IDs.",
+        sourceIds: [],
+      });
+    }
     if (priorStance !== "neutral" && priorStance !== state.thesisStance) {
       issues.push({
         code: "THESIS_REVERSAL",

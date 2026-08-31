@@ -192,8 +192,8 @@
             "zh": "下一讀 · 上修廣度"
           },
           {
-            "en": "Next read · 50-day participation",
-            "zh": "下一讀 · 50 日線參與率"
+            "en": "Next read · fifty-day participation",
+            "zh": "下一讀 · 五十日線參與率"
           },
           {
             "en": "Next read · cash conversion",
@@ -302,16 +302,7 @@
             "en": "Next read · volume ramps",
             "zh": "下一讀 · 出貨放量"
           }
-        ],
-        "thesisSurvivalRationale": {
-          "text": {
-            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
-            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
-          },
-          "metricIds": [
-            "compute.accelerator_pool"
-          ]
-        }
+        ]
       }
     },
     "/energy": {
@@ -542,8 +533,8 @@
           "zh": "AI 的電力堆疊，離不開 SiC。"
         },
         "summary": {
-          "en": "A weekly view of silicon carbide across AI chip packaging, 800V data-center power, EV inverters, wafer scaling, and the supply-chain contest shaping the next infrastructure cycle.",
-          "zh": "每週追蹤碳化矽在 AI 晶片封裝、800V 資料中心電力、電動車逆變器、晶圓擴徑與供應鏈競局中的最新變化。"
+          "en": "A weekly view of silicon carbide across AI chip packaging, eight-hundred-volt data-center power, EV inverters, wafer scaling, and the supply-chain contest shaping the next infrastructure cycle.",
+          "zh": "每週追蹤碳化矽在 AI 晶片封裝、八百伏特資料中心電力、電動車逆變器、晶圓擴徑與供應鏈競局中的最新變化。"
         },
         "signal": {
           "en": "AI packaging crossover",
@@ -555,19 +546,19 @@
             "zh": "SiC 正從電動車紅海，移向 AI 基礎設施。"
           },
           "body": {
-            "en": "Twelve-inch SiC is no longer only an EV cost story. Its thermal conductivity, high-voltage performance, and compatibility with 800V data-center architectures create a second demand curve in AI packaging and power delivery. The opportunity depends on wafer quality, customer qualification, and how quickly advanced packaging moves from evaluation to production.",
-            "zh": "12 吋 SiC 已不只是電動車的降本題材。它的高導熱、高電壓性能，以及與 800V 資料中心架構的相容性，正於 AI 封裝與電力傳輸形成第二條需求曲線。機會能否落地，取決於晶圓品質、客戶認證，以及先進封裝從驗證走向量產的速度。"
+            "en": "Twelve-inch SiC is no longer only an EV cost story. Its thermal conductivity, high-voltage performance, and compatibility with eight-hundred-volt data-center architectures create a second demand curve in AI packaging and power delivery. The opportunity depends on wafer quality, customer qualification, and how quickly advanced packaging moves from evaluation to production.",
+            "zh": "十二吋 SiC 已不只是電動車的降本題材。它的高導熱、高電壓性能，以及與八百伏特資料中心架構的相容性，正於 AI 封裝與電力傳輸形成第二條需求曲線。機會能否落地，取決於晶圓品質、客戶認證，以及先進封裝從驗證走向量產的速度。"
           },
           "tags": {
             "en": [
               "300mm wafers",
               "AI packaging",
-              "800V power"
+              "eight-hundred-volt power"
             ],
             "zh": [
               "300mm 晶圓",
               "AI 封裝",
-              "800V 電力"
+              "八百伏特電力"
             ]
           }
         },
@@ -851,7 +842,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "pulse.accelerator_market": {
       "id": "pulse.accelerator_market",
@@ -883,7 +874,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "pulse.power_queue": {
       "id": "pulse.power_queue",
@@ -920,7 +911,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "pulse.enterprise_agents": {
       "id": "pulse.enterprise_agents",
@@ -951,7 +942,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.basket_30d": {
       "id": "stocks.basket_30d",
@@ -976,7 +967,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.positive_breadth": {
       "id": "stocks.positive_breadth",
@@ -1001,7 +992,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.median_forward_pe": {
       "id": "stocks.median_forward_pe",
@@ -1044,7 +1035,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.catalyst_count": {
       "id": "stocks.catalyst_count",
@@ -1087,7 +1078,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "compute.accelerator_pool": {
       "id": "compute.accelerator_pool",
@@ -1125,7 +1116,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "compute.hbm_demand": {
       "id": "compute.hbm_demand",
@@ -1156,7 +1147,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "compute.packaging_lead_weeks": {
       "id": "compute.packaging_lead_weeks",
@@ -1187,7 +1178,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "compute.inference_cost_change": {
       "id": "compute.inference_cost_change",
@@ -1218,7 +1209,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "energy.announced_power_gw": {
       "id": "energy.announced_power_gw",
@@ -1255,7 +1246,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "energy.committed_power_gw": {
       "id": "energy.committed_power_gw",
@@ -1286,7 +1277,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "energy.interconnection_years": {
       "id": "energy.interconnection_years",
@@ -1317,7 +1308,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "energy.liquid_cooling_share": {
       "id": "energy.liquid_cooling_share",
@@ -1348,7 +1339,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "models.production_agents": {
       "id": "models.production_agents",
@@ -1379,7 +1370,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "models.software_spend_growth": {
       "id": "models.software_spend_growth",
@@ -1410,7 +1401,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "models.managed_tokens": {
       "id": "models.managed_tokens",
@@ -1447,7 +1438,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "models.api_deployment_share": {
       "id": "models.api_deployment_share",
@@ -1478,7 +1469,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "sic.market_2030_usd_b": {
       "id": "sic.market_2030_usd_b",
@@ -1522,7 +1513,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "sic.wafer_frontier_mm": {
       "id": "sic.wafer_frontier_mm",
@@ -1559,7 +1550,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "sic.packaging_watts": {
       "id": "sic.packaging_watts",
@@ -1590,7 +1581,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "sic.ev_penetration": {
       "id": "sic.ev_penetration",
@@ -1627,7 +1618,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.nvda.price": {
       "id": "stocks.nvda.price",
@@ -1652,7 +1643,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.nvda.weekReturn": {
       "id": "stocks.nvda.weekReturn",
@@ -1677,7 +1668,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.nvda.monthReturn": {
       "id": "stocks.nvda.monthReturn",
@@ -1702,7 +1693,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.avgo.price": {
       "id": "stocks.avgo.price",
@@ -1727,7 +1718,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.avgo.weekReturn": {
       "id": "stocks.avgo.weekReturn",
@@ -1752,7 +1743,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.avgo.monthReturn": {
       "id": "stocks.avgo.monthReturn",
@@ -1777,7 +1768,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.amd.price": {
       "id": "stocks.amd.price",
@@ -1802,7 +1793,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.amd.weekReturn": {
       "id": "stocks.amd.weekReturn",
@@ -1827,7 +1818,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.amd.monthReturn": {
       "id": "stocks.amd.monthReturn",
@@ -1852,7 +1843,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.tsm.price": {
       "id": "stocks.tsm.price",
@@ -1877,7 +1868,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.tsm.weekReturn": {
       "id": "stocks.tsm.weekReturn",
@@ -1902,7 +1893,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.tsm.monthReturn": {
       "id": "stocks.tsm.monthReturn",
@@ -1927,7 +1918,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.vrt.price": {
       "id": "stocks.vrt.price",
@@ -1952,7 +1943,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.vrt.weekReturn": {
       "id": "stocks.vrt.weekReturn",
@@ -1977,7 +1968,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.vrt.monthReturn": {
       "id": "stocks.vrt.monthReturn",
@@ -2002,7 +1993,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.etn.price": {
       "id": "stocks.etn.price",
@@ -2027,7 +2018,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.etn.weekReturn": {
       "id": "stocks.etn.weekReturn",
@@ -2052,7 +2043,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.etn.monthReturn": {
       "id": "stocks.etn.monthReturn",
@@ -2077,7 +2068,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.ceg.price": {
       "id": "stocks.ceg.price",
@@ -2102,7 +2093,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.ceg.weekReturn": {
       "id": "stocks.ceg.weekReturn",
@@ -2127,7 +2118,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.ceg.monthReturn": {
       "id": "stocks.ceg.monthReturn",
@@ -2152,7 +2143,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.wolf.price": {
       "id": "stocks.wolf.price",
@@ -2177,7 +2168,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.wolf.weekReturn": {
       "id": "stocks.wolf.weekReturn",
@@ -2202,7 +2193,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.wolf.monthReturn": {
       "id": "stocks.wolf.monthReturn",
@@ -2227,7 +2218,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.on.price": {
       "id": "stocks.on.price",
@@ -2252,7 +2243,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.on.weekReturn": {
       "id": "stocks.on.weekReturn",
@@ -2277,7 +2268,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.on.monthReturn": {
       "id": "stocks.on.monthReturn",
@@ -2302,7 +2293,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.now.price": {
       "id": "stocks.now.price",
@@ -2327,7 +2318,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.now.weekReturn": {
       "id": "stocks.now.weekReturn",
@@ -2352,7 +2343,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.now.monthReturn": {
       "id": "stocks.now.monthReturn",
@@ -2377,7 +2368,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.pltr.price": {
       "id": "stocks.pltr.price",
@@ -2402,7 +2393,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.pltr.weekReturn": {
       "id": "stocks.pltr.weekReturn",
@@ -2427,7 +2418,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.pltr.monthReturn": {
       "id": "stocks.pltr.monthReturn",
@@ -2452,7 +2443,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.crm.price": {
       "id": "stocks.crm.price",
@@ -2477,7 +2468,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.crm.weekReturn": {
       "id": "stocks.crm.weekReturn",
@@ -2502,7 +2493,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     },
     "stocks.crm.monthReturn": {
       "id": "stocks.crm.monthReturn",
@@ -2527,7 +2518,7 @@
         }
       ],
       "confidence": "medium",
-      "status": "waiting"
+      "status": "verified"
     }
   },
   "keySignalIds": [

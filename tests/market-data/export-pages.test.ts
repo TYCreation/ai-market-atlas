@@ -15,6 +15,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { projectMonthlyArchive } from "../../market-data/storage.ts";
 import { hashCandidate } from "../../market-data/review.ts";
+import validCandidate from "../fixtures/market/valid-candidate.json" with { type: "json" };
 import { exportPages } from "../../scripts/export-pages.ts";
 import {
   generateMarketBriefAssets,
@@ -633,12 +634,6 @@ test("exports the canonical changed-sic Wednesday brief without reconstructing a
 test("exports a month-end candidate with its prospective archive without mutating tracked storage", async () => {
   const isolatedRoot = await isolatedExportProject(true);
   const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
-  const isolatedSnapshotPath = join(
-    isolatedRoot,
-    "data",
-    "market",
-    "current.json",
-  );
   const candidatePath = join(
     isolatedRoot,
     "data",
@@ -671,9 +666,7 @@ test("exports a month-end candidate with its prospective archive without mutatin
     join(projectRoot, "data", "market", "monthly", "index.json"),
     "utf8",
   );
-  const candidate = JSON.parse(
-    await readFile(isolatedSnapshotPath, "utf8"),
-  ) as MarketSnapshot;
+  const candidate = structuredClone(validCandidate) as unknown as MarketSnapshot;
   candidate.runId = "2026-08-29-month-end";
   candidate.cadence = "month-end";
   candidate.generatedAt = "2026-08-29T01:00:00.000Z";

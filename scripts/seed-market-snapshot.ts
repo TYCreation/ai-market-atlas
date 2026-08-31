@@ -64,11 +64,18 @@ function modeledMetric(id: string, page: PageSlug, value: string, valueZh: strin
   };
 }
 
-function report(english: DashboardConfig, chinese: DashboardConfig) {
+function report(english: DashboardConfig, chinese: DashboardConfig, thesisMetricIds: string[]) {
   const field = (name: "eyebrow" | "title" | "summary" | "signal") => ({ en: english[name], zh: chinese[name] });
   return {
     eyebrow: field("eyebrow"), title: field("title"), summary: field("summary"), signal: field("signal"),
     thesis: { title: { en: english.thesis.title, zh: chinese.thesis.title }, body: { en: english.thesis.body, zh: chinese.thesis.body }, tags: { en: english.thesis.tags, zh: chinese.thesis.tags } },
+    thesisSurvivalRationale: {
+      text: {
+        en: "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+        zh: "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。",
+      },
+      metricIds: [thesisMetricIds[0]],
+    },
     supportingEvidence: [], opposingEvidence: [], catalysts: [],
     risks: english.watchlist.map((item, index) => ({ en: item.body, zh: chinese.watchlist[index]?.body ?? item.body })),
     nextObservations: english.watchlist.map((item, index) => ({ en: item.owner, zh: chinese.watchlist[index]?.owner ?? item.owner })),
@@ -104,7 +111,8 @@ function createSnapshot(runId: string): MarketSnapshot {
   }
   const pages = {} as MarketSnapshot["pages"];
   for (const page of Object.keys(dashboards) as PageSlug[]) {
-    pages[page] = { changed: false, changeReasons: [], verifiedAt: timestamp, thesisStance: "neutral", previousThesisStance: "neutral", thesisMetricIds: KPI_CATALOG.filter((entry) => entry[0] === page).map((entry) => entry[2]), report: report(dashboards[page], chineseDashboards[page]) };
+    const thesisMetricIds = KPI_CATALOG.filter((entry) => entry[0] === page).map((entry) => entry[2]);
+    pages[page] = { changed: false, changeReasons: [], verifiedAt: timestamp, thesisStance: "neutral", previousThesisStance: "neutral", thesisMetricIds, report: report(dashboards[page], chineseDashboards[page], thesisMetricIds) };
   }
   return { schemaVersion: 1, runId, cadence: runId.endsWith("wednesday") ? "wednesday" : runId.endsWith("month-end") ? "month-end" : "saturday", generatedAt: timestamp, dataCutoff: timestamp, pages, sources, metrics, keySignalIds: KPI_CATALOG.map((entry) => entry[2]) };
 }

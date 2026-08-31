@@ -211,6 +211,13 @@ function validateNarrativeEvidence(snapshot: MarketSnapshot): GateIssue[] {
       { path: "thesis.title", text: state.report.thesis.title, metricIds: state.thesisMetricIds },
       { path: "thesis.body", text: state.report.thesis.body, metricIds: state.thesisMetricIds },
     );
+    if (state.report.thesisSurvivalRationale !== undefined) {
+      fields.push({
+        path: "thesisSurvivalRationale",
+        text: state.report.thesisSurvivalRationale.text,
+        metricIds: state.report.thesisSurvivalRationale.metricIds,
+      });
+    }
     for (const locale of ["en", "zh"] as const) {
       for (const [index, tag] of state.report.thesis.tags[locale].entries()) {
         fields.push({

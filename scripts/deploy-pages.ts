@@ -25,7 +25,7 @@ import {
   type VerificationExpectation,
 } from "../market-data/deployment.ts";
 import { hashCandidate, isSafeMarketRunId } from "../market-data/review.ts";
-import { assertMarketSnapshot } from "../market-data/schema.ts";
+import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "../market-data/schema.ts";
 import {
   promoteCandidate,
   projectMonthlyArchive,
@@ -930,13 +930,17 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-async function readSnapshot(path: string, label: string) {
+async function readSnapshot(path: string, label: string, kind: "candidate" | "published") {
   const metadata = await lstat(path);
   if (metadata.isSymbolicLink() || !metadata.isFile()) {
     throw new Error(`${label} must be a regular file`);
   }
   const value: unknown = JSON.parse(await readFile(path, "utf8"));
-  assertMarketSnapshot(value);
+  if (kind === "candidate") {
+    assertMarketSnapshot(value);
+  } else {
+    assertPublishedMarketSnapshot(value);
+  }
   return value;
 }
 
@@ -985,7 +989,7 @@ async function runLockedDeployPagesAtProjectRoot(
   const currentPath = join(marketRoot, "current.json");
   const candidateDirectory = join(projectRoot, "work", "pages-candidate");
   const lastGoodDirectory = join(projectRoot, "work", "pages-last-good");
-  const candidate = await readSnapshot(candidatePath, "candidate");
+  const candidate = await readSnapshot(candidatePath, "candidate", "candidate");
   if (candidate.runId !== lockedRunId) {
     throw new Error("candidate runId changed after publication lock acquisition");
   }
@@ -1015,7 +1019,7 @@ async function runLockedDeployPagesAtProjectRoot(
     ) {
       throw error;
     }
-    const current = await readSnapshot(currentPath, "current snapshot");
+    const current = await readSnapshot(currentPath, "current snapshot", "published");
     const currentExport = await runtime.exportPages({
       projectRoot,
       snapshotPath: currentPath,
@@ -1078,7 +1082,7 @@ async function runLockedDeployPagesAtProjectRoot(
         }
       : {}),
   });
-  const currentSnapshot = await readSnapshot(currentPath, "current snapshot");
+  const currentSnapshot = await readSnapshot(currentPath, "current snapshot", "published");
   const snapshotAlreadyCurrent =
     hashCandidate(currentSnapshot) === candidateExport.candidateSha256;
   const activeDirectoryByUrl = new Map<
@@ -1163,7 +1167,7 @@ async function runLockedDeployPagesAtProjectRoot(
         expectedManifestSha256: candidateExport.manifestSha256,
       });
       if (snapshotAlreadyCurrent) {
-        const current = await readSnapshot(currentPath, "current snapshot");
+        const current = await readSnapshot(currentPath, "current snapshot", "published");
         if (hashCandidate(current) !== candidateExport.candidateSha256) {
           throw new Error("current snapshot changed during site-only redeployment");
         }
@@ -1227,6 +1231,7 @@ export async function runDeployPagesAtProjectRoot(
   projectRoot = resolve(projectRoot);
   const candidate = await readSnapshot(
     join(projectRoot, "data", "market", "candidate.json"),
+    "candidate",
     "candidate",
   );
   await withPublicationLock(projectRoot, candidate.runId, () =>

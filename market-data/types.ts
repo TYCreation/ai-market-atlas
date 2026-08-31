@@ -49,6 +49,7 @@ export type PageReport = {
   summary: BilingualText;
   signal: BilingualText;
   thesis: { title: BilingualText; body: BilingualText; tags: Record<Locale, string[]> };
+  thesisSurvivalRationale?: { text: BilingualText; metricIds: string[] };
   supportingEvidence: Array<{ text: BilingualText; metricIds: string[] }>;
   opposingEvidence: Array<{ text: BilingualText; metricIds: string[] }>;
   catalysts: BilingualText[];
@@ -59,7 +60,11 @@ export type PageReport = {
 export type PageState = {
   changed: boolean;
   changeReasons: Array<
-    "first-party-event" | "rounded-value-change" | "gate-worthy-movement" | "conclusion-changing-evidence"
+    | "first-party-event"
+    | "rounded-value-change"
+    | "gate-worthy-movement"
+    | "conclusion-changing-evidence"
+    | "thesis-reexamined-restated"
   >;
   verifiedAt: string;
   thesisStance: ThesisStance;

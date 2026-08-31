@@ -1,6 +1,6 @@
 import { lstat, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { assertMarketSnapshot } from "./schema.ts";
+import { assertPublishedMarketSnapshot } from "./schema.ts";
 import type { MarketSnapshot } from "./types.ts";
 
 function compareText(left: string, right: string): number {
@@ -44,7 +44,7 @@ export async function loadRecentSnapshots(
     let parsed: unknown;
     try {
       parsed = JSON.parse(await readFile(path, "utf8")) as unknown;
-      assertMarketSnapshot(parsed);
+      assertPublishedMarketSnapshot(parsed);
     } catch (error) {
       throw new Error(`Invalid history file ${filename}: ${error instanceof Error ? error.message : String(error)}`);
     }

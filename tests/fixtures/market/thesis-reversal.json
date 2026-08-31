@@ -96,7 +96,16 @@
             "en": "Next read · production cohort",
             "zh": "下一讀 · 正式環境群組"
           }
-        ]
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "pulse.infrastructure_spend"
+          ]
+        }
       }
     },
     "/stocks": {
@@ -190,7 +199,16 @@
             "en": "Next read · cash conversion",
             "zh": "下一讀 · 現金轉化"
           }
-        ]
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "stocks.basket_30d"
+          ]
+        }
       }
     },
     "/compute": {
@@ -284,7 +302,16 @@
             "en": "Next read · volume ramps",
             "zh": "下一讀 · 出貨放量"
           }
-        ]
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "compute.accelerator_pool"
+          ]
+        }
       }
     },
     "/energy": {
@@ -378,7 +405,16 @@
             "en": "Next read · PPA quality",
             "zh": "下一讀 · PPA 品質"
           }
-        ]
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "energy.announced_power_gw"
+          ]
+        }
       }
     },
     "/models": {
@@ -472,7 +508,16 @@
             "en": "Next read · gross margin",
             "zh": "下一讀 · 毛利率"
           }
-        ]
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "models.production_agents"
+          ]
+        }
       }
     },
     "/sic": {
@@ -566,7 +611,16 @@
             "en": "Next read · design wins",
             "zh": "下一讀 · 設計導入"
           }
-        ]
+        ],
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "New supporting and opposing evidence leaves the thesis intact because its central mechanism still holds.",
+            "zh": "新的支持與反向證據仍未動搖核心機制，因此本期論點維持不變。"
+          },
+          "metricIds": [
+            "sic.market_2030_usd_b"
+          ]
+        }
       }
     }
   },

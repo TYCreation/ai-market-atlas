@@ -14,6 +14,7 @@ const CHANGE_REASONS = new Set([
   "rounded-value-change",
   "gate-worthy-movement",
   "conclusion-changing-evidence",
+  "thesis-reexamined-restated",
 ]);
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 const SECRET_QUERY_PARAMETER = /(?:api[_-]?key|access[_-]?token|token|secret|signature|sig|password|credential|key)/i;
@@ -180,19 +181,34 @@ function assertMetricReferences(ids: string[], path: string, metrics: UnknownRec
   }
 }
 
-function assertPage(key: PageSlug, value: unknown, metrics: UnknownRecord): void {
+function assertPage(
+  key: PageSlug,
+  value: unknown,
+  metrics: UnknownRecord,
+  allowLegacyMissingThesisSurvivalRationale: boolean,
+): void {
   const page = requireRecord(value, `pages.${key}`);
   if (typeof page.changed !== "boolean") fail(`pages.${key}.changed must be a boolean`);
-  for (const [index, reason] of requireArray(page.changeReasons, `pages.${key}.changeReasons`).entries()) {
+  const changeReasons = requireArray(page.changeReasons, `pages.${key}.changeReasons`)
+    .map((reason, index) => requireString(reason, `pages.${key}.changeReasons[${index}]`));
+  for (const [index, reason] of changeReasons.entries()) {
     if (!CHANGE_REASONS.has(requireString(reason, `pages.${key}.changeReasons[${index}]`))) {
       fail(`pages.${key}.changeReasons[${index}] is unsupported`);
     }
+  }
+  const declaresThesisRestatement = changeReasons.includes("thesis-reexamined-restated");
+  if (declaresThesisRestatement && !page.changed) {
+    fail(`pages.${key}.changed must be true when thesis-reexamined-restated is declared`);
   }
   requireIsoTimestamp(page.verifiedAt, `pages.${key}.verifiedAt`);
   for (const stance of ["thesisStance", "previousThesisStance"] as const) {
     if (!STANCES.has(requireString(page[stance], `pages.${key}.${stance}`))) fail(`pages.${key}.${stance} is unsupported`);
   }
-  assertMetricReferences(requireStringArray(page.thesisMetricIds, `pages.${key}.thesisMetricIds`), `pages.${key}.thesisMetricIds`, metrics);
+  const thesisMetricIds = requireStringArray(page.thesisMetricIds, `pages.${key}.thesisMetricIds`);
+  if (declaresThesisRestatement && thesisMetricIds.length === 0) {
+    fail(`pages.${key}.thesisMetricIds must cite at least one metric for thesis-reexamined-restated`);
+  }
+  assertMetricReferences(thesisMetricIds, `pages.${key}.thesisMetricIds`, metrics);
   const report = requireRecord(page.report, `pages.${key}.report`);
   for (const field of ["eyebrow", "title", "summary", "signal"] as const) requireBilingual(report[field], `pages.${key}.report.${field}`);
   const thesis = requireRecord(report.thesis, `pages.${key}.report.thesis`);
@@ -201,6 +217,30 @@ function assertPage(key: PageSlug, value: unknown, metrics: UnknownRecord): void
   const tags = requireRecord(thesis.tags, `pages.${key}.report.thesis.tags`);
   requireStringArray(tags.zh, `pages.${key}.report.thesis.tags.zh`);
   requireStringArray(tags.en, `pages.${key}.report.thesis.tags.en`);
+  const survivalRationale = report.thesisSurvivalRationale;
+  if (
+    survivalRationale === undefined &&
+    !allowLegacyMissingThesisSurvivalRationale &&
+    !changeReasons.includes("thesis-reexamined-restated")
+  ) {
+    fail(`pages.${key}.report.thesisSurvivalRationale must be an object`);
+  }
+  if (survivalRationale !== undefined) {
+    const rationale = requireRecord(survivalRationale, `pages.${key}.report.thesisSurvivalRationale`);
+    requireBilingual(rationale.text, `pages.${key}.report.thesisSurvivalRationale.text`);
+    const rationaleMetricIds = requireStringArray(
+      rationale.metricIds,
+      `pages.${key}.report.thesisSurvivalRationale.metricIds`,
+    );
+    if (rationaleMetricIds.length === 0) {
+      fail(`pages.${key}.report.thesisSurvivalRationale.metricIds must cite at least one metric`);
+    }
+    assertMetricReferences(
+      rationaleMetricIds,
+      `pages.${key}.report.thesisSurvivalRationale.metricIds`,
+      metrics,
+    );
+  }
   for (const field of ["supportingEvidence", "opposingEvidence"] as const) {
     for (const [index, evidenceValue] of requireArray(report[field], `pages.${key}.report.${field}`).entries()) {
       const evidence = requireRecord(evidenceValue, `pages.${key}.report.${field}[${index}]`);
@@ -215,7 +255,10 @@ function assertPage(key: PageSlug, value: unknown, metrics: UnknownRecord): void
   }
 }
 
-export function assertMarketSnapshot(value: unknown): asserts value is MarketSnapshot {
+function assertSnapshot(
+  value: unknown,
+  allowLegacyMissingThesisSurvivalRationale: boolean,
+): asserts value is MarketSnapshot {
   const snapshot = requireRecord(value, "snapshot");
   if (snapshot.schemaVersion !== 1) fail("schemaVersion must be 1");
   requireString(snapshot.runId, "runId");
@@ -237,7 +280,17 @@ export function assertMarketSnapshot(value: unknown): asserts value is MarketSna
   const pages = requireRecord(snapshot.pages, "pages");
   for (const slug of PAGE_SLUGS) {
     if (!pages[slug]) fail(`page is missing: ${slug}`);
-    assertPage(slug, pages[slug], metrics);
+    assertPage(slug, pages[slug], metrics, allowLegacyMissingThesisSurvivalRationale);
   }
   assertMetricReferences(requireStringArray(snapshot.keySignalIds, "keySignalIds"), "keySignalIds", metrics);
+}
+
+/** Strictly validates newly authored candidates against the current editorial contract. */
+export function assertMarketSnapshot(value: unknown): asserts value is MarketSnapshot {
+  assertSnapshot(value, false);
+}
+
+/** Allows only the missing rationale field used by snapshots published before this contract. */
+export function assertPublishedMarketSnapshot(value: unknown): asserts value is MarketSnapshot {
+  assertSnapshot(value, true);
 }

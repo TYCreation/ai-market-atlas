@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import currentSnapshotJson from "#market-snapshot" with { type: "json" };
 import { KPI_CATALOG, stockMetricId, type StockMetricField } from "./catalog.ts";
 import { evaluateMetricFreshness } from "./freshness.ts";
-import { assertMarketSnapshot } from "./schema.ts";
+import { assertPublishedMarketSnapshot } from "./schema.ts";
 import type {
   Locale,
   MarketSnapshot,
@@ -73,7 +73,7 @@ const cadenceLabels: Record<RunCadence, Record<Locale, string>> = {
 };
 
 function validateSnapshot(value: unknown): MarketSnapshot {
-  assertMarketSnapshot(value);
+  assertPublishedMarketSnapshot(value);
   return value;
 }
 

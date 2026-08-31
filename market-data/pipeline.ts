@@ -16,7 +16,7 @@ import {
   reviewCandidate,
   type AutomatedReview,
 } from "./review.ts";
-import { assertMarketSnapshot } from "./schema.ts";
+import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "./schema.ts";
 import type { MarketSnapshot } from "./types.ts";
 import {
   promoteCandidate,
@@ -127,9 +127,13 @@ function fixtureCandidate(value: unknown): MarketSnapshot {
   // Quality-gate fixtures contain numeric stress sentinels unrelated to the
   // pipeline behavior under test. Keep those sentinels inside fixture mode.
   for (const page of Object.values(candidate.pages)) {
+    const thesisSurvivalRationale = page.report.thesisSurvivalRationale;
     page.report = JSON.parse(
       JSON.stringify(page.report).replaceAll(/\d/g, "x"),
     ) as typeof page.report;
+    if (thesisSurvivalRationale !== undefined) {
+      page.report.thesisSurvivalRationale = thesisSurvivalRationale;
+    }
   }
   for (const metric of Object.values(candidate.metrics)) {
     if (
@@ -164,7 +168,7 @@ function priorFixtureSnapshot(candidate: MarketSnapshot): MarketSnapshot {
   for (const metric of Object.values(previous.metrics)) {
     metric.previousNumericValue = metric.numericValue;
   }
-  assertMarketSnapshot(previous);
+  assertPublishedMarketSnapshot(previous);
   return previous;
 }
 

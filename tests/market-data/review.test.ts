@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import candidate from "../fixtures/market/valid-candidate.json" with { type: "json" };
 import conflictingCandidate from "../fixtures/market/conflicting-prices.json" with { type: "json" };
+import missingThesisRationaleCandidate from "../fixtures/market/missing-thesis-survival-rationale.json" with { type: "json" };
 import previous from "../fixtures/market/previous-snapshot.json" with { type: "json" };
 import {
   assertAutoPublishReview,
@@ -17,6 +18,7 @@ import { runMarketReview } from "../../scripts/market-review.ts";
 
 const valid = candidate as unknown as MarketSnapshot;
 const conflicting = conflictingCandidate as unknown as MarketSnapshot;
+const missingThesisRationale = missingThesisRationaleCandidate as unknown as MarketSnapshot;
 const previousSnapshot = previous as unknown as MarketSnapshot;
 const reachableFetcher = async () => new Response("", { status: 200 });
 const publicResolver = async () => ["93.184.216.34"];
@@ -253,6 +255,18 @@ test("rejects a no-change integrity failure", async () => {
 
   assert.equal(review.decision, "reject");
   assert.equal(review.checks.find((check) => check.id === "no-change-integrity")?.status, "fail");
+});
+
+test("rejects a candidate whose unchanged thesis omits its survival rationale", async () => {
+  const prior = reviewableCandidate();
+  const missing = withoutNumericNarrative(structuredClone(missingThesisRationale));
+  missing.metrics["stocks.wolf.weekReturn"].numericValue = -19.9;
+  missing.metrics["stocks.wolf.weekReturn"].display = { en: "-19.9%", zh: "-19.9%" };
+
+  const review = await reviewSnapshot(missing, prior);
+
+  assert.equal(review.decision, "reject");
+  assert.equal(review.checks.find((check) => check.id === "schema")?.status, "fail");
 });
 
 test("rejects schema-invalid content but still emits every review check", async () => {

@@ -1,10 +1,10 @@
 import { realpath, readFile, stat, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { evaluateMetricFreshness } from "../market-data/freshness.ts";
 import { hashCandidate } from "../market-data/review.ts";
-import { assertMarketSnapshot } from "../market-data/schema.ts";
+import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "../market-data/schema.ts";
 import type {
   BilingualText,
   MarketSnapshot,
@@ -237,7 +237,7 @@ function nextWeekObservations(snapshot: MarketSnapshot): BilingualText[] {
 }
 
 export function buildMarketBrief(snapshot: MarketSnapshot): MarketBriefPayload {
-  assertMarketSnapshot(snapshot);
+  assertPublishedMarketSnapshot(snapshot);
   assertSnapshotBriefCardinality(snapshot);
   const freshSignals = freshKeySignals(snapshot);
   const signals = freshSignals.map((metric): MarketBriefSignal => {
@@ -458,7 +458,11 @@ async function loadSnapshot(path: string): Promise<MarketSnapshot> {
   const file = await stat(resolved);
   if (!file.isFile()) throw new Error(`Market snapshot path is not a regular file: ${path}`);
   const value = JSON.parse(await readFile(resolved, "utf8")) as unknown;
-  assertMarketSnapshot(value);
+  if (basename(resolved) === "candidate.json") {
+    assertMarketSnapshot(value);
+  } else {
+    assertPublishedMarketSnapshot(value);
+  }
   return value;
 }
 

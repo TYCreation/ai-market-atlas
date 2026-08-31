@@ -6,7 +6,7 @@ import type { SourceAdapter } from "./adapters/types.ts";
 import { normalizeCandidate } from "./normalize.ts";
 import { assertMonthlyArchiveRecord, type MonthlyArchiveRecord } from "./monthly-record.ts";
 import { assertAutoPublishReview, hashCandidate, isSafeMarketRunId, type AutomatedReview } from "./review.ts";
-import { assertMarketSnapshot } from "./schema.ts";
+import { assertPublishedMarketSnapshot } from "./schema.ts";
 import type { MarketSnapshot, SourceRecord } from "./types.ts";
 
 export type { MonthlyArchiveRecord } from "./monthly-record.ts";
@@ -42,7 +42,7 @@ function parseSnapshot(text: string, label: string): MarketSnapshot {
   } catch {
     throw new Error(`${label} is malformed JSON`);
   }
-  assertMarketSnapshot(value);
+  assertPublishedMarketSnapshot(value);
   return value;
 }
 

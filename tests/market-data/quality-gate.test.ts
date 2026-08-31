@@ -3,7 +3,10 @@ import test from "node:test";
 import candidate from "../fixtures/market/valid-candidate.json" with { type: "json" };
 import conflictingCandidate from "../fixtures/market/conflicting-prices.json" with { type: "json" };
 import missingRequiredCandidate from "../fixtures/market/missing-required.json" with { type: "json" };
+import missingThesisRationaleCandidate from "../fixtures/market/missing-thesis-survival-rationale.json" with { type: "json" };
 import thesisReversalCandidate from "../fixtures/market/thesis-reversal.json" with { type: "json" };
+import thesisRestatementCandidate from "../fixtures/market/thesis-restatement.json" with { type: "json" };
+import unmarkedThesisRewriteCandidate from "../fixtures/market/unmarked-thesis-rewrite.json" with { type: "json" };
 import previous from "../fixtures/market/previous-snapshot.json" with { type: "json" };
 import { evaluateQualityGate } from "../../market-data/quality-gate.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
@@ -12,6 +15,9 @@ const valid = candidate as unknown as MarketSnapshot;
 const conflicting = conflictingCandidate as unknown as MarketSnapshot;
 const missingRequired = missingRequiredCandidate as unknown as MarketSnapshot;
 const thesisReversal = thesisReversalCandidate as unknown as MarketSnapshot;
+const thesisRestatement = thesisRestatementCandidate as unknown as MarketSnapshot;
+const unmarkedThesisRewrite = unmarkedThesisRewriteCandidate as unknown as MarketSnapshot;
+const missingThesisRationale = missingThesisRationaleCandidate as unknown as MarketSnapshot;
 const previousSnapshot = previous as unknown as MarketSnapshot;
 
 test("blocks prices that disagree by more than one percent", () => {
@@ -249,6 +255,36 @@ test("blocks rewritten unchanged-page narrative", () => {
   const result = evaluateQualityGate(rewritten, prior);
 
   assert.ok(result.issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/compute",
+  ));
+});
+
+test("accepts an evidenced thesis restatement with the exact change reason", () => {
+  const result = evaluateQualityGate(thesisRestatement, valid);
+
+  assert.equal(result.issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/compute",
+  ), false);
+});
+
+test("blocks a restated thesis that is not marked changed", () => {
+  const unmarkedChange = structuredClone(thesisRestatement);
+  unmarkedChange.pages["/compute"].changed = false;
+
+  assert.ok(evaluateQualityGate(unmarkedChange, valid).issues.some(
+    (issue) => issue.page === "/compute" &&
+      issue.message === "A restated thesis must mark the page changed, use the exact thesis re-examination reason, and cite thesis metrics.",
+  ));
+});
+
+test("blocks a thesis rewrite without the exact restatement declaration", () => {
+  assert.ok(evaluateQualityGate(unmarkedThesisRewrite, valid).issues.some(
+    (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/compute",
+  ));
+});
+
+test("blocks an unchanged thesis without a cited survival rationale", () => {
+  assert.ok(evaluateQualityGate(missingThesisRationale, valid).issues.some(
     (issue) => issue.code === "MATERIAL_CHANGE_MISMATCH" && issue.page === "/compute",
   ));
 });

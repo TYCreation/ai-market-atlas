@@ -21,7 +21,7 @@ import {
   type MonthlyArchiveRecord,
 } from "../market-data/monthly-record.ts";
 import { hashCandidate } from "../market-data/review.ts";
-import { assertMarketSnapshot } from "../market-data/schema.ts";
+import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "../market-data/schema.ts";
 import type { MarketSnapshot } from "../market-data/types.ts";
 import { buildSourceBundles } from "../market-data/view-model.ts";
 import {
@@ -429,7 +429,11 @@ export async function exportPages(
   await assertOutputPathSafe(projectRoot, outputDirectory);
   await assertRegularFile(snapshotPath, "market snapshot");
   const snapshot: unknown = JSON.parse(await readFile(snapshotPath, "utf8"));
-  assertMarketSnapshot(snapshot);
+  if (basename(snapshotPath) === "candidate.json") {
+    assertMarketSnapshot(snapshot);
+  } else {
+    assertPublishedMarketSnapshot(snapshot);
+  }
   const canonicalBrief = await loadBoundMarketBrief(projectRoot, snapshot);
   const candidateSha256 = hashCandidate(snapshot);
   if (
