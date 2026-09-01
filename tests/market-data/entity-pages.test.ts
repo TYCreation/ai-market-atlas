@@ -5,6 +5,8 @@ import { loadPublishedBriefs, type PublishedBrief } from "../../market-data/brie
 import type { MarketSnapshot, PageSlug, PageState } from "../../market-data/types.ts";
 import {
   ENTITY_EVIDENCE_FLOOR,
+  ENTITY_SELECTION_LIMIT,
+  discoverEntityCandidateRecords,
   discoverEligibleEntityRecords,
   entityRoutePaths,
   extractEntityHubs,
@@ -14,95 +16,30 @@ import {
 
 const projectRoot = new URL("../..", import.meta.url).pathname;
 const EXPECTED_ELIGIBLE_ENTITY_SLUGS = [
-  "accelerator",
-  "accelerator-market",
-  "agents",
-  "ai",
-  "ai-market-atlas",
   "amd",
   "amd-data-center",
-  "announced",
-  "announced-power",
-  "api",
-  "api-deployment",
-  "atlas-model",
-  "basket",
-  "breadth",
   "broadcom",
-  "catalyst",
-  "center",
   "cisco",
   "cisco-ai-infrastructure",
-  "committed",
-  "committed-power",
-  "contract",
-  "cooling",
-  "cost",
-  "data",
-  "deployment",
-  "doe-data-centers",
-  "enterprise",
-  "enterprise-agents",
-  "ev",
-  "forward",
-  "frontier",
-  "gemini-pricing",
-  "google-ai-developers",
+  "doe",
+  "gemini",
   "hbm",
-  "helix",
-  "iea-data-centres",
-  "iea-energy-ai",
-  "inference",
-  "inference-cost",
+  "iea",
   "infineon",
-  "infrastructure",
-  "infrastructure-spend",
-  "interconnection",
-  "international-energy-agency",
-  "lead",
-  "liquid",
   "liquid-cooling",
-  "managed",
-  "market",
-  "median",
-  "median-forward",
-  "monitoring",
+  "market-2030",
   "nvidia",
   "onsemi",
-  "onsemi-ai",
   "openai",
-  "openai-cyber-pacing",
-  "openai-monitoring",
   "openai-ports",
-  "openai-ports-pike",
-  "openai-pricing",
   "packaging",
-  "packaging-lead",
-  "ports",
-  "positive",
-  "positive-breadth",
-  "power",
-  "production",
-  "production-agents",
   "sharon-ai",
-  "sharon-ai-contract",
-  "sharon-ai-deployment-acceptance",
-  "software",
-  "software-spend",
-  "spend",
-  "stanford-economy",
   "stanford-hai",
   "stmicroelectronics",
   "tsmc",
-  "u-s-department-energy-lbnl",
-  "u-s-securities-exchange-commission",
   "vertiv",
   "vistra",
-  "vistra-helix",
-  "wafer",
-  "wafer-frontier",
   "wolfspeed",
-  "wolfspeed-ai",
 ] as const;
 
 async function retainedBriefs() {
@@ -215,26 +152,43 @@ function syntheticPublishedBrief(date: string): PublishedBrief {
   return syntheticObservedEntityBrief(date, "Gemini");
 }
 
-test("discovers the current retained eligible entity corpus from report evidence instead of a curated allowlist", async () => {
+test("selects a capped, evidence-ranked corpus from the larger discovered candidate set", async () => {
   const briefs = await retainedBriefs();
+  const candidates = discoverEntityCandidateRecords(briefs);
   const first = discoverEligibleEntityRecords(briefs);
   const second = discoverEligibleEntityRecords(briefs);
 
   assert.deepEqual(second, first);
+  assert.ok(candidates.length > first.length);
+  assert.equal(first.length, ENTITY_SELECTION_LIMIT);
+  assert.ok(first.length >= 20 && first.length <= 30);
   assert.deepEqual(first.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
   assert.equal(new Set(first.map((entity) => entity.slug)).size, first.length);
   assert.ok(first.every((entity) =>
-    entity.briefs.length >= ENTITY_EVIDENCE_FLOOR.datedBriefs &&
-    entity.sourceReferenceCount >= ENTITY_EVIDENCE_FLOOR.sourceReferences
+    entity.evidence.datedBriefs >= ENTITY_EVIDENCE_FLOOR.datedBriefs &&
+    entity.evidence.canonicalSources >= ENTITY_EVIDENCE_FLOOR.canonicalSources &&
+    entity.evidence.distinctMetrics >= ENTITY_EVIDENCE_FLOOR.distinctMetrics
   ));
   assert.ok(first.every((entity) => entity.briefs.every((brief) => brief.pillars.length >= 1)));
+  assert.ok(first.every((entity) => entity.sources.every((source) => source.kind !== "atlas")));
   assert.ok(first.find((entity) => entity.slug === "tsmc"));
   assert.ok(first.find((entity) => entity.slug === "vistra"));
   assert.ok(first.find((entity) => entity.slug === "sharon-ai"));
-  assert.equal(first.some((entity) => entity.slug === "gemini"), false);
-  assert.equal(first.some((entity) => entity.slug === "stanford"), false);
-  assert.equal(first.some((entity) => entity.slug === "2026"), false);
-  assert.equal(first.some((entity) => entity.slug === "results"), false);
+  for (const thinSlug of [
+    "announced",
+    "atlas-model",
+    "basket",
+    "breadth",
+    "data",
+    "forward",
+    "gemini-pricing",
+    "median",
+    "openai-pricing",
+    "positive",
+    "sharon-ai-deployment-acceptance",
+  ]) {
+    assert.equal(first.some((entity) => entity.slug === thinSlug), false, thinSlug);
+  }
 });
 
 test("entity alias normalization coalesces observed variants and rejects generic boilerplate", async () => {
@@ -252,7 +206,7 @@ test("entity alias normalization coalesces observed variants and rejects generic
   assert.equal(getEntityHub(hubs, "STM")?.slug, "stmicroelectronics");
 });
 
-test("no entity below the explicit brief and source-reference floor emits", async () => {
+test("no entity below the explicit date, canonical-source, and metric floors emits", async () => {
   const newestOnly = (await retainedBriefs()).slice(0, 1);
   assert.deepEqual(discoverEligibleEntityRecords(newestOnly), []);
 });
@@ -266,7 +220,12 @@ test("source-derived observed entities are not suppressed by name when evidence 
   const gemini = entities.find((entity) => entity.slug === "gemini");
   assert.ok(gemini);
   assert.equal(gemini.briefs.length, 2);
-  assert.equal(gemini.sourceReferenceCount, 2);
+  assert.deepEqual(gemini.evidence, {
+    datedBriefs: 2,
+    canonicalSources: 1,
+    distinctMetrics: 1,
+    narrativeDates: 0,
+  });
 });
 
 test("source identifiers and publishers retain observed domain names while stripping only document and date boilerplate", () => {
@@ -326,7 +285,7 @@ test("source identifiers and publishers retain observed domain names while strip
     const entity = entities.find((candidate) => candidate.slug === expectedSlug);
     assert.ok(entity, `${observedName} should qualify once the evidence floor is met`);
     assert.equal(entity.briefs.length, 2);
-    assert.equal(entity.sourceReferenceCount, 2);
+    assert.equal(entity.evidence.canonicalSources, 1);
   }
 
   for (const observedName of rejectedCases) {
@@ -343,20 +302,68 @@ test("source identifiers and publishers retain observed domain names while strip
   }
 });
 
-test("metric fields retain domain tokens but remove measurement suffixes by position", () => {
+test("metric fields emit one whole semantic concept after positional measurement suffix stripping", () => {
   const entities = discoverEligibleEntityRecords([
     syntheticObservedEntityBrief("2026-08-26", "Observed Publisher", "compute.ai_agency_capacity_gw"),
     syntheticObservedEntityBrief("2026-08-22", "Observed Publisher", "compute.ai_agency_capacity_gw"),
   ]);
 
-  for (const expectedSlug of ["ai", "agency", "ai-agency"] as const) {
-    assert.ok(
-      entities.some((entity) => entity.slug === expectedSlug),
-      `${expectedSlug} should be discovered from the metric field`,
-    );
-  }
+  assert.ok(entities.some((entity) => entity.slug === "ai-agency"));
+  assert.equal(entities.some((entity) => entity.slug === "ai"), false);
+  assert.equal(entities.some((entity) => entity.slug === "agency"), false);
   assert.equal(entities.some((entity) => entity.slug === "capacity"), false);
   assert.equal(entities.some((entity) => entity.slug === "gw"), false);
+});
+
+test("source identities stop at document/event suffixes and atlas sources never become entities", () => {
+  const openAiBriefs = [
+    syntheticObservedEntityBrief("2026-08-26", "OpenAI Investor Relations"),
+    syntheticObservedEntityBrief("2026-08-22", "OpenAI Investor Relations"),
+  ];
+  const sharonBriefs = [
+    syntheticObservedEntityBrief("2026-08-26", "Sharon AI Deployment Acceptance"),
+    syntheticObservedEntityBrief("2026-08-22", "Sharon AI Deployment Acceptance"),
+  ];
+  const selfBriefs = [
+    syntheticObservedEntityBrief("2026-08-26", "AI Market Atlas"),
+    syntheticObservedEntityBrief("2026-08-22", "AI Market Atlas"),
+  ];
+  for (const brief of selfBriefs) {
+    const source = Object.values(brief.snapshot.sources)[0];
+    source.kind = "atlas";
+  }
+
+  assert.ok(discoverEligibleEntityRecords(openAiBriefs).some((entity) => entity.slug === "openai"));
+  assert.ok(discoverEligibleEntityRecords(sharonBriefs).some((entity) => entity.slug === "sharon-ai"));
+  assert.equal(
+    discoverEntityCandidateRecords(sharonBriefs).some((entity) => entity.slug === "sharon-ai-deployment-acceptance"),
+    false,
+  );
+  assert.deepEqual(discoverEligibleEntityRecords(selfBriefs), []);
+});
+
+test("evidence diversity counts dates, canonical sources, and metric IDs independently", async () => {
+  const sharonAi = discoverEligibleEntityRecords(await retainedBriefs())
+    .find((entity) => entity.slug === "sharon-ai");
+  assert.ok(sharonAi);
+  assert.deepEqual(sharonAi.evidence, {
+    datedBriefs: 2,
+    canonicalSources: 1,
+    distinctMetrics: 2,
+    narrativeDates: 2,
+  });
+});
+
+test("selected labels preserve organization and metric acronyms", async () => {
+  const entities = discoverEligibleEntityRecords(await retainedBriefs());
+  const names = new Map(entities.map((entity) => [entity.slug, entity.name.en]));
+
+  assert.equal(names.get("amd-data-center"), "AMD data center");
+  assert.equal(names.get("cisco-ai-infrastructure"), "Cisco AI infrastructure");
+  assert.equal(names.get("doe"), "DOE");
+  assert.equal(names.get("iea"), "IEA");
+  assert.equal(names.get("openai-ports"), "OpenAI PORTS");
+  assert.equal(names.get("stanford-hai"), "Stanford HAI");
 });
 
 test("entity hubs only link dated briefs and pillars with report metric references", async () => {

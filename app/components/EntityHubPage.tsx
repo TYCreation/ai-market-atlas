@@ -48,6 +48,7 @@ export function EntityHubPage({ entity, locale }: { entity: EntityHub; locale: "
         <ul>
           {entity.metrics.map((metric) => <li key={`${metric.date}:${metric.id}`}>
             <time dateTime={metric.asOf}>{metric.date}</time><code>{metric.id}</code><span>{metric.display[locale]}</span>
+            <span>{metric.sourceIds.map((sourceId) => <a href={`#source-${sourceId}`} key={sourceId}>{sourceId}</a>)}</span>
           </li>)}
         </ul>
       </section>

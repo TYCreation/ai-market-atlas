@@ -3,65 +3,66 @@ import type { PageSlug, SourceRecord } from "./types.ts";
 
 export const ENTITY_EVIDENCE_FLOOR = {
   datedBriefs: 2,
-  sourceReferences: 2,
+  canonicalSources: 1,
+  distinctMetrics: 1,
 } as const;
 
-// Source names are prose-like identifiers.  These tokens describe the
-// document, its period, or the connective grammar around a name; they are not
-// a vocabulary of disallowed entities.  Everything else is eligible evidence.
-const SOURCE_BOILERPLATE_TOKENS = new Set([
-  "a",
-  "an",
-  "and",
-  "announcement",
-  "announcements",
-  "at",
-  "earnings",
-  "filing",
-  "filed",
-  "form",
-  "for",
-  "from",
-  "globenewswire",
-  "in",
-  "investor",
-  "month",
-  "months",
-  "news",
-  "newswire",
-  "of",
-  "on",
-  "or",
-  "press",
-  "pr",
-  "q1",
-  "q2",
-  "q3",
-  "q4",
-  "quarter",
-  "release",
-  "relations",
-  "report",
-  "results",
-  "the",
-  "to",
-  "update",
-  "updates",
-  "via",
-  "week",
-  "weeks",
-  "year",
-  "years",
-]);
+export const ENTITY_SELECTION_LIMIT = 24;
 
-// These tokens are measurement fields only when they occur at the end of a
-// metric field.  They remain valid source-derived names and valid interior
-// metric tokens (for example, "liquid-cooling"), rather than global bans.
+// A source ID is an entity prefix followed by document/event/date grammar.
+// These are suffix boundaries, never a denylist of valid entity names.
+const SOURCE_DOCUMENT_SUFFIXES = [
+  ["deployment", "acceptance"],
+  ["investor", "relations"],
+  ["data", "centers"],
+  ["data", "centres"],
+  ["energy", "ai"],
+  ["form"],
+  ["pricing"],
+  ["results"],
+  ["earnings"],
+  ["filing"],
+  ["filed"],
+  ["press"],
+  ["release"],
+  ["announcement"],
+  ["acceptance"],
+  ["investor"],
+  ["month"],
+  ["news"],
+  ["quarter"],
+  ["relations"],
+  ["report"],
+  ["update"],
+  ["week"],
+  ["year"],
+] as const;
+
+const IDENTITY_CONNECTORS = new Set(["a", "an", "and", "at", "for", "from", "in", "of", "on", "or", "the", "to", "via"]);
+
+const PUBLISHER_SUFFIXES = [
+  ["investor", "relations"],
+  ["holdings", "co"],
+  ["incorporated"],
+  ["corporation"],
+  ["corp"],
+  ["company"],
+  ["inc"],
+  ["llc"],
+  ["ltd"],
+] as const;
+
+const METRIC_SUFFIX_PHRASES = [
+  ["month", "return"],
+  ["week", "return"],
+] as const;
+
+// Measurement descriptors are removed only from the end of a metric field.
+// Domain words remain intact everywhere else (for example liquid-cooling).
 const METRIC_MEASUREMENT_SUFFIXES = new Set([
   "b",
   "capacity",
   "change",
-  "commitment",
   "count",
   "demand",
   "efficiency",
@@ -74,11 +75,9 @@ const METRIC_MEASUREMENT_SUFFIXES = new Set([
   "penetration",
   "pool",
   "price",
-  "queue",
   "return",
   "revenue",
   "share",
-  "tokens",
   "usd",
   "value",
   "watts",
@@ -86,43 +85,56 @@ const METRIC_MEASUREMENT_SUFFIXES = new Set([
   "years",
 ]);
 
-const SOURCE_ID_CHANNEL_SUFFIXES = new Set(["gnw", "prn", "sec"]);
-
 const ENTITY_ALIAS_NORMALIZATION = new Map<string, string>([
   ["advanced-micro-devices", "amd"],
   ["advanced-micro-devices-inc", "amd"],
+  ["avgo", "broadcom"],
+  ["international-energy-agency", "iea"],
+  ["nvda", "nvidia"],
+  ["on", "onsemi"],
+  ["open-ai", "openai"],
   ["sharon", "sharon-ai"],
   ["sharon-ai", "sharon-ai"],
+  ["stanford", "stanford-hai"],
   ["stm", "stmicroelectronics"],
   ["tsm", "tsmc"],
   ["vrt", "vertiv"],
   ["vertiv-holdings-co", "vertiv"],
+  ["wolf", "wolfspeed"],
 ]);
 
 const ENTITY_LABEL_OVERRIDES: Record<string, { en: string; zh: string }> = {
   accelerator: { en: "AI accelerators", zh: "AI 加速器" },
   agents: { en: "AI agents", zh: "AI 代理" },
   amd: { en: "AMD", zh: "AMD" },
+  "amd-data-center": { en: "AMD data center", zh: "AMD 資料中心" },
   "announced-power": { en: "Announced power", zh: "已公告電力" },
   api: { en: "APIs", zh: "API" },
   broadcom: { en: "Broadcom", zh: "Broadcom" },
   cisco: { en: "Cisco", zh: "Cisco" },
+  "cisco-ai-infrastructure": { en: "Cisco AI infrastructure", zh: "Cisco AI 基礎設施" },
   "committed-power": { en: "Committed power", zh: "已承諾電力" },
   cooling: { en: "Data-center cooling", zh: "資料中心冷卻" },
+  doe: { en: "DOE", zh: "美國能源部" },
+  gemini: { en: "Gemini", zh: "Gemini" },
   hbm: { en: "HBM", zh: "HBM" },
+  iea: { en: "IEA", zh: "國際能源總署" },
   inference: { en: "Inference", zh: "推論" },
   infineon: { en: "Infineon", zh: "Infineon" },
   interconnection: { en: "Grid interconnection", zh: "電網併網" },
   "managed-tokens": { en: "Managed tokens", zh: "託管權杖" },
+  "market-2030": { en: "2030 SiC market", zh: "2030 年 SiC 市場" },
   nvidia: { en: "NVIDIA", zh: "NVIDIA" },
   onsemi: { en: "onsemi", zh: "onsemi" },
   openai: { en: "OpenAI", zh: "OpenAI" },
+  "openai-ports": { en: "OpenAI PORTS", zh: "OpenAI PORTS" },
   packaging: { en: "Advanced packaging", zh: "先進封裝" },
   power: { en: "Data-center power", zh: "資料中心電力" },
   "production-agents": { en: "Production agents", zh: "生產環境代理" },
   "sharon-ai": { en: "Sharon AI", zh: "Sharon AI" },
   software: { en: "AI software", zh: "AI 軟體" },
   spend: { en: "AI spending", zh: "AI 支出" },
+  "stanford-hai": { en: "Stanford HAI", zh: "Stanford HAI" },
   stmicroelectronics: { en: "STMicroelectronics", zh: "STMicroelectronics" },
   tsmc: { en: "TSMC", zh: "TSMC" },
   vertiv: { en: "Vertiv", zh: "Vertiv" },
@@ -132,10 +144,15 @@ const ENTITY_LABEL_OVERRIDES: Record<string, { en: string; zh: string }> = {
 };
 
 type EntityCandidateChannel =
-  | "metric-token"
-  | "metric-compound"
-  | "source-id"
-  | "source-publisher";
+  | "metric-concept"
+  | "source-identity";
+
+export type EntityEvidenceDiversity = {
+  datedBriefs: number;
+  canonicalSources: number;
+  distinctMetrics: number;
+  narrativeDates: number;
+};
 
 export type EntityEvidenceMetric = {
   date: string;
@@ -160,18 +177,19 @@ export type EligibleEntityRecord = {
   metrics: EntityEvidenceMetric[];
   sources: SourceRecord[];
   lastModified: string;
-  sourceReferenceCount: number;
+  evidence: EntityEvidenceDiversity;
 };
 
-export type EntityHub = Omit<EligibleEntityRecord, "sourceReferenceCount">;
+export type EntityHub = Omit<EligibleEntityRecord, "evidence">;
 
 type CandidateAccumulator = {
   slug: string;
   briefs: Map<string, { date: string; dataCutoff: string; pillars: Set<PageSlug> }>;
   pillars: Set<PageSlug>;
   metrics: Map<string, EntityEvidenceMetric>;
+  metricIds: Set<string>;
   sourceIds: Set<string>;
-  sourceReferenceKeys: Set<string>;
+  narrativeDates: Set<string>;
   channels: Set<EntityCandidateChannel>;
   observedNames: Map<string, number>;
 };
@@ -190,14 +208,6 @@ function sortedUnique(values: string[]): string[] {
   return [...new Set(values)].sort();
 }
 
-function isNumericBoilerplateToken(token: string): boolean {
-  return /^\d/.test(token) || /^fy\d+$/.test(token);
-}
-
-function isSourceBoilerplateToken(token: string): boolean {
-  return isNumericBoilerplateToken(token) || SOURCE_BOILERPLATE_TOKENS.has(token) || /^fy$/.test(token);
-}
-
 function tokenizeEntityText(value: string): string[] {
   return value
     .normalize("NFKC")
@@ -211,12 +221,56 @@ function tokenizeEntityText(value: string): string[] {
 
 function normalizeCandidateTokens(tokens: string[]): string | undefined {
   if (tokens.length === 0 || new Set(tokens).size !== tokens.length) return undefined;
-  if (tokens.some(isNumericBoilerplateToken)) return undefined;
+  if (IDENTITY_CONNECTORS.has(tokens[0]) || IDENTITY_CONNECTORS.has(tokens[tokens.length - 1])) return undefined;
   const phrase = tokens.join("-");
   const alias = ENTITY_ALIAS_NORMALIZATION.get(phrase);
   if (alias !== undefined) return alias;
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(phrase)) return undefined;
   return phrase;
+}
+
+function startsWithTokens(tokens: string[], prefix: string[]): boolean {
+  return prefix.length <= tokens.length && prefix.every((token, index) => tokens[index] === token);
+}
+
+function matchesPhraseAt(tokens: string[], phrase: readonly string[], index: number): boolean {
+  return phrase.every((token, offset) => tokens[index + offset] === token);
+}
+
+function sourceSuffixStartsAt(tokens: string[], index: number): boolean {
+  const token = tokens[index] ?? "";
+  return (
+    /^\d/.test(token) ||
+    /^q[1-4]$/.test(token) ||
+    /^fy(?:\d+)?$/.test(token) ||
+    ["gnw", "prn", "sec"].includes(token) ||
+    SOURCE_DOCUMENT_SUFFIXES.some((phrase) => matchesPhraseAt(tokens, phrase, index))
+  );
+}
+
+function leadingSourceTokens(tokens: string[]): string[] {
+  const boundary = tokens.findIndex((_token, index) => sourceSuffixStartsAt(tokens, index));
+  return boundary < 0 ? tokens : tokens.slice(0, boundary);
+}
+
+function publisherIdentityTokens(value: string): string[] {
+  let tokens = tokenizeEntityText(value);
+  const via = tokens.indexOf("via");
+  if (via >= 0) tokens = tokens.slice(0, via);
+  tokens = leadingSourceTokens(tokens);
+  let removed = true;
+  while (removed && tokens.length > 0) {
+    removed = false;
+    for (const suffix of PUBLISHER_SUFFIXES) {
+      const index = tokens.length - suffix.length;
+      if (index >= 0 && matchesPhraseAt(tokens, suffix, index)) {
+        tokens = tokens.slice(0, index);
+        removed = true;
+        break;
+      }
+    }
+  }
+  return tokens;
 }
 
 function formatTitleCase(value: string): string {
@@ -226,51 +280,79 @@ function formatTitleCase(value: string): string {
 function metricFieldTokens(metricId: string): string[] {
   const [, ...fieldSegments] = metricId.split(".");
   const tokens = fieldSegments
-    .flatMap((segment) => segment.split("_"))
-    .filter(Boolean)
-    .filter((token) => !isNumericBoilerplateToken(token) && !/^q[1-4]$/.test(token));
-  while (tokens.length > 0 && METRIC_MEASUREMENT_SUFFIXES.has(tokens[tokens.length - 1])) {
-    tokens.pop();
+    .flatMap((segment) => tokenizeEntityText(
+      segment.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/_/g, " "),
+    ))
+    .filter(Boolean);
+  let stripped = true;
+  while (stripped && tokens.length > 0) {
+    stripped = false;
+    for (const suffix of METRIC_SUFFIX_PHRASES) {
+      const index = tokens.length - suffix.length;
+      if (index >= 0 && matchesPhraseAt(tokens, suffix, index)) {
+        tokens.splice(index);
+        stripped = true;
+        break;
+      }
+    }
+    if (stripped) continue;
+    const last = tokens[tokens.length - 1];
+    if (METRIC_MEASUREMENT_SUFFIXES.has(last) || /^q[1-4]$/.test(last) || /^fy\d+$/.test(last)) {
+      tokens.pop();
+      stripped = true;
+    }
   }
   return tokens;
 }
 
-function metricEntityCandidates(metricId: string): Array<{ slug: string; channel: Extract<EntityCandidateChannel, "metric-token" | "metric-compound"> }> {
+function metricEntityCandidate(metricId: string): { slug: string; channel: "metric-concept" } | undefined {
   const tokens = metricFieldTokens(metricId);
-  const candidates = new Map<string, Extract<EntityCandidateChannel, "metric-token" | "metric-compound">>();
-  for (const token of tokens) {
-    const slug = normalizeCandidateTokens([token]);
-    if (slug !== undefined && !candidates.has(slug)) candidates.set(slug, "metric-token");
-  }
-  if (tokens.length > 1) {
-    const slug = normalizeCandidateTokens(tokens);
-    if (slug !== undefined) candidates.set(slug, "metric-compound");
-  }
-  return [...candidates.entries()]
-    .sort((left, right) => left[0].localeCompare(right[0]))
-    .map(([slug, channel]) => ({ slug, channel }));
-}
-
-function sourceLeadingCandidate(
-  rawValue: string,
-  channel: Extract<EntityCandidateChannel, "source-id" | "source-publisher">,
-): { slug: string; channel: typeof channel; observedName?: string } | undefined {
-  const tokens = tokenizeEntityText(rawValue).filter((token) => !isSourceBoilerplateToken(token));
-  if (channel === "source-id" && SOURCE_ID_CHANNEL_SUFFIXES.has(tokens[tokens.length - 1] ?? "")) {
-    tokens.pop();
-  }
   const slug = normalizeCandidateTokens(tokens);
-  return slug === undefined ? undefined : { slug, channel, observedName: rawValue.trim() || undefined };
+  return slug === undefined ? undefined : { slug, channel: "metric-concept" };
 }
 
-function sourceEntityCandidates(
+function sourceEntityCandidate(
   sourceId: string,
   source: SourceRecord,
-): Array<{ slug: string; channel: Extract<EntityCandidateChannel, "source-id" | "source-publisher">; observedName?: string }> {
+): { slug: string; channel: "source-identity"; observedName: string } | undefined {
+  if (source.kind === "atlas") return undefined;
+  const idTokens = leadingSourceTokens(tokenizeEntityText(sourceId));
+  const publisherTokens = publisherIdentityTokens(source.publisher);
+  const idSlug = normalizeCandidateTokens(idTokens);
+  const publisherSlug = normalizeCandidateTokens(publisherTokens);
+  const publisherSlugTokens = publisherSlug?.split("-") ?? [];
+  const aliasesAgree = idSlug !== undefined && publisherSlug !== undefined && idSlug === publisherSlug;
+  const publisherMatchesId = publisherSlug !== undefined && startsWithTokens(tokenizeEntityText(sourceId), publisherSlugTokens);
+  const leadingPublisherTokenMatches = publisherTokens.length > 1 && publisherTokens[0] === idTokens[0];
+  const slug = aliasesAgree || publisherMatchesId || leadingPublisherTokenMatches ? publisherSlug : idSlug;
+  if (slug === undefined) return undefined;
+  const observedName = slug === publisherSlug
+    ? publisherIdentityTokens(source.publisher).join(" ")
+    : idTokens.join(" ");
+  return { slug, channel: "source-identity", observedName: observedName || slug.replace(/-/g, " ") };
+}
+
+function reportEvidenceText(brief: PublishedBrief, pillar: PageSlug, metricId: string): string {
+  const report = brief.snapshot.pages[pillar].report;
   return [
-    sourceLeadingCandidate(sourceId, "source-id"),
-    sourceLeadingCandidate(source.publisher, "source-publisher"),
-  ].filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== undefined);
+    ...report.thesis.tags.en,
+    ...report.thesis.tags.zh,
+    ...(report.thesisSurvivalRationale?.metricIds.includes(metricId)
+      ? Object.values(report.thesisSurvivalRationale.text)
+      : []),
+    ...report.supportingEvidence
+      .filter((evidence) => evidence.metricIds.includes(metricId))
+      .flatMap((evidence) => Object.values(evidence.text)),
+    ...report.opposingEvidence
+      .filter((evidence) => evidence.metricIds.includes(metricId))
+      .flatMap((evidence) => Object.values(evidence.text)),
+  ].join(" ");
+}
+
+function narrativeReferences(slug: string, text: string): boolean {
+  const needle = slug.split("-");
+  const haystack = tokenizeEntityText(text);
+  return haystack.some((_token, index) => matchesPhraseAt(haystack, needle, index));
 }
 
 function entityName(slug: string, observedNames: Map<string, number>): { en: string; zh: string } {
@@ -282,7 +364,7 @@ function entityName(slug: string, observedNames: Map<string, number>): { en: str
       left[0].length - right[0].length ||
       left[0].localeCompare(right[0]),
     )[0]?.[0];
-  const en = observed ?? formatTitleCase(slug.replace(/-/g, " "));
+  const en = formatTitleCase(observed ?? slug.replace(/-/g, " "));
   return { en, zh: en };
 }
 
@@ -292,8 +374,9 @@ function accumulator(slug: string): CandidateAccumulator {
     briefs: new Map(),
     pillars: new Set(),
     metrics: new Map(),
+    metricIds: new Set(),
     sourceIds: new Set(),
-    sourceReferenceKeys: new Set(),
+    narrativeDates: new Set(),
     channels: new Set(),
     observedNames: new Map(),
   };
@@ -311,6 +394,7 @@ function recordObservation(
   metricId: string,
   relevantSourceIds: string[],
   channel: EntityCandidateChannel,
+  narrativeReferenced: boolean,
   observedName?: string,
 ): void {
   record.channels.add(channel);
@@ -323,6 +407,8 @@ function recordObservation(
   briefRecord.pillars.add(pillar);
   record.briefs.set(brief.date, briefRecord);
   record.pillars.add(pillar);
+  record.metricIds.add(metricId);
+  if (narrativeReferenced) record.narrativeDates.add(brief.date);
   const metric = brief.snapshot.metrics[metricId];
   const metricKey = `${brief.date}:${metricId}`;
   const priorMetric = record.metrics.get(metricKey);
@@ -336,18 +422,15 @@ function recordObservation(
   });
   for (const sourceId of relevantSourceIds) {
     record.sourceIds.add(sourceId);
-    record.sourceReferenceKeys.add(`${brief.date}:${pillar}:${metricId}:${sourceId}`);
   }
 }
 
 function keepEligible(record: CandidateAccumulator): boolean {
-  if (
-    record.briefs.size < ENTITY_EVIDENCE_FLOOR.datedBriefs ||
-    record.sourceReferenceKeys.size < ENTITY_EVIDENCE_FLOOR.sourceReferences
-  ) return false;
-  const hasMetricEvidence = record.channels.has("metric-token") || record.channels.has("metric-compound");
-  if (hasMetricEvidence) return true;
-  return record.channels.has("source-id") || record.channels.has("source-publisher");
+  return (
+    record.briefs.size >= ENTITY_EVIDENCE_FLOOR.datedBriefs &&
+    record.sourceIds.size >= ENTITY_EVIDENCE_FLOOR.canonicalSources &&
+    record.metricIds.size >= ENTITY_EVIDENCE_FLOOR.distinctMetrics
+  );
 }
 
 function sourceLookup(briefs: PublishedBrief[]): Map<string, SourceRecord> {
@@ -363,11 +446,14 @@ function sourceLookup(briefs: PublishedBrief[]): Map<string, SourceRecord> {
 export function normalizeEntitySlug(value: string): string | undefined {
   if (value.includes("/")) return undefined;
   const tokens = tokenizeEntityText(value);
-  if (tokens.some(isSourceBoilerplateToken)) return undefined;
+  if (sourceSuffixStartsAt(tokens, 0)) return undefined;
   return normalizeCandidateTokens(tokens);
 }
 
-export function discoverEligibleEntityRecords(briefs: PublishedBrief[]): EligibleEntityRecord[] {
+function accumulateEntityCandidates(briefs: PublishedBrief[]): {
+  records: CandidateAccumulator[];
+  sourceRecords: Map<string, SourceRecord>;
+} {
   const sourceRecords = sourceLookup(briefs);
   const candidates = new Map<string, CandidateAccumulator>();
 
@@ -375,62 +461,59 @@ export function discoverEligibleEntityRecords(briefs: PublishedBrief[]): Eligibl
     for (const pillar of Object.keys(brief.snapshot.pages) as PageSlug[]) {
       for (const metricId of reportMetricIds(brief, pillar)) {
         const metric = brief.snapshot.metrics[metricId];
-        const metricSlugs = metricEntityCandidates(metricId);
-        const sourceSpecific = new Map<string, { sourceIds: Set<string>; channels: Set<EntityCandidateChannel>; observedNames: Set<string> }>();
-        for (const sourceId of metric.sourceIds) {
-          const source = brief.snapshot.sources[sourceId];
-          for (const candidate of sourceEntityCandidates(sourceId, source)) {
-            const entry = sourceSpecific.get(candidate.slug) ?? {
-              sourceIds: new Set<string>(),
-              channels: new Set<EntityCandidateChannel>(),
-              observedNames: new Set<string>(),
-            };
-            entry.sourceIds.add(sourceId);
-            entry.channels.add(candidate.channel);
-            if (candidate.observedName !== undefined) entry.observedNames.add(candidate.observedName);
-            sourceSpecific.set(candidate.slug, entry);
-          }
-        }
-        for (const candidate of metricSlugs) {
-          const record = candidates.get(candidate.slug) ?? accumulator(candidate.slug);
-          const specific = sourceSpecific.get(candidate.slug);
-          recordObservation(
-            record,
-            brief,
-            pillar,
-            metricId,
-            sortedUnique([...(specific?.sourceIds ?? new Set(metric.sourceIds))]),
-            candidate.channel,
-            [...(specific?.observedNames ?? [])][0],
-          );
-          candidates.set(candidate.slug, record);
-        }
-        for (const [slug, specific] of sourceSpecific) {
-          const record = candidates.get(slug) ?? accumulator(slug);
-          for (const channel of specific.channels) {
+        const evidenceText = reportEvidenceText(brief, pillar, metricId);
+        const relevantSourceIds = metric.sourceIds.filter(
+          (sourceId) => brief.snapshot.sources[sourceId]?.kind !== "atlas",
+        );
+        const metricCandidate = metricEntityCandidate(metricId);
+        if (metricCandidate !== undefined) {
+          const narrativeReferenced = narrativeReferences(metricCandidate.slug, evidenceText);
+          if (narrativeReferenced || relevantSourceIds.length > 0) {
+            const record = candidates.get(metricCandidate.slug) ?? accumulator(metricCandidate.slug);
             recordObservation(
               record,
               brief,
               pillar,
               metricId,
-              sortedUnique([...specific.sourceIds]),
-              channel,
-              [...specific.observedNames][0],
+              relevantSourceIds,
+              metricCandidate.channel,
+              narrativeReferenced,
             );
+            candidates.set(metricCandidate.slug, record);
           }
-          candidates.set(slug, record);
+        }
+        for (const sourceId of metric.sourceIds) {
+          const source = brief.snapshot.sources[sourceId];
+          if (source === undefined) continue;
+          const candidate = sourceEntityCandidate(sourceId, source);
+          if (candidate === undefined) continue;
+          const record = candidates.get(candidate.slug) ?? accumulator(candidate.slug);
+          recordObservation(
+            record,
+            brief,
+            pillar,
+            metricId,
+            [sourceId],
+            candidate.channel,
+            narrativeReferences(candidate.slug, evidenceText),
+            candidate.observedName,
+          );
+          candidates.set(candidate.slug, record);
         }
       }
     }
   }
+  return { records: [...candidates.values()], sourceRecords };
+}
 
-  return [...candidates.values()]
-    .filter(keepEligible)
-    .map((record) => {
+function materializeEntityRecord(
+  record: CandidateAccumulator,
+  sourceRecords: Map<string, SourceRecord>,
+): EligibleEntityRecord {
       const sources = [...record.sourceIds]
         .sort()
         .map((sourceId) => sourceRecords.get(sourceId))
-        .filter((source): source is SourceRecord => source !== undefined);
+        .filter((source): source is SourceRecord => source !== undefined && source.kind !== "atlas");
       const briefs = [...record.briefs.values()]
         .map((brief) => ({
           date: brief.date,
@@ -451,14 +534,55 @@ export function discoverEligibleEntityRecords(briefs: PublishedBrief[]): Eligibl
           (latest, brief) => latest > brief.dataCutoff ? latest : brief.dataCutoff,
           "",
         ),
-        sourceReferenceCount: record.sourceReferenceKeys.size,
+        evidence: {
+          datedBriefs: record.briefs.size,
+          canonicalSources: record.sourceIds.size,
+          distinctMetrics: record.metricIds.size,
+          narrativeDates: record.narrativeDates.size,
+        },
       };
-    })
+}
+
+export function discoverEntityCandidateRecords(briefs: PublishedBrief[]): EligibleEntityRecord[] {
+  const { records, sourceRecords } = accumulateEntityCandidates(briefs);
+  return records
+    .map((record) => materializeEntityRecord(record, sourceRecords))
+    .sort((left, right) => left.slug.localeCompare(right.slug));
+}
+
+// The useful-corpus contract deliberately caps recurrence: after the floor,
+// ranking rewards dated narrative references, authoritative source identity,
+// and diversity across metrics/sources/pillars, with a stable slug tie-break.
+function entitySelectionScore(record: CandidateAccumulator): number {
+  const cap = (value: number) => Math.min(value, 3);
+  return (
+    cap(record.narrativeDates.size) * 24 +
+    (record.channels.has("source-identity") ? 32 : 0) +
+    cap(record.metricIds.size) * 8 +
+    cap(record.sourceIds.size) * 6 +
+    cap(record.pillars.size) * 4 +
+    cap(record.briefs.size) * 4 +
+    (record.slug.includes("-") ? 2 : 0)
+  );
+}
+
+export function discoverEligibleEntityRecords(briefs: PublishedBrief[]): EligibleEntityRecord[] {
+  const { records, sourceRecords } = accumulateEntityCandidates(briefs);
+  return records
+    .filter(keepEligible)
+    .sort((left, right) =>
+      entitySelectionScore(right) - entitySelectionScore(left) || left.slug.localeCompare(right.slug),
+    )
+    .slice(0, ENTITY_SELECTION_LIMIT)
+    .map((record) => materializeEntityRecord(record, sourceRecords))
     .sort((left, right) => left.slug.localeCompare(right.slug));
 }
 
 export function extractEntityHubs(briefs: PublishedBrief[]): EntityHub[] {
-  return discoverEligibleEntityRecords(briefs).map(({ sourceReferenceCount: _sourceReferenceCount, ...entity }) => entity);
+  return discoverEligibleEntityRecords(briefs).map(({ evidence, ...entity }) => {
+    void evidence;
+    return entity;
+  });
 }
 
 export function getEntityHub(entities: EntityHub[], slug: string): EntityHub | undefined {

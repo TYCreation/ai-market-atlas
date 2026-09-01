@@ -25,6 +25,7 @@ import {
 import type { MarketSnapshot } from "../../market-data/types.ts";
 import { autoPublishReview } from "./helpers.ts";
 import {
+  ENTITY_SELECTION_LIMIT,
   discoverEligibleEntityRecords,
   entityRoutePaths,
   extractEntityHubs,
@@ -35,95 +36,30 @@ const projectRoot = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const outputDirectory = join(projectRoot, "work", "pages-candidate");
 const snapshotPath = join(projectRoot, "data", "market", "current.json");
 const EXPECTED_ELIGIBLE_ENTITY_SLUGS = [
-  "accelerator",
-  "accelerator-market",
-  "agents",
-  "ai",
-  "ai-market-atlas",
   "amd",
   "amd-data-center",
-  "announced",
-  "announced-power",
-  "api",
-  "api-deployment",
-  "atlas-model",
-  "basket",
-  "breadth",
   "broadcom",
-  "catalyst",
-  "center",
   "cisco",
   "cisco-ai-infrastructure",
-  "committed",
-  "committed-power",
-  "contract",
-  "cooling",
-  "cost",
-  "data",
-  "deployment",
-  "doe-data-centers",
-  "enterprise",
-  "enterprise-agents",
-  "ev",
-  "forward",
-  "frontier",
-  "gemini-pricing",
-  "google-ai-developers",
+  "doe",
+  "gemini",
   "hbm",
-  "helix",
-  "iea-data-centres",
-  "iea-energy-ai",
-  "inference",
-  "inference-cost",
+  "iea",
   "infineon",
-  "infrastructure",
-  "infrastructure-spend",
-  "interconnection",
-  "international-energy-agency",
-  "lead",
-  "liquid",
   "liquid-cooling",
-  "managed",
-  "market",
-  "median",
-  "median-forward",
-  "monitoring",
+  "market-2030",
   "nvidia",
   "onsemi",
-  "onsemi-ai",
   "openai",
-  "openai-cyber-pacing",
-  "openai-monitoring",
   "openai-ports",
-  "openai-ports-pike",
-  "openai-pricing",
   "packaging",
-  "packaging-lead",
-  "ports",
-  "positive",
-  "positive-breadth",
-  "power",
-  "production",
-  "production-agents",
   "sharon-ai",
-  "sharon-ai-contract",
-  "sharon-ai-deployment-acceptance",
-  "software",
-  "software-spend",
-  "spend",
-  "stanford-economy",
   "stanford-hai",
   "stmicroelectronics",
   "tsmc",
-  "u-s-department-energy-lbnl",
-  "u-s-securities-exchange-commission",
   "vertiv",
   "vistra",
-  "vistra-helix",
-  "wafer",
-  "wafer-frontier",
   "wolfspeed",
-  "wolfspeed-ai",
 ] as const;
 
 async function isolatedExportProject(build: boolean): Promise<string> {
@@ -224,6 +160,7 @@ test("exports evidence-bound bilingual entity hubs with historical metadata and 
     assert.ok(sharonAi);
     assert.deepEqual(eligible.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
     assert.deepEqual(entities.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
+    assert.equal(entities.length, ENTITY_SELECTION_LIMIT);
     const sitemap = await readFile(join(isolatedOutput, "sitemap.xml"), "utf8");
     for (const entity of entities) {
       assert.ok(result.routes.includes(`/entity/${entity.slug}/`));
@@ -242,6 +179,11 @@ test("exports evidence-bound bilingual entity hubs with historical metadata and 
       });
       assert.equal((await lstat(join(isolatedOutput, "entity", entity.slug, "index.html"))).isFile(), true, entity.slug);
       assert.equal((await lstat(join(isolatedOutput, "en", "entity", entity.slug, "index.html"))).isFile(), true, entity.slug);
+      const entityHtml = await readFile(join(isolatedOutput, "entity", entity.slug, "index.html"), "utf8");
+      const firstPillar = entity.pillars[0] === "/" ? "/" : entity.pillars[0];
+      assert.ok(entityHtml.includes(`href="/brief/${entity.briefs[0].date}"`), `${entity.slug}: dated brief link`);
+      assert.ok(entityHtml.includes(`href="${firstPillar}"`), `${entity.slug}: pillar link`);
+      assert.match(entityHtml, /href="#source-[^"]+"/, `${entity.slug}: metric-to-source link`);
       assert.ok(
         sitemap.includes(`<loc>https://aimarketatlas.net/entity/${entity.slug}/</loc><lastmod>${entity.lastModified}</lastmod>`),
         entity.slug,
