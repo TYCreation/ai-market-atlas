@@ -36,6 +36,9 @@ import {
   exportPages,
   type DeploymentManifest,
 } from "./export-pages.ts";
+import {
+  DISCOVERY_ARTIFACTS,
+} from "../market-data/discovery-feeds.ts";
 
 const PROJECT_NAME = "ai-market-atlas";
 const PRODUCTION_BASE_URL = "https://aimarketatlas.net";
@@ -678,11 +681,26 @@ export async function readDeploymentManifest(
     (value as { routeIdentities?: unknown }).routeIdentities === null ||
     typeof (value as { routeIdentities?: unknown }).routeIdentities !==
       "object" ||
-    Array.isArray((value as { routeIdentities?: unknown }).routeIdentities)
+    Array.isArray((value as { routeIdentities?: unknown }).routeIdentities) ||
+    ("artifacts" in (value as Record<string, unknown>) &&
+      (!Array.isArray((value as { artifacts?: unknown }).artifacts) ||
+        !(value as { artifacts: unknown[] }).artifacts.every(
+          (artifact) =>
+            typeof artifact === "string" &&
+            DISCOVERY_ARTIFACTS.includes(
+              artifact as (typeof DISCOVERY_ARTIFACTS)[number],
+            ),
+        )))
   ) {
     throw new Error("deployment manifest is invalid");
   }
   const manifest = value as DeploymentManifest;
+  if (
+    manifest.artifacts &&
+    JSON.stringify(manifest.artifacts) !== JSON.stringify([...DISCOVERY_ARTIFACTS])
+  ) {
+    throw new Error("deployment manifest discovery artifacts do not match");
+  }
   if (
     expected.expectedCandidateSha256 !== undefined &&
     manifest.candidateSha256 !== expected.expectedCandidateSha256
@@ -1045,6 +1063,7 @@ async function runLockedDeployPagesAtProjectRoot(
           sourceIds: currentExport.sourceIds,
           archiveSourceIds: currentExport.archiveSourceIds,
           routeIdentities: currentExport.routeIdentities,
+          artifacts: [...DISCOVERY_ARTIFACTS],
         },
       );
       const seededAnchor: LastGoodAnchor = {
@@ -1150,6 +1169,7 @@ async function runLockedDeployPagesAtProjectRoot(
         sourceIds: manifest.sourceIds,
         archiveSourceIds: manifest.archiveSourceIds,
         routeIdentities: manifest.routeIdentities,
+        artifacts: manifest.artifacts,
       };
       const verifier =
         baseUrl === PRODUCTION_BASE_URL && runtime.verifyProduction

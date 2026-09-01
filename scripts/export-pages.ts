@@ -38,6 +38,12 @@ import {
   type MarketBriefPayload,
   type SnapshotValidationMode,
 } from "./generate-market-brief.ts";
+import {
+  buildLlmsTxt,
+  buildNewsSitemapXml,
+  buildRssXml,
+  DISCOVERY_ARTIFACTS,
+} from "../market-data/discovery-feeds.ts";
 
 type WorkerModule = {
   default: {
@@ -59,6 +65,9 @@ export type ExportPagesOptions = {
   build?: boolean;
   authorizedCandidateSha256?: string;
   prospectiveArchive?: MonthlyArchiveRecord;
+  /** Explicit build/publication clock used for the 48-hour news sitemap window. */
+  publicationReferenceTime?: string | Date;
+  newsSitemapReferenceTime?: string | Date;
 };
 
 export type ExportPagesResult = {
@@ -75,10 +84,9 @@ export type ExportPagesResult = {
   routeIdentities: Record<string, RouteVerificationIdentity>;
 };
 
-export type DeploymentManifest = Omit<
-  ExportPagesResult,
-  "outputDirectory" | "manifestSha256"
->;
+export type DeploymentManifest = Omit<ExportPagesResult, "outputDirectory" | "manifestSha256"> & {
+  artifacts: string[];
+};
 
 const CURRENT_ROUTES = [
   "/",
@@ -200,6 +208,12 @@ const REDIRECT_HOSTS = new Set([
   "ai-market-atlas.pages.dev",
 ]);
 
+const DISCOVERY_HEADERS = {
+  "/rss.xml": "application/rss+xml; charset=utf-8",
+  "/news-sitemap.xml": "application/xml; charset=utf-8",
+  "/llms.txt": "text/plain; charset=utf-8",
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -208,6 +222,15 @@ export default {
         PRIMARY_ORIGIN + url.pathname + url.search,
         301,
       );
+    }
+    const discoveryType = DISCOVERY_HEADERS[url.pathname];
+    if (discoveryType) {
+      const response = await env.ASSETS.fetch(request);
+      if (response.status !== 200) return response;
+      const headers = new Headers(response.headers);
+      headers.set("content-type", discoveryType);
+      headers.set("cache-control", "public, max-age=300, s-maxage=3600");
+      return new Response(response.body, { status: response.status, headers });
     }
     return env.ASSETS.fetch(request);
   },
@@ -316,6 +339,7 @@ async function assertOutputPathSafe(
 }
 
 function contentType(path: string): string {
+  if (path.endsWith("/rss.xml")) return "application/rss+xml; charset=utf-8";
   return (
     {
       ".css": "text/css; charset=utf-8",
@@ -325,6 +349,8 @@ function contentType(path: string): string {
       ".json": "application/json; charset=utf-8",
       ".png": "image/png",
       ".svg": "image/svg+xml",
+      ".txt": "text/plain; charset=utf-8",
+      ".xml": "application/xml; charset=utf-8",
       ".woff2": "font/woff2",
     }[extname(path)] ?? "application/octet-stream"
   );
@@ -703,6 +729,17 @@ export async function exportPages(
   // its payload hash checked. It is deliberately absent from the sitemap: it is
   // orphaned, thin and duplicative, and is served noindex.
   const routes = [...renderedRoutes, "/market-brief/"];
+  const artifacts = [...DISCOVERY_ARTIFACTS];
+  const publicationReferenceTime =
+    options.newsSitemapReferenceTime ??
+    options.publicationReferenceTime ??
+    snapshot.generatedAt;
+  const rssXml = buildRssXml(publishedBriefs);
+  const newsSitemapXml = buildNewsSitemapXml(
+    publishedBriefs,
+    publicationReferenceTime,
+  );
+  const llmsTxt = buildLlmsTxt(publishedBriefs, entities);
   const sitemapRoutes = renderedRoutes.map((route) => {
     const brief = publishedBriefs.find((entry) => route.includes(`/brief/${entry.date}/`));
     const archive = monthlyArchives.find(({ archive: entry }) => route.endsWith(`/archive/${entry.month}`));
@@ -890,6 +927,7 @@ export async function exportPages(
           "Allow: /",
           "",
           `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
+          `Sitemap: ${SITE_ORIGIN}/news-sitemap.xml`,
           "",
         ].join("\n"),
         { flag: "wx" },
@@ -899,6 +937,13 @@ export async function exportPages(
         sitemapXml(sitemapRoutes),
         { flag: "wx" },
       ),
+      writeFile(join(temporary, "rss.xml"), rssXml, { flag: "wx" }),
+      writeFile(
+        join(temporary, "news-sitemap.xml"),
+        newsSitemapXml,
+        { flag: "wx" },
+      ),
+      writeFile(join(temporary, "llms.txt"), llmsTxt, { flag: "wx" }),
       writeFile(
         join(temporary, "_redirects"),
         [
@@ -929,6 +974,7 @@ export async function exportPages(
       candidateSha256,
       artifactTreeSha256,
       routeIdentities,
+      artifacts,
     };
     manifestSha256 = hashCandidate(manifest);
     await writeFile(

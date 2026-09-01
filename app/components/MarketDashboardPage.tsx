@@ -12,6 +12,7 @@ import { ReportStructuredData } from "./StructuredData";
 import { normalizeTaiwanCopy } from "../taiwan-copy";
 import type { EditionMeta, ReaderEditionMeta } from "../../market-data/view-model";
 import { BriefPillarIndex } from "./BriefPillarIndex";
+import { configuredNewsletterEndpoint } from "../newsletter";
 
 function toReaderEdition({
   cadence,
@@ -78,6 +79,7 @@ export async function MarketDashboardPage({
         pageEdition={pageEdition}
         initialLocale={locale}
         alternateLocaleHref={alternateRoutePath}
+        newsletterEndpoint={configuredNewsletterEndpoint()}
       />
       {showPillarIndex ? <BriefPillarIndex pillar={basePath} locale={locale} /> : null}
     </>

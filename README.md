@@ -188,9 +188,10 @@ npm run market:export -- --snapshot data/market/candidate.json
 
 The export in `work/pages-candidate` contains `/`, all five topic routes,
 `/archive`, every retained `/archive/YYYY-MM`, and `/market-brief/` with its
-canonical `data.json`. The export manifest binds the candidate, artifact tree,
-route identities, sources, and brief payload. Preview and production must use
-these exact bytes.
+canonical `data.json`. It also contains the permanent `/rss.xml`, recent-brief
+`/news-sitemap.xml`, and `/llms.txt` discovery artifacts. The export manifest
+binds the candidate, artifact tree, route identities, sources, discovery
+artifacts, and brief payload. Preview and production must use these exact bytes.
 
 ### Promotion, archives, and retention
 

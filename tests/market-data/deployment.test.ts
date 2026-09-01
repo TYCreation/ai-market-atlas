@@ -633,6 +633,28 @@ test("market brief verification fetches both HTML and canonical data.json", asyn
   assert.deepEqual(paths, ["/market-brief/", "/market-brief/data.json"]);
 });
 
+test("deployment verification checks discovery artifacts and their content types", async () => {
+  const paths: string[] = [];
+  const expectation = { ...verificationExpectation, artifacts: ["/rss.xml", "/news-sitemap.xml", "/llms.txt"] };
+  await verifyDeployment(
+    "https://preview.pages.dev",
+    ["/"],
+    expectation,
+    async (input) => {
+      const path = new URL(input.toString()).pathname;
+      paths.push(path);
+      const types: Record<string, string> = {
+        "/rss.xml": "application/rss+xml; charset=utf-8",
+        "/news-sitemap.xml": "application/xml; charset=utf-8",
+        "/llms.txt": "text/plain; charset=utf-8",
+      };
+      if (path === "/") return new Response("2026-08-01-saturday 2026-08-01T01:00:00.000Z 資料截止 <article id=\"source-atlas-model\"></article>", { status: 200 });
+      return new Response("artifact", { status: 200, headers: { "content-type": types[path] } });
+    },
+  );
+  assert.deepEqual(paths, ["/", "/rss.xml", "/news-sitemap.xml", "/llms.txt"]);
+});
+
 test("deployment verification binds a dated brief route to its retained snapshot identity", async () => {
   const expectation = {
     ...verificationExpectation,

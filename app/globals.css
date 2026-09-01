@@ -1942,6 +1942,30 @@ h2 {
   color: var(--ivory);
 }
 
+.newsletter {
+  align-items: start;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  margin-top: 56px;
+  padding: 28px;
+}
+
+.newsletter h2 { margin: 8px 0 12px; }
+.newsletter p { color: var(--muted); line-height: 1.65; margin: 0; }
+.newsletter-form { display: grid; gap: 10px; }
+.newsletter-form label { color: var(--ivory); font-size: var(--text-sm); }
+.newsletter-form input[type="email"] { background: var(--ink); border: 1px solid var(--line); border-radius: 8px; color: var(--ivory); font: inherit; padding: 11px 12px; width: 100%; }
+.newsletter-form input:disabled { cursor: not-allowed; opacity: 0.55; }
+.newsletter-consent { align-items: start; display: flex; gap: 8px; line-height: 1.45; }
+.newsletter-consent input { margin-top: 4px; }
+.newsletter-form button { background: var(--cyan); border: 0; border-radius: 8px; color: var(--ink); cursor: pointer; font: inherit; font-weight: 650; padding: 11px 16px; }
+.newsletter-form button:disabled { cursor: not-allowed; opacity: 0.5; }
+.newsletter-status { font-size: var(--text-xs); }
+
 .footer {
   align-items: start;
   border-top: 1px solid var(--line);
@@ -2440,7 +2464,8 @@ h2 {
   .watch-grid,
   .sic-pulse-grid,
   .sic-section-grid,
-  .case-grid {
+  .case-grid,
+  .newsletter {
     grid-template-columns: 1fr;
   }
 

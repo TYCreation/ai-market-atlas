@@ -162,6 +162,11 @@ test("exports evidence-bound bilingual entity hubs with historical metadata and 
     assert.deepEqual(entities.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
     assert.equal(entities.length, ENTITY_SELECTION_LIMIT);
     const sitemap = await readFile(join(isolatedOutput, "sitemap.xml"), "utf8");
+    assert.match(await readFile(join(isolatedOutput, "rss.xml"), "utf8"), /<rss version="2\.0"/);
+    assert.match(await readFile(join(isolatedOutput, "news-sitemap.xml"), "utf8"), /<urlset/);
+    assert.match(await readFile(join(isolatedOutput, "llms.txt"), "utf8"), /https:\/\/aimarketatlas\.net\/rss\.xml/);
+    assert.match(await readFile(join(isolatedOutput, "_worker.js"), "utf8"), /application\/rss\+xml/);
+    assert.match(await readFile(join(isolatedOutput, "_worker.js"), "utf8"), /s-maxage=3600/);
     for (const entity of entities) {
       assert.ok(result.routes.includes(`/entity/${entity.slug}/`));
       assert.ok(result.routes.includes(`/en/entity/${entity.slug}/`));
@@ -360,7 +365,8 @@ test("exports every current/archive route and public asset without localhost met
       "User-agent: *\n" +
         "Content-Signal: search=yes, ai-input=yes, ai-train=no, use=reference\n" +
         "Allow: /\n\n" +
-        "Sitemap: https://aimarketatlas.net/sitemap.xml\n",
+        "Sitemap: https://aimarketatlas.net/sitemap.xml\n" +
+        "Sitemap: https://aimarketatlas.net/news-sitemap.xml\n",
     );
     assert.doesNotMatch(html, /localhost|127\.0\.0\.1/i);
     assert.deepEqual(
@@ -380,6 +386,7 @@ test("exports every current/archive route and public asset without localhost met
         candidateSha256: result.candidateSha256,
         artifactTreeSha256: result.artifactTreeSha256,
         routeIdentities: result.routeIdentities,
+        artifacts: ["/rss.xml", "/news-sitemap.xml", "/llms.txt"],
       },
     );
     assert.match(result.artifactTreeSha256, /^[a-f0-9]{64}$/);

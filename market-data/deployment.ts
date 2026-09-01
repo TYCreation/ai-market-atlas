@@ -14,6 +14,10 @@ import {
   isMarketBriefPayload,
   marketBriefPayloadSha256,
 } from "../scripts/generate-market-brief.ts";
+import {
+  DISCOVERY_ARTIFACT_CONTENT_TYPES,
+  DISCOVERY_ARTIFACTS,
+} from "./discovery-feeds.ts";
 
 export type PublishDependencies = {
   deploy(directory: string, branch: string): Promise<string>;
@@ -54,6 +58,7 @@ export type VerificationExpectation = {
   sourceIds: string[];
   archiveSourceIds: Record<string, string[]>;
   routeIdentities: Record<string, RouteVerificationIdentity>;
+  artifacts?: string[];
 };
 
 export type RouteVerificationIdentity =
@@ -564,6 +569,35 @@ export async function verifyDeployment(
           `${route}data.json payload hash does not match manifest and embedded JSON`,
         );
       }
+    }
+  }
+
+  const artifacts = expectation.artifacts ?? [];
+  if (
+    artifacts.length !== new Set(artifacts).size ||
+    artifacts.some(
+      (artifact) =>
+        !DISCOVERY_ARTIFACTS.includes(
+          artifact as (typeof DISCOVERY_ARTIFACTS)[number],
+        ),
+    )
+  ) {
+    throw new Error("deployment discovery artifacts are invalid");
+  }
+  for (const artifact of artifacts) {
+    const response = await fetchVerifiedResponse(
+      new URL(artifact, base),
+      artifact,
+      DISCOVERY_ARTIFACT_CONTENT_TYPES[
+        artifact as (typeof DISCOVERY_ARTIFACTS)[number]
+      ],
+    );
+    const expectedType =
+      DISCOVERY_ARTIFACT_CONTENT_TYPES[
+        artifact as (typeof DISCOVERY_ARTIFACTS)[number]
+      ];
+    if (!(response.headers.get("content-type") ?? "").toLowerCase().startsWith(expectedType)) {
+      throw new Error(`${artifact} verification content type is incorrect`);
     }
   }
 }

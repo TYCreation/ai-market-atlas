@@ -19,6 +19,12 @@ interface ExecutionContext {
   passThroughOnException(): void;
 }
 
+const DISCOVERY_HEADERS: Record<string, string> = {
+  "/rss.xml": "application/rss+xml; charset=utf-8",
+  "/news-sitemap.xml": "application/xml; charset=utf-8",
+  "/llms.txt": "text/plain; charset=utf-8",
+};
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -38,6 +44,16 @@ const worker = {
           return result.response();
         },
       }, allowedWidths);
+    }
+
+    const discoveryType = DISCOVERY_HEADERS[url.pathname];
+    if (discoveryType) {
+      const response = await env.ASSETS.fetch(request);
+      if (response.status !== 200) return response;
+      const headers = new Headers(response.headers);
+      headers.set("content-type", discoveryType);
+      headers.set("cache-control", "public, max-age=300, s-maxage=3600");
+      return new Response(response.body, { status: response.status, headers });
     }
 
     return handler.fetch(request, env, ctx);

@@ -128,6 +128,10 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, /支援、反向與催化信號/);
       assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
+      assert.match(html, /訂閱週報 \/ Subscribe/);
+      assert.match(html, /type="email"[^>]+disabled/);
+      assert.match(html, /<input[^>]*type="checkbox"[^>]*disabled[^>]*name="newsletter-consent"/);
+      assert.match(html, /目前尚未開放訂閱|Newsletter signup is not configured/);
     }
     if (pathname === "/stocks") {
       assert.match(

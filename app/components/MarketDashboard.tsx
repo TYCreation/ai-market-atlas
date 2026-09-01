@@ -18,6 +18,7 @@ import { MetricProvenance, TaipeiTime } from "./MetricProvenance";
 import { MetricSources, SourcePanel } from "./SourcePanel";
 import { MarketDelta } from "./MarketDelta";
 import { SiteCredit } from "./SiteCredit";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 type Locale = "zh" | "en";
 
@@ -108,6 +109,7 @@ export function MarketDashboard({
   pageEdition,
   initialLocale = "zh",
   alternateLocaleHref,
+  newsletterEndpoint,
 }: {
   config: DashboardConfig;
   chineseConfig: DashboardConfig;
@@ -116,6 +118,7 @@ export function MarketDashboard({
   pageEdition: LocalizedPageEdition;
   initialLocale?: Locale;
   alternateLocaleHref?: string;
+  newsletterEndpoint?: string;
 }) {
   const [horizon, setHorizon] = useState<(typeof horizons)[number]>("Q3");
   const locale = initialLocale;
@@ -485,6 +488,8 @@ export function MarketDashboard({
         </section>
 
         <SourcePanel bundle={sourceBundle} locale={locale} />
+
+        <NewsletterSignup endpoint={newsletterEndpoint} />
 
         <footer className="footer">
           <p>
