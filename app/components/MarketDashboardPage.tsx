@@ -62,9 +62,9 @@ export async function MarketDashboardPage({
 
   return (
     <>
-      {snapshot ? <span hidden data-market-route-identity>
+      <span hidden data-market-route-identity>
         {viewModel.snapshot.runId} {viewModel.snapshot.dataCutoff}
-      </span> : null}
+      </span>
       <ReportStructuredData
         path={path}
         headline={dashboardHeadings[basePath][locale]}
