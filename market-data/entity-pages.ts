@@ -3,40 +3,213 @@ import type { PageSlug, SourceRecord } from "./types.ts";
 
 export const ENTITY_EVIDENCE_FLOOR = {
   datedBriefs: 2,
-  sources: 2,
+  sourceReferences: 2,
 } as const;
 
-type EntityTaxonomyEntry = {
-  slug: string;
-  metricTokens: readonly string[];
-  name: { en: string; zh: string };
+const METRIC_NAMESPACE_TOKENS = new Set([
+  "compute",
+  "energy",
+  "models",
+  "pulse",
+  "sic",
+  "stocks",
+]);
+
+const ENTITY_STOPWORDS = new Set([
+  "acceptance",
+  "agency",
+  "ai",
+  "announced",
+  "august",
+  "b",
+  "basket",
+  "breadth",
+  "capacity",
+  "carbide",
+  "catalyst",
+  "center",
+  "change",
+  "coding",
+  "co",
+  "commission",
+  "commitment",
+  "committed",
+  "contract",
+  "cost",
+  "count",
+  "critical",
+  "customer",
+  "cyber",
+  "data",
+  "delivers",
+  "demand",
+  "department",
+  "deployment",
+  "developer",
+  "developers",
+  "directional",
+  "economy",
+  "efficiency",
+  "enterprise",
+  "ev",
+  "executive",
+  "factories",
+  "filed",
+  "findings",
+  "first",
+  "fiscal",
+  "form",
+  "forward",
+  "fourth",
+  "frontier",
+  "full",
+  "generation",
+  "global",
+  "globenewswire",
+  "growth",
+  "guidance",
+  "gw",
+  "helix",
+  "how",
+  "infrastructure",
+  "international",
+  "investor",
+  "joins",
+  "lbnl",
+  "latest",
+  "lead",
+  "liquid",
+  "managed",
+  "market",
+  "median",
+  "milestone",
+  "mm",
+  "model",
+  "monitoring",
+  "networks",
+  "news",
+  "newswire",
+  "next",
+  "orders",
+  "overhead",
+  "pacing",
+  "pe",
+  "penetration",
+  "performance",
+  "pike",
+  "pool",
+  "ports",
+  "positive",
+  "powering",
+  "pr",
+  "pricing",
+  "product",
+  "production",
+  "project",
+  "q1",
+  "q2",
+  "q3",
+  "q4",
+  "quarter",
+  "queue",
+  "relations",
+  "report",
+  "results",
+  "revenue",
+  "s",
+  "second",
+  "securities",
+  "share",
+  "silicon",
+  "stack",
+  "summary",
+  "technical",
+  "technology",
+  "third",
+  "token",
+  "tokens",
+  "u",
+  "updates",
+  "usd",
+  "use",
+  "value",
+  "via",
+  "watts",
+  "weekly",
+  "weeks",
+  "year",
+  "years",
+]);
+
+const BLOCKED_SOURCE_ENTITY_TOKENS = new Set([
+  "atlas",
+  "department",
+  "doe",
+  "gemini",
+  "google",
+  "iea",
+  "international",
+  "lbnl",
+  "securities",
+  "stanford",
+]);
+
+const COMPOUND_ENTITY_HEAD_TOKENS = new Set([
+  "announced",
+  "committed",
+  "managed",
+  "production",
+  "sharon",
+]);
+
+const ENTITY_ALIAS_NORMALIZATION = new Map<string, string>([
+  ["advanced-micro-devices", "amd"],
+  ["advanced-micro-devices-inc", "amd"],
+  ["sharon", "sharon-ai"],
+  ["sharon-ai", "sharon-ai"],
+  ["stm", "stmicroelectronics"],
+  ["tsm", "tsmc"],
+  ["vrt", "vertiv"],
+]);
+
+const ENTITY_LABEL_OVERRIDES: Record<string, { en: string; zh: string }> = {
+  accelerator: { en: "AI accelerators", zh: "AI 加速器" },
+  agents: { en: "AI agents", zh: "AI 代理" },
+  amd: { en: "AMD", zh: "AMD" },
+  "announced-power": { en: "Announced power", zh: "已公告電力" },
+  api: { en: "APIs", zh: "API" },
+  broadcom: { en: "Broadcom", zh: "Broadcom" },
+  cisco: { en: "Cisco", zh: "Cisco" },
+  "committed-power": { en: "Committed power", zh: "已承諾電力" },
+  cooling: { en: "Data-center cooling", zh: "資料中心冷卻" },
+  hbm: { en: "HBM", zh: "HBM" },
+  inference: { en: "Inference", zh: "推論" },
+  infineon: { en: "Infineon", zh: "Infineon" },
+  interconnection: { en: "Grid interconnection", zh: "電網併網" },
+  "managed-tokens": { en: "Managed tokens", zh: "託管權杖" },
+  nvidia: { en: "NVIDIA", zh: "NVIDIA" },
+  onsemi: { en: "onsemi", zh: "onsemi" },
+  openai: { en: "OpenAI", zh: "OpenAI" },
+  packaging: { en: "Advanced packaging", zh: "先進封裝" },
+  power: { en: "Data-center power", zh: "資料中心電力" },
+  "production-agents": { en: "Production agents", zh: "生產環境代理" },
+  "sharon-ai": { en: "Sharon AI", zh: "Sharon AI" },
+  software: { en: "AI software", zh: "AI 軟體" },
+  spend: { en: "AI spending", zh: "AI 支出" },
+  stmicroelectronics: { en: "STMicroelectronics", zh: "STMicroelectronics" },
+  tsmc: { en: "TSMC", zh: "TSMC" },
+  vertiv: { en: "Vertiv", zh: "Vertiv" },
+  vistra: { en: "Vistra", zh: "Vistra" },
+  wafer: { en: "SiC wafers", zh: "SiC 晶圓" },
+  wolfspeed: { en: "Wolfspeed", zh: "Wolfspeed" },
 };
 
-// This is a vocabulary of retained metric-ID segments, not editorial keywords. It
-// makes the eligible entity set reviewable and keeps a page tied to cited data.
-const ENTITY_TAXONOMY: readonly EntityTaxonomyEntry[] = [
-  { slug: "accelerator", metricTokens: ["accelerator"], name: { en: "AI accelerators", zh: "AI 加速器" } },
-  { slug: "agents", metricTokens: ["agents"], name: { en: "AI agents", zh: "AI 代理" } },
-  { slug: "amd", metricTokens: ["amd"], name: { en: "AMD", zh: "AMD" } },
-  { slug: "announced-power", metricTokens: ["announced", "power"], name: { en: "Announced power", zh: "已公告電力" } },
-  { slug: "api", metricTokens: ["api"], name: { en: "APIs", zh: "API" } },
-  { slug: "cisco", metricTokens: ["cisco"], name: { en: "Cisco", zh: "Cisco" } },
-  { slug: "committed-power", metricTokens: ["committed", "power"], name: { en: "Committed power", zh: "已承諾電力" } },
-  { slug: "cooling", metricTokens: ["cooling"], name: { en: "Data-center cooling", zh: "資料中心冷卻" } },
-  { slug: "hbm", metricTokens: ["hbm"], name: { en: "HBM", zh: "HBM" } },
-  { slug: "inference", metricTokens: ["inference"], name: { en: "Inference", zh: "推論" } },
-  { slug: "interconnection", metricTokens: ["interconnection"], name: { en: "Grid interconnection", zh: "電網併網" } },
-  { slug: "managed-tokens", metricTokens: ["managed", "tokens"], name: { en: "Managed tokens", zh: "託管權杖" } },
-  { slug: "onsemi", metricTokens: ["onsemi"], name: { en: "onsemi", zh: "onsemi" } },
-  { slug: "openai", metricTokens: ["openai"], name: { en: "OpenAI", zh: "OpenAI" } },
-  { slug: "packaging", metricTokens: ["packaging"], name: { en: "Advanced packaging", zh: "先進封裝" } },
-  { slug: "power", metricTokens: ["power"], name: { en: "Data-center power", zh: "資料中心電力" } },
-  { slug: "production-agents", metricTokens: ["production", "agents"], name: { en: "Production agents", zh: "生產環境代理" } },
-  { slug: "software", metricTokens: ["software"], name: { en: "AI software", zh: "AI 軟體" } },
-  { slug: "spend", metricTokens: ["spend"], name: { en: "AI spending", zh: "AI 支出" } },
-  { slug: "vertiv", metricTokens: ["vertiv"], name: { en: "Vertiv", zh: "Vertiv" } },
-  { slug: "wafer", metricTokens: ["wafer"], name: { en: "SiC wafers", zh: "SiC 晶圓" } },
-] as const;
+type EntityCandidateChannel =
+  | "metric-token"
+  | "metric-compound"
+  | "source-id"
+  | "source-publisher"
+  | "source-title";
 
 export type EntityEvidenceMetric = {
   date: string;
@@ -53,7 +226,7 @@ export type EntityBriefReference = {
   pillars: PageSlug[];
 };
 
-export type EntityHub = {
+export type EligibleEntityRecord = {
   slug: string;
   name: { en: string; zh: string };
   briefs: EntityBriefReference[];
@@ -61,12 +234,21 @@ export type EntityHub = {
   metrics: EntityEvidenceMetric[];
   sources: SourceRecord[];
   lastModified: string;
+  sourceReferenceCount: number;
 };
 
-export function normalizeEntitySlug(value: string): string | undefined {
-  const normalized = value.normalize("NFKC").trim().toLowerCase();
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) ? normalized : undefined;
-}
+export type EntityHub = Omit<EligibleEntityRecord, "sourceReferenceCount">;
+
+type CandidateAccumulator = {
+  slug: string;
+  briefs: Map<string, { date: string; dataCutoff: string; pillars: Set<PageSlug> }>;
+  pillars: Set<PageSlug>;
+  metrics: Map<string, EntityEvidenceMetric>;
+  sourceIds: Set<string>;
+  sourceReferenceKeys: Set<string>;
+  channels: Set<EntityCandidateChannel>;
+  observedNames: Map<string, number>;
+};
 
 function reportMetricIds(brief: PublishedBrief, pillar: PageSlug): Set<string> {
   const page = brief.snapshot.pages[pillar];
@@ -78,78 +260,295 @@ function reportMetricIds(brief: PublishedBrief, pillar: PageSlug): Set<string> {
   ]);
 }
 
-function metricMatches(metricId: string, entry: EntityTaxonomyEntry): boolean {
-  const parts = metricId.split(/[._]/);
-  return entry.metricTokens.every((token) => parts.includes(token));
-}
-
 function sortedUnique(values: string[]): string[] {
   return [...new Set(values)].sort();
 }
 
-function collectEntity(entry: EntityTaxonomyEntry, briefs: PublishedBrief[]): EntityHub | undefined {
-  const metrics: EntityEvidenceMetric[] = [];
-  const briefReferences: EntityBriefReference[] = [];
-  const sourceIds = new Set<string>();
-  const pillars = new Set<PageSlug>();
+function isNumericBoilerplateToken(token: string): boolean {
+  return /^\d/.test(token) || /^fy\d+$/.test(token);
+}
 
-  for (const brief of briefs) {
-    const referencedPillars = (Object.keys(brief.snapshot.pages) as PageSlug[]).filter((pillar) => {
-      const references = reportMetricIds(brief, pillar);
-      return [...references].some((metricId) => metricMatches(metricId, entry));
-    });
-    if (referencedPillars.length === 0) continue;
-    const referencedIds = new Set(referencedPillars.flatMap((pillar) => [...reportMetricIds(brief, pillar)]));
-    const citedMetrics = Object.values(brief.snapshot.metrics).filter((metric) =>
-      referencedIds.has(metric.id) && metricMatches(metric.id, entry),
-    );
-    if (citedMetrics.length === 0) continue;
-    for (const pillar of referencedPillars) pillars.add(pillar);
-    for (const metric of citedMetrics) {
-      metrics.push({
-        date: brief.date,
-        id: metric.id,
-        page: metric.page,
-        display: metric.display,
-        asOf: metric.asOf,
-        sourceIds: sortedUnique(metric.sourceIds),
-      });
-      metric.sourceIds.forEach((sourceId) => sourceIds.add(sourceId));
-    }
-    briefReferences.push({
-      date: brief.date,
-      dataCutoff: brief.snapshot.dataCutoff,
-      pillars: [...referencedPillars].sort(),
-    });
+function tokenizeEntityText(value: string): string[] {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function normalizeCandidateTokens(
+  tokens: string[],
+  options: { allowCompoundStopwords?: boolean } = {},
+): string | undefined {
+  if (tokens.length === 0 || new Set(tokens).size !== tokens.length) return undefined;
+  const phrase = tokens.join("-");
+  const alias = ENTITY_ALIAS_NORMALIZATION.get(phrase);
+  if (alias !== undefined) return alias;
+  if (tokens.some((token) => BLOCKED_SOURCE_ENTITY_TOKENS.has(token))) return undefined;
+  if (!options.allowCompoundStopwords && tokens.every((token) => ENTITY_STOPWORDS.has(token) || isNumericBoilerplateToken(token))) {
+    return undefined;
   }
+  if (!options.allowCompoundStopwords && tokens.some((token) => ENTITY_STOPWORDS.has(token) || isNumericBoilerplateToken(token))) {
+    return undefined;
+  }
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(phrase)) return undefined;
+  return phrase;
+}
 
-  const sources = [...sourceIds]
-    .sort()
-    .map((sourceId) => briefs.flatMap((brief) => [brief.snapshot.sources[sourceId]]).find(Boolean))
-    .filter((source): source is SourceRecord => source !== undefined);
-  if (
-    briefReferences.length < ENTITY_EVIDENCE_FLOOR.datedBriefs ||
-    sources.length < ENTITY_EVIDENCE_FLOOR.sources
-  ) return undefined;
+function formatTitleCase(value: string): string {
+  return value.replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+}
+
+function metricEntityCandidates(metricId: string): string[] {
+  const tokens = metricId
+    .split(/[._]/)
+    .filter(Boolean)
+    .filter((token) => !METRIC_NAMESPACE_TOKENS.has(token));
+  const candidates = new Map<string, Extract<EntityCandidateChannel, "metric-token" | "metric-compound">>();
+  for (const token of tokens) {
+    const slug = normalizeCandidateTokens([token]);
+    if (slug !== undefined && !candidates.has(slug)) candidates.set(slug, "metric-token");
+  }
+  for (let index = 0; index < tokens.length - 1; index += 1) {
+    const head = tokens[index];
+    if (!COMPOUND_ENTITY_HEAD_TOKENS.has(head)) continue;
+    const slug = normalizeCandidateTokens([head, tokens[index + 1]], { allowCompoundStopwords: true });
+    if (slug !== undefined) candidates.set(slug, "metric-compound");
+  }
+  return [...candidates.entries()]
+    .sort((left, right) => left[0].localeCompare(right[0]))
+    .map(([slug, channel]) => ({ slug, channel }));
+}
+
+function sourceLeadingCandidate(
+  rawValue: string,
+  channel: Exclude<EntityCandidateChannel, "metric-token" | "metric-compound">,
+): { slug: string; channel: typeof channel; observedName?: string } | undefined {
+  const tokens = tokenizeEntityText(rawValue);
+  const leading: string[] = [];
+  for (const token of tokens) {
+    if (isNumericBoilerplateToken(token) || ENTITY_STOPWORDS.has(token)) break;
+    leading.push(token);
+    if (leading.length === 3) break;
+  }
+  for (let length = Math.min(3, leading.length); length >= 1; length -= 1) {
+    const slug = normalizeCandidateTokens(leading.slice(0, length));
+    if (slug === undefined) continue;
+    const observedName = rawValue
+      .normalize("NFKC")
+      .trim()
+      .split(/[^0-9A-Za-z]+/)
+      .filter(Boolean)
+      .slice(0, length)
+      .join(" ");
+    return { slug, channel, observedName: observedName || undefined };
+  }
+  return undefined;
+}
+
+function sourceEntityCandidates(
+  sourceId: string,
+  source: SourceRecord,
+): Array<{ slug: string; channel: Exclude<EntityCandidateChannel, "metric-token" | "metric-compound">; observedName?: string }> {
+  return [
+    sourceLeadingCandidate(sourceId, "source-id"),
+    sourceLeadingCandidate(source.publisher, "source-publisher"),
+    sourceLeadingCandidate(source.title, "source-title"),
+  ].filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== undefined);
+}
+
+function entityName(slug: string, observedNames: Map<string, number>): { en: string; zh: string } {
+  const override = ENTITY_LABEL_OVERRIDES[slug];
+  if (override !== undefined) return override;
+  const observed = [...observedNames.entries()]
+    .sort((left, right) =>
+      right[1] - left[1] ||
+      left[0].length - right[0].length ||
+      left[0].localeCompare(right[0]),
+    )[0]?.[0];
+  const en = observed ?? formatTitleCase(slug.replace(/-/g, " "));
+  return { en, zh: en };
+}
+
+function accumulator(slug: string): CandidateAccumulator {
   return {
-    slug: entry.slug,
-    name: entry.name,
-    briefs: briefReferences.sort((left, right) => right.date.localeCompare(left.date)),
-    pillars: [...pillars].sort(),
-    metrics: metrics.sort((left, right) => right.date.localeCompare(left.date) || left.id.localeCompare(right.id)),
-    sources,
-    lastModified: briefReferences.reduce(
-      (latest, brief) => latest > brief.dataCutoff ? latest : brief.dataCutoff,
-      "",
-    ),
+    slug,
+    briefs: new Map(),
+    pillars: new Set(),
+    metrics: new Map(),
+    sourceIds: new Set(),
+    sourceReferenceKeys: new Set(),
+    channels: new Set(),
+    observedNames: new Map(),
   };
 }
 
-export function extractEntityHubs(briefs: PublishedBrief[]): EntityHub[] {
-  return ENTITY_TAXONOMY
-    .map((entry) => collectEntity(entry, briefs))
-    .filter((entity): entity is EntityHub => entity !== undefined)
+function observeName(record: CandidateAccumulator, observedName?: string): void {
+  if (!observedName) return;
+  record.observedNames.set(observedName, (record.observedNames.get(observedName) ?? 0) + 1);
+}
+
+function recordObservation(
+  record: CandidateAccumulator,
+  brief: PublishedBrief,
+  pillar: PageSlug,
+  metricId: string,
+  relevantSourceIds: string[],
+  channel: EntityCandidateChannel,
+  observedName?: string,
+): void {
+  record.channels.add(channel);
+  observeName(record, observedName);
+  const briefRecord = record.briefs.get(brief.date) ?? {
+    date: brief.date,
+    dataCutoff: brief.snapshot.dataCutoff,
+    pillars: new Set<PageSlug>(),
+  };
+  briefRecord.pillars.add(pillar);
+  record.briefs.set(brief.date, briefRecord);
+  record.pillars.add(pillar);
+  const metric = brief.snapshot.metrics[metricId];
+  const metricKey = `${brief.date}:${metricId}`;
+  const priorMetric = record.metrics.get(metricKey);
+  record.metrics.set(metricKey, {
+    date: brief.date,
+    id: metric.id,
+    page: metric.page,
+    display: metric.display,
+    asOf: metric.asOf,
+    sourceIds: sortedUnique([...(priorMetric?.sourceIds ?? []), ...relevantSourceIds]),
+  });
+  for (const sourceId of relevantSourceIds) {
+    record.sourceIds.add(sourceId);
+    record.sourceReferenceKeys.add(`${brief.date}:${pillar}:${metricId}:${sourceId}`);
+  }
+}
+
+function keepEligible(record: CandidateAccumulator): boolean {
+  if (
+    record.briefs.size < ENTITY_EVIDENCE_FLOOR.datedBriefs ||
+    record.sourceReferenceKeys.size < ENTITY_EVIDENCE_FLOOR.sourceReferences
+  ) return false;
+  const hasMetricEvidence = record.channels.has("metric-token") || record.channels.has("metric-compound");
+  if (hasMetricEvidence) return true;
+  return record.channels.has("source-publisher") && (record.channels.has("source-id") || record.channels.has("source-title"));
+}
+
+function sourceLookup(briefs: PublishedBrief[]): Map<string, SourceRecord> {
+  const lookup = new Map<string, SourceRecord>();
+  for (const brief of briefs) {
+    for (const [sourceId, source] of Object.entries(brief.snapshot.sources)) {
+      if (!lookup.has(sourceId)) lookup.set(sourceId, source);
+    }
+  }
+  return lookup;
+}
+
+export function normalizeEntitySlug(value: string): string | undefined {
+  if (value.includes("/")) return undefined;
+  const tokens = tokenizeEntityText(value);
+  const compoundSlug = normalizeCandidateTokens(tokens, {
+    allowCompoundStopwords: COMPOUND_ENTITY_HEAD_TOKENS.has(tokens[0] ?? ""),
+  });
+  if (compoundSlug !== undefined) return compoundSlug;
+  return normalizeCandidateTokens(tokens);
+}
+
+export function discoverEligibleEntityRecords(briefs: PublishedBrief[]): EligibleEntityRecord[] {
+  const sourceRecords = sourceLookup(briefs);
+  const candidates = new Map<string, CandidateAccumulator>();
+
+  for (const brief of briefs) {
+    for (const pillar of Object.keys(brief.snapshot.pages) as PageSlug[]) {
+      for (const metricId of reportMetricIds(brief, pillar)) {
+        const metric = brief.snapshot.metrics[metricId];
+        const metricSlugs = metricEntityCandidates(metricId);
+        const sourceSpecific = new Map<string, { sourceIds: Set<string>; channels: Set<EntityCandidateChannel>; observedNames: Set<string> }>();
+        for (const sourceId of metric.sourceIds) {
+          const source = brief.snapshot.sources[sourceId];
+          for (const candidate of sourceEntityCandidates(sourceId, source)) {
+            const entry = sourceSpecific.get(candidate.slug) ?? {
+              sourceIds: new Set<string>(),
+              channels: new Set<EntityCandidateChannel>(),
+              observedNames: new Set<string>(),
+            };
+            entry.sourceIds.add(sourceId);
+            entry.channels.add(candidate.channel);
+            if (candidate.observedName !== undefined) entry.observedNames.add(candidate.observedName);
+            sourceSpecific.set(candidate.slug, entry);
+          }
+        }
+        for (const candidate of metricSlugs) {
+          const record = candidates.get(candidate.slug) ?? accumulator(candidate.slug);
+          const specific = sourceSpecific.get(candidate.slug);
+          recordObservation(
+            record,
+            brief,
+            pillar,
+            metricId,
+            sortedUnique([...(specific?.sourceIds ?? new Set(metric.sourceIds))]),
+            candidate.channel,
+            [...(specific?.observedNames ?? [])][0],
+          );
+          candidates.set(candidate.slug, record);
+        }
+        for (const [slug, specific] of sourceSpecific) {
+          const record = candidates.get(slug) ?? accumulator(slug);
+          for (const channel of specific.channels) {
+            recordObservation(
+              record,
+              brief,
+              pillar,
+              metricId,
+              sortedUnique([...specific.sourceIds]),
+              channel,
+              [...specific.observedNames][0],
+            );
+          }
+          candidates.set(slug, record);
+        }
+      }
+    }
+  }
+
+  return [...candidates.values()]
+    .filter(keepEligible)
+    .map((record) => {
+      const sources = [...record.sourceIds]
+        .sort()
+        .map((sourceId) => sourceRecords.get(sourceId))
+        .filter((source): source is SourceRecord => source !== undefined);
+      const briefs = [...record.briefs.values()]
+        .map((brief) => ({
+          date: brief.date,
+          dataCutoff: brief.dataCutoff,
+          pillars: [...brief.pillars].sort(),
+        }))
+        .sort((left, right) => right.date.localeCompare(left.date));
+      return {
+        slug: record.slug,
+        name: entityName(record.slug, record.observedNames),
+        briefs,
+        pillars: [...record.pillars].sort(),
+        metrics: [...record.metrics.values()].sort(
+          (left, right) => right.date.localeCompare(left.date) || left.id.localeCompare(right.id),
+        ),
+        sources,
+        lastModified: briefs.reduce(
+          (latest, brief) => latest > brief.dataCutoff ? latest : brief.dataCutoff,
+          "",
+        ),
+        sourceReferenceCount: record.sourceReferenceKeys.size,
+      };
+    })
     .sort((left, right) => left.slug.localeCompare(right.slug));
+}
+
+export function extractEntityHubs(briefs: PublishedBrief[]): EntityHub[] {
+  return discoverEligibleEntityRecords(briefs).map(({ sourceReferenceCount: _sourceReferenceCount, ...entity }) => entity);
 }
 
 export function getEntityHub(entities: EntityHub[], slug: string): EntityHub | undefined {

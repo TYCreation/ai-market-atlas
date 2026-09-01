@@ -27,6 +27,7 @@ import { buildSourceBundles } from "../market-data/view-model.ts";
 import { loadPublishedBriefs } from "../market-data/briefs.ts";
 import { briefRoutePaths } from "../market-data/brief-routes.ts";
 import {
+  discoverEligibleEntityRecords,
   entityRoutePaths,
   extractEntityHubs,
 } from "../market-data/entity-pages.ts";
@@ -148,6 +149,47 @@ function sitemapXml(routes: Array<{ route: string; lastModified: string }>): str
     )
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
+}
+
+function assertEntityExportCompleteness(
+  eligibleEntities: Array<{
+    slug: string;
+    lastModified: string;
+    sources: Array<{ id: string }>;
+  }>,
+  exportedEntities: Array<{ slug: string }>,
+  renderedRoutes: string[],
+  routeIdentities: Record<string, RouteVerificationIdentity>,
+  sitemapRoutes: Array<{ route: string; lastModified: string }>,
+): void {
+  const eligibleSlugs = eligibleEntities.map((entity) => entity.slug).sort();
+  const exportedSlugs = exportedEntities.map((entity) => entity.slug).sort();
+  if (JSON.stringify(exportedSlugs) !== JSON.stringify(eligibleSlugs)) {
+    throw new Error(
+      `entity export completeness mismatch: eligible=${eligibleSlugs.join(",")} exported=${exportedSlugs.join(",")}`,
+    );
+  }
+  for (const entity of eligibleEntities) {
+    const expectedSourceIds = entity.sources.map((source) => source.id).sort();
+    for (const route of [`/entity/${entity.slug}/`, `/en/entity/${entity.slug}/`]) {
+      if (!renderedRoutes.includes(route)) {
+        throw new Error(`entity export completeness is missing route ${route}`);
+      }
+      const identity = routeIdentities[route];
+      if (
+        identity?.kind !== "entity-detail" ||
+        identity.entitySlug !== entity.slug ||
+        identity.lastModified !== entity.lastModified ||
+        JSON.stringify(identity.sourceIds) !== JSON.stringify(expectedSourceIds)
+      ) {
+        throw new Error(`entity export completeness identity mismatch for ${route}`);
+      }
+      const sitemapEntry = sitemapRoutes.find((entry) => entry.route === route);
+      if (sitemapEntry?.lastModified !== entity.lastModified) {
+        throw new Error(`entity export completeness sitemap mismatch for ${route}`);
+      }
+    }
+  }
 }
 
 function redirectWorker(): string {
@@ -536,6 +578,7 @@ export async function exportPages(
     join(projectRoot, "data", "market", "runs"),
     join(projectRoot, "data", "market", "reviews"),
   );
+  const eligibleEntities = discoverEligibleEntityRecords(publishedBriefs);
   const entities = extractEntityHubs(publishedBriefs);
   const entityRoutes = entityRoutePaths(entities);
   const archiveMonths = monthlyArchives.map(
@@ -677,6 +720,13 @@ export async function exportPages(
         snapshot.dataCutoff,
     };
   });
+  assertEntityExportCompleteness(
+    eligibleEntities,
+    entities,
+    renderedRoutes,
+    routeIdentities,
+    sitemapRoutes,
+  );
 
   const workDirectory = dirname(outputDirectory);
   await mkdir(workDirectory, { recursive: true });

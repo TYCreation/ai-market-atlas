@@ -25,6 +25,7 @@ import {
 import type { MarketSnapshot } from "../../market-data/types.ts";
 import { autoPublishReview } from "./helpers.ts";
 import {
+  discoverEligibleEntityRecords,
   entityRoutePaths,
   extractEntityHubs,
 } from "../../market-data/entity-pages.ts";
@@ -33,6 +34,37 @@ import { loadPublishedBriefs } from "../../market-data/briefs.ts";
 const projectRoot = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const outputDirectory = join(projectRoot, "work", "pages-candidate");
 const snapshotPath = join(projectRoot, "data", "market", "current.json");
+const EXPECTED_ELIGIBLE_ENTITY_SLUGS = [
+  "accelerator",
+  "agents",
+  "amd",
+  "announced-power",
+  "api",
+  "broadcom",
+  "cisco",
+  "committed-power",
+  "cooling",
+  "hbm",
+  "inference",
+  "infineon",
+  "interconnection",
+  "managed-tokens",
+  "nvidia",
+  "onsemi",
+  "openai",
+  "packaging",
+  "power",
+  "production-agents",
+  "sharon-ai",
+  "software",
+  "spend",
+  "stmicroelectronics",
+  "tsmc",
+  "vertiv",
+  "vistra",
+  "wafer",
+  "wolfspeed",
+] as const;
 
 async function isolatedExportProject(build: boolean): Promise<string> {
   const isolatedRoot = await mkdtemp(join(tmpdir(), "market-export-project-"));
@@ -122,11 +154,43 @@ test("exports evidence-bound bilingual entity hubs with historical metadata and 
       join(isolatedRoot, "data", "market", "runs"),
       join(isolatedRoot, "data", "market", "reviews"),
     ));
+    const eligible = discoverEligibleEntityRecords(await loadPublishedBriefs(
+      join(isolatedRoot, "data", "market", "runs"),
+      join(isolatedRoot, "data", "market", "reviews"),
+    ));
     const amd = entities.find((entity) => entity.slug === "amd");
+    const sharonAi = entities.find((entity) => entity.slug === "sharon-ai");
     assert.ok(amd);
-    assert.ok(entities.length >= 20);
-    assert.ok(result.routes.includes("/entity/amd/"));
-    assert.ok(result.routes.includes("/en/entity/amd/"));
+    assert.ok(sharonAi);
+    assert.deepEqual(eligible.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
+    assert.deepEqual(entities.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
+    const sitemap = await readFile(join(isolatedOutput, "sitemap.xml"), "utf8");
+    for (const entity of entities) {
+      assert.ok(result.routes.includes(`/entity/${entity.slug}/`));
+      assert.ok(result.routes.includes(`/en/entity/${entity.slug}/`));
+      assert.deepEqual(result.routeIdentities[`/entity/${entity.slug}/`], {
+        kind: "entity-detail",
+        entitySlug: entity.slug,
+        lastModified: entity.lastModified,
+        sourceIds: entity.sources.map((source) => source.id),
+      });
+      assert.deepEqual(result.routeIdentities[`/en/entity/${entity.slug}/`], {
+        kind: "entity-detail",
+        entitySlug: entity.slug,
+        lastModified: entity.lastModified,
+        sourceIds: entity.sources.map((source) => source.id),
+      });
+      assert.equal((await lstat(join(isolatedOutput, "entity", entity.slug, "index.html"))).isFile(), true, entity.slug);
+      assert.equal((await lstat(join(isolatedOutput, "en", "entity", entity.slug, "index.html"))).isFile(), true, entity.slug);
+      assert.ok(
+        sitemap.includes(`<loc>https://aimarketatlas.net/entity/${entity.slug}/</loc><lastmod>${entity.lastModified}</lastmod>`),
+        entity.slug,
+      );
+      assert.ok(
+        sitemap.includes(`<loc>https://aimarketatlas.net/en/entity/${entity.slug}/</loc><lastmod>${entity.lastModified}</lastmod>`),
+        entity.slug,
+      );
+    }
     assert.deepEqual(result.routeIdentities["/entity/amd/"], {
       kind: "entity-detail",
       entitySlug: "amd",
@@ -144,6 +208,9 @@ test("exports evidence-bound bilingual entity hubs with historical metadata and 
     assert.match(zh, /\/brief\/2026-08-26/);
     assert.match(zh, /\/stocks/);
     assert.match(await readFile(join(isolatedOutput, "sitemap.xml"), "utf8"), new RegExp(`https://aimarketatlas\\.net/entity/amd/</loc><lastmod>${amd.lastModified}</lastmod>`));
+    const sharonZh = await readFile(join(isolatedOutput, "entity", "sharon-ai", "index.html"), "utf8");
+    assert.match(sharonZh, /Sharon AI/);
+    assert.match(sharonZh, /\/brief\/2026-08-26/);
   } finally {
     await rm(isolatedRoot, { recursive: true, force: true });
   }
@@ -171,6 +238,7 @@ test("exports every current/archive route and public asset without localhost met
         join(isolatedRoot, "data", "market", "reviews"),
       ),
     );
+    assert.deepEqual(entities.map((entity) => entity.slug), EXPECTED_ELIGIBLE_ENTITY_SLUGS);
 
     assert.deepEqual(result.routes, [
       "/",
@@ -258,6 +326,9 @@ test("exports every current/archive route and public asset without localhost met
     assert.match(sitemap, /https:\/\/aimarketatlas\.net\/stocks\//);
     assert.match(sitemap, /https:\/\/aimarketatlas\.net\/brief\/2026-08-26\/<\/loc><lastmod>2026-08-26T01:00:00\.000Z<\/lastmod>/);
     assert.match(sitemap, /https:\/\/aimarketatlas\.net\/brief\/2026-08-01\/<\/loc><lastmod>2026-08-01T01:00:00\.000Z<\/lastmod>/);
+    assert.match(sitemap, /https:\/\/aimarketatlas\.net\/entity\/tsmc\/<\/loc><lastmod>2026-08-26T01:00:00\.000Z<\/lastmod>/);
+    assert.match(sitemap, /https:\/\/aimarketatlas\.net\/entity\/vistra\//);
+    assert.match(sitemap, /https:\/\/aimarketatlas\.net\/entity\/sharon-ai\//);
 
     const datedZh = await readFile(join(isolatedOutput, "brief", "2026-08-26", "index.html"), "utf8");
     const datedEn = await readFile(join(isolatedOutput, "en", "brief", "2026-08-26", "index.html"), "utf8");

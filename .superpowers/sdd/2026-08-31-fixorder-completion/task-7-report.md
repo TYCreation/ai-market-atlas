@@ -20,6 +20,32 @@ Date: 2026-09-01
 
 ## Self-review
 
-- Confirmed retained entity set is deterministic and currently yields 21 bilingual hubs, meeting the “roughly 20 per locale” target without invented slugs.
+- Confirmed retained entity set is deterministic and currently yields 29 bilingual hubs, meeting the “roughly 20 per locale” target without invented slugs.
 - Confirmed export now includes entity pages in `routes`, `routeIdentities`, `sitemap.xml`, and invalid entity slugs return HTTP 404 during export verification.
 - No remaining functional concerns found in the staged Task 7 diff.
+
+## September 1, 2026 follow-up fix: corpus-driven discovery completeness
+
+### RED
+
+- `npm test -- tests/rendered-html.test.mjs tests/market-data/entity-pages.test.ts tests/market-data/export-pages.test.ts tests/market-data/deployment.test.ts`
+  - failed because `market-data/entity-pages.ts` did not export `discoverEligibleEntityRecords`
+  - failed because `/entity/sharon-ai` rendered HTTP 404
+- First implementation pass of the same command exposed two additional gaps:
+  - false-positive slug `frontier`
+  - `/entity/announced-power/` export 404 from compound-slug normalization
+
+### GREEN
+
+- Replaced the curated entity allowlist with deterministic discovery from report-referenced metric IDs, source IDs, and source publisher/title identifiers.
+- Added a separate export completeness contract so every discovered eligible entity must produce both locale routes, `entity-detail` identities, and sitemap lastmod entries.
+- Hand-checked retained eligible corpus snapshot now pinned by test coverage to 29 slugs, including `tsmc`, `vistra`, and `sharon-ai`, while rejecting thin or boilerplate candidates such as `gemini`, `stanford`, `2026`, and `results`.
+- `npm test -- tests/rendered-html.test.mjs tests/market-data/entity-pages.test.ts tests/market-data/export-pages.test.ts tests/market-data/deployment.test.ts` → 98/98 passing
+- `npm run test:market` → 351/351 passing
+- `npm test` → 21/21 passing
+
+### Follow-up self-review
+
+- Entity evidence now counts dated brief coverage plus cited source references, which keeps the floor explicit while allowing same-source multi-brief entities such as Sharon AI to remain evidence-bound.
+- Source-derived company entities are corroborated through retained source identifiers/publishers instead of a hand-maintained inventory; locale routes, canonicals, hreflang, robots, structured data, and 404 behavior remained intact in verification.
+- No open functional concerns found after the final September 1, 2026 verification runs.

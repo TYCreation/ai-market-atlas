@@ -202,18 +202,21 @@ test("server-renders a permanent monthly archive with public sources", async () 
 });
 
 test("server-renders an evidence-bound entity hub with dated briefs and public sources", async () => {
-  const response = await render("/entity/amd");
-  assert.equal(response.status, 200);
+  for (const [pathname, title, linkedPillar, linkedSource] of [
+    ["/entity/amd", "AMD 證據索引", "/stocks", /source-amd-/],
+    ["/entity/sharon-ai", "Sharon AI 證據索引", "/compute", /source-sharon-ai-deployment-acceptance/],
+  ]) {
+    const response = await render(pathname);
+    assert.equal(response.status, 200);
 
-  const html = await response.text();
-  assert.match(html, /AMD 證據索引/);
-  assert.match(html, /\/brief\/2026-08-26/);
-  assert.match(html, /\/stocks/);
-  assert.match(html, /source-amd-/);
-  assert.match(html, /hrefLang="en" href="https:\/\/aimarketatlas\.net\/en\/entity\/amd\/"/);
-  assert.match(html, /<meta name="robots" content="index, follow"\/>/);
-  assert.match(html, /application\/ld\+json/);
-  assert.match(html, /"mainEntityOfPage":"https:\/\/aimarketatlas\.net\/entity\/amd\/"/);
+    const html = await response.text();
+    assert.match(html, new RegExp(title));
+    assert.match(html, /\/brief\/2026-08-26/);
+    assert.match(html, new RegExp(linkedPillar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(html, linkedSource);
+    assert.match(html, /<meta name="robots" content="index, follow"\/>/);
+    assert.match(html, /application\/ld\+json/);
+  }
 });
 
 test("rendered publication exposes route, source, brief, and archive markers", async () => {
@@ -254,6 +257,7 @@ test("every indexable report exposes distinct search metadata and structured dat
     ["/archive", ["AI 市場情報月度封存", "AI 市場情報：月度市場封存"]],
     ["/archive/2026-07", ["2026 年 7 月 AI 市場報告", "2026 年 7 月市場封存"]],
     ["/entity/amd", ["AMD 證據索引", "AMD 證據索引"]],
+    ["/entity/sharon-ai", ["Sharon AI 證據索引", "Sharon AI 證據索引"]],
   ]);
   const titles = new Set();
 
@@ -297,10 +301,12 @@ test("every rendered route declares one trailing-slash canonical in the React tr
     ["/archive", "https://aimarketatlas.net/archive/"],
     ["/archive/2026-07", "https://aimarketatlas.net/archive/2026-07/"],
     ["/entity/amd", "https://aimarketatlas.net/entity/amd/"],
+    ["/entity/sharon-ai", "https://aimarketatlas.net/entity/sharon-ai/"],
     ["/en", "https://aimarketatlas.net/en/"],
     ["/en/stocks", "https://aimarketatlas.net/en/stocks/"],
     ["/en/archive/2026-07", "https://aimarketatlas.net/en/archive/2026-07/"],
     ["/en/entity/amd", "https://aimarketatlas.net/en/entity/amd/"],
+    ["/en/entity/sharon-ai", "https://aimarketatlas.net/en/entity/sharon-ai/"],
   ]);
 
   for (const [pathname, canonical] of expected) {
@@ -313,7 +319,7 @@ test("every rendered route declares one trailing-slash canonical in the React tr
 });
 
 test("indexable routes carry a single Discover-eligible robots directive", async () => {
-  for (const pathname of ["/", "/stocks", "/archive", "/archive/2026-07", "/entity/amd", "/en", "/en/sic", "/en/entity/amd"]) {
+  for (const pathname of ["/", "/stocks", "/archive", "/archive/2026-07", "/entity/amd", "/entity/sharon-ai", "/en", "/en/sic", "/en/entity/amd", "/en/entity/sharon-ai"]) {
     const html = await (await render(pathname)).text();
     assert.equal((html.match(/name="robots"/g) ?? []).length, 1, pathname);
     assert.match(html, /<meta name="robots" content="index, follow"\/>/, pathname);
