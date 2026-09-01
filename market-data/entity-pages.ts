@@ -141,19 +141,6 @@ const ENTITY_STOPWORDS = new Set([
   "years",
 ]);
 
-const BLOCKED_SOURCE_ENTITY_TOKENS = new Set([
-  "atlas",
-  "department",
-  "doe",
-  "gemini",
-  "google",
-  "iea",
-  "international",
-  "lbnl",
-  "securities",
-  "stanford",
-]);
-
 const COMPOUND_ENTITY_HEAD_TOKENS = new Set([
   "announced",
   "committed",
@@ -287,7 +274,6 @@ function normalizeCandidateTokens(
   const phrase = tokens.join("-");
   const alias = ENTITY_ALIAS_NORMALIZATION.get(phrase);
   if (alias !== undefined) return alias;
-  if (tokens.some((token) => BLOCKED_SOURCE_ENTITY_TOKENS.has(token))) return undefined;
   if (!options.allowCompoundStopwords && tokens.every((token) => ENTITY_STOPWORDS.has(token) || isNumericBoilerplateToken(token))) {
     return undefined;
   }

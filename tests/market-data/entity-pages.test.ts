@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { join } from "node:path";
-import { loadPublishedBriefs } from "../../market-data/briefs.ts";
+import { loadPublishedBriefs, type PublishedBrief } from "../../market-data/briefs.ts";
+import type { MarketSnapshot, PageSlug, PageState } from "../../market-data/types.ts";
 import {
   ENTITY_EVIDENCE_FLOOR,
   discoverEligibleEntityRecords,
@@ -51,6 +52,97 @@ async function retainedBriefs() {
   );
 }
 
+function syntheticPageState(metricIds: string[]): PageState {
+  return {
+    changed: true,
+    changeReasons: ["first-party-event"],
+    verifiedAt: "2026-08-26T01:00:00.000Z",
+    thesisStance: "bullish",
+    previousThesisStance: "bullish",
+    thesisMetricIds: metricIds,
+    report: {
+      eyebrow: { en: "Synthetic", zh: "Synthetic" },
+      title: { en: "Synthetic", zh: "Synthetic" },
+      summary: { en: "Synthetic", zh: "Synthetic" },
+      signal: { en: "Synthetic", zh: "Synthetic" },
+      thesis: {
+        title: { en: "Synthetic", zh: "Synthetic" },
+        body: { en: "Synthetic", zh: "Synthetic" },
+        tags: { en: ["synthetic"], zh: ["synthetic"] },
+      },
+      thesisSurvivalRationale: {
+        text: { en: "Synthetic", zh: "Synthetic" },
+        metricIds,
+      },
+      supportingEvidence: [{ text: { en: "Synthetic", zh: "Synthetic" }, metricIds }],
+      opposingEvidence: [{ text: { en: "Synthetic", zh: "Synthetic" }, metricIds }],
+      catalysts: [],
+      risks: [],
+      nextObservations: [],
+    },
+  };
+}
+
+function syntheticPublishedBrief(date: string): PublishedBrief {
+  const dataCutoff = `${date}T01:00:00.000Z`;
+  const metricId = "models.managed_tokens";
+  const emptyMetricIds: string[] = [];
+  const emptyPage = syntheticPageState(emptyMetricIds);
+  const modelPage = syntheticPageState([metricId]);
+  const pages = {
+    "/": emptyPage,
+    "/stocks": emptyPage,
+    "/compute": emptyPage,
+    "/energy": emptyPage,
+    "/models": modelPage,
+    "/sic": emptyPage,
+  } satisfies Record<PageSlug, PageState>;
+  const snapshot = {
+    schemaVersion: 1,
+    runId: `${date}-saturday`,
+    cadence: "saturday",
+    generatedAt: dataCutoff,
+    dataCutoff,
+    pages,
+    sources: {
+      "gemini-pricing": {
+        id: "gemini-pricing",
+        kind: "pricing",
+        publisher: "Gemini",
+        title: "Gemini pricing",
+        publishedAt: dataCutoff,
+        retrievedAt: dataCutoff,
+        scope: {
+          en: "Synthetic Gemini pricing source",
+          zh: "Synthetic Gemini pricing source",
+        },
+      },
+    },
+    metrics: {
+      [metricId]: {
+        id: metricId,
+        page: "/models",
+        required: true,
+        kind: "published",
+        numericValue: 1,
+        display: { en: "1", zh: "1" },
+        unit: "count",
+        asOf: dataCutoff,
+        sourceIds: ["gemini-pricing"],
+        observations: [{ sourceId: "gemini-pricing", numericValue: 1, asOf: dataCutoff }],
+        confidence: "high",
+        status: "verified",
+      },
+    },
+    keySignalIds: [metricId],
+  } satisfies MarketSnapshot;
+  return {
+    date,
+    snapshot,
+    review: {} as PublishedBrief["review"],
+  };
+}
+
 test("discovers the current retained eligible entity corpus from report evidence instead of a curated allowlist", async () => {
   const briefs = await retainedBriefs();
   const first = discoverEligibleEntityRecords(briefs);
@@ -91,6 +183,18 @@ test("entity alias normalization coalesces observed variants and rejects generic
 test("no entity below the explicit brief and source-reference floor emits", async () => {
   const newestOnly = (await retainedBriefs()).slice(0, 1);
   assert.deepEqual(discoverEligibleEntityRecords(newestOnly), []);
+});
+
+test("source-derived observed entities are not suppressed by name when evidence meets the floor", () => {
+  const entities = discoverEligibleEntityRecords([
+    syntheticPublishedBrief("2026-08-26"),
+    syntheticPublishedBrief("2026-08-22"),
+  ]);
+
+  const gemini = entities.find((entity) => entity.slug === "gemini");
+  assert.ok(gemini);
+  assert.equal(gemini.briefs.length, 2);
+  assert.equal(gemini.sourceReferenceCount, 2);
 });
 
 test("entity hubs only link dated briefs and pillars with report metric references", async () => {
