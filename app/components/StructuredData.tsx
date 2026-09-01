@@ -1,5 +1,10 @@
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_ORIGIN } from "../seo";
 
+function canonicalStructuredDataUrl(path: string): string {
+  const normalized = path === "/" ? "/" : path.endsWith("/") ? path : `${path}/`;
+  return new URL(normalized, SITE_ORIGIN).href;
+}
+
 function JsonLd({ data }: { data: object }) {
   return (
     <script
@@ -51,7 +56,7 @@ export function ReportStructuredData({
   description: string;
   dateModified: string;
 }) {
-  const url = new URL(path, SITE_ORIGIN).href;
+  const url = canonicalStructuredDataUrl(path);
   return (
     <JsonLd
       data={{
@@ -81,7 +86,7 @@ export function CollectionStructuredData({
   name: string;
   description: string;
 }) {
-  const url = new URL(path, SITE_ORIGIN).href;
+  const url = canonicalStructuredDataUrl(path);
   return (
     <JsonLd
       data={{

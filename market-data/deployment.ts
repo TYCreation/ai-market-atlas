@@ -82,6 +82,12 @@ export type RouteVerificationIdentity =
       sourceIds: string[];
     }
   | {
+      kind: "entity-detail";
+      entitySlug: string;
+      lastModified: string;
+      sourceIds: string[];
+    }
+  | {
       kind: "market-brief";
       dataCutoff: string;
       sourceIds: string[];
@@ -286,6 +292,19 @@ function assertVerificationExpectation(
         throw new Error("deployment brief detail identity is invalid");
       }
     }
+    if (candidate.kind === "entity-detail") {
+      if (
+        typeof candidate.entitySlug !== "string" ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(candidate.entitySlug) ||
+        !isCanonicalUtcTimestamp(String(candidate.lastModified)) ||
+        !Array.isArray(candidate.sourceIds) ||
+        candidate.sourceIds.length === 0 ||
+        candidate.sourceIds.some((sourceId) => typeof sourceId !== "string" || !/^[a-z0-9][a-z0-9._-]*$/.test(sourceId)) ||
+        new Set(candidate.sourceIds).size !== candidate.sourceIds.length
+      ) {
+        throw new Error("deployment entity detail identity is invalid");
+      }
+    }
   }
 }
 
@@ -395,6 +414,20 @@ function assertVerificationContent(
       sourceCardIds(body, false),
       identity.sourceIds,
       `${route} dated brief sources`,
+    );
+    return undefined;
+  }
+  if (identity.kind === "entity-detail") {
+    if (
+      !body.includes(route) ||
+      !body.includes(identity.lastModified)
+    ) {
+      throw new Error(`${route} entity identity is missing`);
+    }
+    assertExactValues(
+      sourceCardIds(body, false),
+      identity.sourceIds,
+      `${route} entity sources`,
     );
     return undefined;
   }

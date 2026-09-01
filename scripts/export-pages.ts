@@ -27,6 +27,10 @@ import { buildSourceBundles } from "../market-data/view-model.ts";
 import { loadPublishedBriefs } from "../market-data/briefs.ts";
 import { briefRoutePaths } from "../market-data/brief-routes.ts";
 import {
+  entityRoutePaths,
+  extractEntityHubs,
+} from "../market-data/entity-pages.ts";
+import {
   assertMarketBriefMatchesSnapshot,
   isMarketBriefPayload,
   marketBriefPayloadSha256,
@@ -532,6 +536,8 @@ export async function exportPages(
     join(projectRoot, "data", "market", "runs"),
     join(projectRoot, "data", "market", "reviews"),
   );
+  const entities = extractEntityHubs(publishedBriefs);
+  const entityRoutes = entityRoutePaths(entities);
   const archiveMonths = monthlyArchives.map(
     ({ archive }) => archive.month,
   );
@@ -607,6 +613,20 @@ export async function exportPages(
       }),
     ),
     ...Object.fromEntries(
+      entities.flatMap((entity) => {
+        const identity = {
+          kind: "entity-detail" as const,
+          entitySlug: entity.slug,
+          lastModified: entity.lastModified,
+          sourceIds: entity.sources.map((source) => source.id).sort(),
+        };
+        return [
+          [`/entity/${entity.slug}/`, identity],
+          [`/en/entity/${entity.slug}/`, identity],
+        ];
+      }),
+    ),
+    ...Object.fromEntries(
       monthlyArchives.map(({ archive }) => [
         `/en/archive/${archive.month}`,
         {
@@ -633,6 +653,7 @@ export async function exportPages(
     ...archiveMonths.map((month) => `/archive/${month}`),
     ...archiveMonths.map((month) => `/en/archive/${month}`),
     ...briefRoutePaths(publishedBriefs),
+    ...entityRoutes,
   ];
   // `routes` is the set the deploy verifier walks (see deploy-pages.ts, which calls
   // the verifier with `manifest.routes`), so the HyperFrames deck stays in it and keeps
@@ -642,9 +663,18 @@ export async function exportPages(
   const sitemapRoutes = renderedRoutes.map((route) => {
     const brief = publishedBriefs.find((entry) => route.includes(`/brief/${entry.date}/`));
     const archive = monthlyArchives.find(({ archive: entry }) => route.endsWith(`/archive/${entry.month}`));
+    const entity = entities.find(
+      (entry) =>
+        route === `/entity/${entry.slug}/` ||
+        route === `/en/entity/${entry.slug}/`,
+    );
     return {
       route,
-      lastModified: brief?.snapshot.dataCutoff ?? archive?.archive.dataCutoff ?? snapshot.dataCutoff,
+      lastModified:
+        brief?.snapshot.dataCutoff ??
+        archive?.archive.dataCutoff ??
+        entity?.lastModified ??
+        snapshot.dataCutoff,
     };
   });
 
@@ -759,6 +789,22 @@ export async function exportPages(
       );
       if (response.status !== 404) {
         throw new Error(`Vinext export returned HTTP ${response.status} for invalid dated brief ${invalidRoute}`);
+      }
+    }
+    for (const invalidRoute of ["/entity/not-a-retained-entity", "/en/entity/not-a-retained-entity"]) {
+      const response = await worker.default.fetch(
+        new Request(`${SITE_ORIGIN}${invalidRoute}`, {
+          headers: {
+            accept: "text/html",
+            "x-forwarded-host": "aimarketatlas.net",
+            "x-forwarded-proto": "https",
+          },
+        }),
+        { ASSETS: assets },
+        { waitUntil() {}, passThroughOnException() {} },
+      );
+      if (response.status !== 404) {
+        throw new Error(`Vinext export returned HTTP ${response.status} for invalid entity ${invalidRoute}`);
       }
     }
     const notFoundResponse = await worker.default.fetch(

@@ -659,6 +659,32 @@ test("deployment verification binds a dated brief route to its retained snapshot
   );
 });
 
+test("deployment verification binds an entity route to its retained source identity", async () => {
+  const expectation = {
+    ...verificationExpectation,
+    routeIdentities: {
+      ...verificationExpectation.routeIdentities,
+      "/entity/amd/": {
+        kind: "entity-detail" as const,
+        entitySlug: "amd",
+        lastModified: "2026-08-26T01:00:00.000Z",
+        sourceIds: ["amd-q2-2026", "tsmc-july-2026"],
+      },
+    },
+  };
+
+  await verifyDeployment(
+    "https://preview.pages.dev",
+    ["/entity/amd/"],
+    expectation,
+    async () =>
+      new Response(
+        'https://aimarketatlas.net/entity/amd/ 2026-08-26T01:00:00.000Z <article id="source-amd-q2-2026"></article><article id="source-tsmc-july-2026"></article>',
+        { status: 200 },
+      ),
+  );
+});
+
 test("market brief verification rejects missing, stale, and corrupt data.json without content retries", async (t) => {
   const payload = verificationBrief;
   const expectation = {

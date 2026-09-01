@@ -24,6 +24,11 @@ import {
 } from "../../scripts/generate-market-brief.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 import { autoPublishReview } from "./helpers.ts";
+import {
+  entityRoutePaths,
+  extractEntityHubs,
+} from "../../market-data/entity-pages.ts";
+import { loadPublishedBriefs } from "../../market-data/briefs.ts";
 
 const projectRoot = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const outputDirectory = join(projectRoot, "work", "pages-candidate");
@@ -103,6 +108,47 @@ async function isolatedExportProject(build: boolean): Promise<string> {
   return isolatedRoot;
 }
 
+test("exports evidence-bound bilingual entity hubs with historical metadata and identities", async () => {
+  const isolatedRoot = await isolatedExportProject(true);
+  const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
+  try {
+    const result = await exportPages({
+      projectRoot: isolatedRoot,
+      snapshotPath: join(isolatedRoot, "data", "market", "current.json"),
+      outputDirectory: isolatedOutput,
+      build: true,
+    });
+    const entities = extractEntityHubs(await loadPublishedBriefs(
+      join(isolatedRoot, "data", "market", "runs"),
+      join(isolatedRoot, "data", "market", "reviews"),
+    ));
+    const amd = entities.find((entity) => entity.slug === "amd");
+    assert.ok(amd);
+    assert.ok(entities.length >= 20);
+    assert.ok(result.routes.includes("/entity/amd/"));
+    assert.ok(result.routes.includes("/en/entity/amd/"));
+    assert.deepEqual(result.routeIdentities["/entity/amd/"], {
+      kind: "entity-detail",
+      entitySlug: "amd",
+      lastModified: amd.lastModified,
+      sourceIds: amd.sources.map((source) => source.id),
+    });
+    const zh = await readFile(join(isolatedOutput, "entity", "amd", "index.html"), "utf8");
+    const en = await readFile(join(isolatedOutput, "en", "entity", "amd", "index.html"), "utf8");
+    assert.match(zh, /rel="canonical" href="https:\/\/aimarketatlas\.net\/entity\/amd\/"/);
+    assert.match(zh, /hrefLang="en" href="https:\/\/aimarketatlas\.net\/en\/entity\/amd\/"/);
+    assert.match(en, /rel="canonical" href="https:\/\/aimarketatlas\.net\/en\/entity\/amd\/"/);
+    assert.match(en, /hrefLang="zh-Hant" href="https:\/\/aimarketatlas\.net\/entity\/amd\/"/);
+    assert.match(zh, /application\/ld\+json/);
+    assert.match(zh, /2026-08-26/);
+    assert.match(zh, /\/brief\/2026-08-26/);
+    assert.match(zh, /\/stocks/);
+    assert.match(await readFile(join(isolatedOutput, "sitemap.xml"), "utf8"), new RegExp(`https://aimarketatlas\\.net/entity/amd/</loc><lastmod>${amd.lastModified}</lastmod>`));
+  } finally {
+    await rm(isolatedRoot, { recursive: true, force: true });
+  }
+});
+
 test("exports every current/archive route and public asset without localhost metadata", async () => {
   const isolatedRoot = await isolatedExportProject(false);
   const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
@@ -119,6 +165,12 @@ test("exports every current/archive route and public asset without localhost met
       outputDirectory: isolatedOutput,
       build: false,
     });
+    const entities = extractEntityHubs(
+      await loadPublishedBriefs(
+        join(isolatedRoot, "data", "market", "runs"),
+        join(isolatedRoot, "data", "market", "reviews"),
+      ),
+    );
 
     assert.deepEqual(result.routes, [
       "/",
@@ -153,6 +205,7 @@ test("exports every current/archive route and public asset without localhost met
       "/en/brief/2026-08-08/",
       "/en/brief/2026-08-05/",
       "/en/brief/2026-08-01/",
+      ...entityRoutePaths(entities),
       "/market-brief/",
     ]);
     for (const path of [
