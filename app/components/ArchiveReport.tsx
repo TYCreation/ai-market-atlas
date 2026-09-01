@@ -35,9 +35,10 @@ export function ArchiveReport({
 
   return (
     <main className="archive-main">
-      <span hidden data-archive-route-identity>
-        {archive.runId} {archive.dataCutoff}
-      </span>
+      <span
+        hidden
+        data-archive-route-identity={`${archive.runId} ${archive.dataCutoff}`}
+      />
       <Link className="archive-back" href={locale === "en" ? "/en/archive" : "/archive"}>
         ← {locale === "en" ? "Monthly archives" : "月度市場封存"}
       </Link>

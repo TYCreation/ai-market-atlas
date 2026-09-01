@@ -6,12 +6,13 @@ Run this checklist from the repository root before the final production release 
 
 - [x] `node --test tests/lint-generated-artifacts.test.mjs` — 1/1 passed.
 - [x] `npm run lint` — 0 errors; two existing unused-variable warnings in `market-data/freshness.ts` and `market-data/storage.ts`.
-- [x] `npm run test:market` — 364/364 passed, including market-data, export, deployment, browser market-brief, discovery-feed, newsletter, and fixture pipeline coverage.
+- [x] `npm run test:market` — 365/365 passed, including market-data, export, deployment, browser market-brief, discovery-feed, newsletter, and fixture pipeline coverage.
 - [x] `npm run test:readability` — 1/1 passed.
 - [x] `npm run test` — 21/21 passed.
 - [x] Focused release tests: `node --experimental-strip-types --test tests/market-data/export-pages.test.ts tests/market-data/deployment.test.ts tests/market-data/deploy-pages.test.ts tests/market-data/end-to-end.test.ts` — 100/100 passed.
 - [x] `npm run market:export` — local export passed for the current published fixture (`2026-08-08-saturday`), producing 81 routes and `/rss.xml`, `/news-sitemap.xml`, and `/llms.txt`.
-- [x] Local HTTP deployment verification — `verifyDeployment` passed against the exported tree; unknown route returned HTTP 404; `/market-brief/` was noindex; dated brief and entity identity routes returned 200 with alternate hreflang links.
+- [x] `npm run market:release:verify -- --base-url <base-url> --manifest work/pages-candidate/.market-deployment.json` — executable fail-closed endpoint checklist. It invokes `verifyDeployment`, then verifies real 404, unique trailing-slash canonicals/hreflang, exact sitemap lastmods, market-brief noindex and `data.json` identity, dated brief/entity identities, discovery content types, and newsletter mode (`--newsletter=enabled` when configured; disabled is the default).
+- [ ] `npm run market:pages:rehearse` — BLOCKED in this environment: the real Pages runtime exits before readiness with `No such module "wrangler:modules-watch"` (or Wrangler's generated middleware facade). The command is fail-closed and does not substitute a static server.
 
 The exported manifest must continue to bind route HTML to the run/cutoff/source identity, keep all canonical and alternate URLs trailing-slash normalized, and retain historical sitemap `lastmod` values. The market brief remains a noindex presentation artifact and is excluded from `sitemap.xml`; RSS contains permanent dated briefs, while the news sitemap is limited to the explicit recent-publication window.
 
@@ -29,4 +30,4 @@ Do not push, merge, or deploy as part of this checklist's local rehearsal.
 
 ## Environment note
 
-`npx wrangler pages dev work/pages-candidate --local --port 8788` could not start in this environment because the generated worker requested Wrangler's unavailable `wrangler:modules-watch` module. The local HTTP server plus `verifyDeployment` rehearsal above exercises the exported artifact and deployment verifier without requiring that optional Wrangler dev runtime. Re-run the Pages runtime check in the release environment before production approval.
+`npm run market:pages:rehearse` runs `npx wrangler pages dev work/pages-candidate --local --port <free-port> --show-interactive-dev-session=false`, exercises the generated `_worker.js` with real `env.ASSETS`, redirects, discovery headers, 404 behavior, and then runs the endpoint checklist. It requires `npm ci`, the repository-pinned Wrangler/workerd runtime, `dist/server/wrangler.json`, and `work/pages-candidate`. In this checkout Wrangler 4.118.0 injected `wrangler:modules-watch` that workerd could not resolve; newer Wrangler 4.127.1 instead failed on its generated middleware facade. The gate remains unchecked until a runtime with those modules starts successfully.

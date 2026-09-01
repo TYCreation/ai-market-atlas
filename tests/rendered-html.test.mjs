@@ -99,10 +99,9 @@ for (const [pathname, heading, metricIds] of [
       /rel="shortcut icon" href="https:\/\/aimarketatlas\.net\/favicon\.svg"/,
     );
     assert.match(html, /中文 \/ EN/);
-    assert.match(
-      html,
-      new RegExp(currentSnapshot.runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-    );
+    const routeIdentity = html.match(/<span hidden="" data-market-route-identity="([^"]+)"[^>]*><\/span>/);
+    assert.ok(routeIdentity, "current route must expose a hidden route identity marker");
+    assert.equal(routeIdentity[1], `${currentSnapshot.runId} ${currentSnapshot.dataCutoff}`);
     assert.match(html, /資料截止/);
     if (!currentSnapshot.pages[pathname].changed) {
       assert.match(html, /本期無重大變化/);
@@ -163,10 +162,9 @@ for (const [pathname, heading] of [
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, new RegExp(`<h1[^>]*>${heading}</h1>`));
-    assert.match(
-      html,
-      new RegExp(currentSnapshot.runId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-    );
+    const routeIdentity = html.match(/<span hidden="" data-market-route-identity="([^"]+)"[^>]*><\/span>/);
+    assert.ok(routeIdentity, "English current route must expose a hidden route identity marker");
+    assert.equal(routeIdentity[1], `${currentSnapshot.runId} ${currentSnapshot.dataCutoff}`);
     if (pathname === "/en/stocks") {
       assert.match(html, /Atlas model/);
       assert.doesNotMatch(html, /Market observation/);
@@ -192,7 +190,6 @@ test("server-renders the monthly archive index", async () => {
 test("server-renders a permanent monthly archive with public sources", async () => {
   const response = await render("/archive/2026-07");
   assert.equal(response.status, 200);
-
   const html = await response.text();
   assert.match(html, /2026 年 7 月市場封存/);
   assert.match(html, /完整公開來源/);
@@ -201,7 +198,19 @@ test("server-renders a permanent monthly archive with public sources", async () 
     html,
     /https:\/\/investor\.nvidia\.com\/news\/press-release-details\/2026\/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2027\/default\.aspx/,
   );
+  const routeIdentity = html.match(/<span hidden="" data-archive-route-identity="([^"]+)"[^>]*><\/span>/);
+  assert.ok(routeIdentity, "archive detail must expose a hidden route identity marker");
+  assert.equal(routeIdentity[1], "2026-07-25-saturday 2026-07-25T01:00:00.000Z");
+  assert.doesNotMatch(html, /class="edition-run"/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
+
+  const englishResponse = await render("/en/archive/2026-07");
+  assert.equal(englishResponse.status, 200);
+  const englishHtml = await englishResponse.text();
+  const englishIdentity = englishHtml.match(/<span hidden="" data-archive-route-identity="([^"]+)"[^>]*><\/span>/);
+  assert.ok(englishIdentity, "English archive detail must expose a hidden route identity marker");
+  assert.equal(englishIdentity[1], "2026-07-25-saturday 2026-07-25T01:00:00.000Z");
+  assert.doesNotMatch(englishHtml, /class="edition-run"/);
 });
 
 test("server-renders an evidence-bound entity hub with dated briefs and public sources", async () => {

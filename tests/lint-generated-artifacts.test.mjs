@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -8,11 +9,16 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 const projectRoot = dirname(fileURLToPath(new URL("../package.json", import.meta.url)));
-const generatedArtifact = join(projectRoot, "work", "lint-rehearsal-artifact.js");
+const generatedArtifact = join(
+  projectRoot,
+  "work",
+  "pages-candidate",
+  `.lint-rehearsal-${process.pid}-${randomUUID()}.js`,
+);
 
 test("lint accepts generated deployment artifacts outside the source tree", async () => {
   await mkdir(dirname(generatedArtifact), { recursive: true });
-  await writeFile(generatedArtifact, "const = invalid generated output;\n");
+  await writeFile(generatedArtifact, "const = invalid generated output;\n", { flag: "wx" });
 
   try {
     await assert.doesNotReject(
