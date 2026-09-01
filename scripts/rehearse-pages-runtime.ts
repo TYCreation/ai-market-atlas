@@ -1,11 +1,15 @@
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
 import { loadReleaseManifest, verifyReleaseEndpoint } from "./release-verification.ts";
+import { ARTIFACT_MANIFEST_NAME } from "../market-data/artifact-tree.ts";
+import { hashCandidate } from "../market-data/review.ts";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const candidateDirectory = join(projectRoot, "work", "pages-candidate");
+const manifestPath = join(candidateDirectory, ARTIFACT_MANIFEST_NAME);
 
 async function reservePort(): Promise<number> {
   const server = createServer();
@@ -16,14 +20,115 @@ async function reservePort(): Promise<number> {
   return address.port;
 }
 
-async function stop(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null) return;
-  child.kill("SIGTERM");
-  await new Promise<void>((resolvePromise) => child.once("exit", () => resolvePromise()));
+function hasExited(child: ChildProcess): boolean {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function isMissingProcess(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "ESRCH"
+  );
+}
+
+async function waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {
+  if (hasExited(child)) return true;
+  return new Promise((resolvePromise) => {
+    const onExit = () => {
+      clearTimeout(timeout);
+      resolvePromise(true);
+    };
+    const timeout = setTimeout(() => {
+      child.off("exit", onExit);
+      resolvePromise(hasExited(child));
+    }, timeoutMs);
+    child.once("exit", onExit);
+  });
+}
+
+function signalRuntime(
+  child: ChildProcess,
+  signal: NodeJS.Signals,
+  killProcessGroup: boolean,
+): void {
+  if (hasExited(child)) return;
+  if (
+    killProcessGroup &&
+    process.platform !== "win32" &&
+    typeof child.pid === "number"
+  ) {
+    try {
+      process.kill(-child.pid, signal);
+      return;
+    } catch (error) {
+      if (!isMissingProcess(error)) throw error;
+      return;
+    }
+  }
+  try {
+    child.kill(signal);
+  } catch (error) {
+    if (!isMissingProcess(error)) throw error;
+  }
+}
+
+export async function stopSpawnedRuntime(
+  child: ChildProcess,
+  graceMs = 3_000,
+  forceMs = 2_000,
+  killProcessGroup = false,
+): Promise<void> {
+  if (hasExited(child)) return;
+  signalRuntime(child, "SIGTERM", killProcessGroup);
+  if (await waitForExit(child, graceMs)) return;
+  signalRuntime(child, "SIGKILL", killProcessGroup);
+  if (!(await waitForExit(child, forceMs))) {
+    throw new Error("Wrangler Pages local runtime did not exit after forced termination");
+  }
+}
+
+export async function requestLocalOriginWithHost(
+  input: string,
+  hostHeader: string,
+  timeoutMs = 15_000,
+): Promise<Response> {
+  const url = new URL(input);
+  return await new Promise<Response>((resolvePromise, reject) => {
+    const request = httpRequest(
+      url,
+      {
+        headers: { host: hostHeader },
+        method: "GET",
+        signal: AbortSignal.timeout(timeoutMs),
+      },
+      (response) => {
+        response.resume();
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(response.headers)) {
+          if (Array.isArray(value)) {
+            for (const item of value) headers.append(name, item);
+          } else if (value !== undefined) {
+            headers.set(name, value);
+          }
+        }
+        resolvePromise(new Response(null, {
+          headers,
+          status: response.statusCode ?? 500,
+        }));
+      },
+    );
+    request.once("error", reject);
+    request.end();
+  });
 }
 
 async function main(): Promise<void> {
-  const manifest = await loadReleaseManifest();
+  const expectedManifestSha256 = hashCandidate(
+    JSON.parse(await readFile(manifestPath, "utf8")) as unknown,
+  );
+  const manifest = await loadReleaseManifest(manifestPath, expectedManifestSha256);
   const port = await reservePort();
   const child = spawn("npx", [
     "wrangler",
@@ -36,6 +141,7 @@ async function main(): Promise<void> {
     "--show-interactive-dev-session=false",
   ], {
     cwd: projectRoot,
+    detached: process.platform !== "win32",
     env: { ...process.env, WRANGLER_LOG_PATH: ".wrangler/wrangler.log" },
     shell: false,
     stdio: ["ignore", "pipe", "pipe"],
@@ -59,10 +165,7 @@ async function main(): Promise<void> {
       await new Promise((resolvePromise) => setTimeout(resolvePromise, 100));
     }
     if (Date.now() >= deadline) throw new Error(`Wrangler Pages local runtime did not become ready within 30 seconds.\n${output}`);
-    const redirect = await fetch(`${origin}/`, {
-      headers: { host: "www.aimarketatlas.net" },
-      redirect: "manual",
-    });
+    const redirect = await requestLocalOriginWithHost(`${origin}/`, "www.aimarketatlas.net");
     if (redirect.status !== 301 || redirect.headers.get("location") !== "https://aimarketatlas.net/") {
       throw new Error(`Pages worker redirect contract failed: HTTP ${redirect.status} ${redirect.headers.get("location") ?? ""}`);
     }
@@ -75,7 +178,7 @@ async function main(): Promise<void> {
     }
     throw error;
   } finally {
-    await stop(child);
+    await stopSpawnedRuntime(child, 3_000, 2_000, process.platform !== "win32");
   }
 }
 

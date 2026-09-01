@@ -127,6 +127,9 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
       assert.match(html, /訂閱週報 \/ Subscribe/);
+      assert.match(html, /aria-describedby="newsletter-consent newsletter-status"/);
+      assert.match(html, /id="newsletter-status"/);
+      assert.match(html, /id="newsletter-consent"/);
       assert.match(html, /type="email"[^>]+disabled/);
       assert.match(html, /<input[^>]*type="checkbox"[^>]*disabled[^>]*name="newsletter-consent"/);
       assert.match(html, /目前尚未開放訂閱|Newsletter signup is not configured/);
@@ -211,6 +214,29 @@ test("server-renders a permanent monthly archive with public sources", async () 
   assert.ok(englishIdentity, "English archive detail must expose a hidden route identity marker");
   assert.equal(englishIdentity[1], "2026-07-25-saturday 2026-07-25T01:00:00.000Z");
   assert.doesNotMatch(englishHtml, /class="edition-run"/);
+});
+
+test("server-renders enabled newsletter controls only for a secure configured endpoint", async () => {
+  const previousEndpoint = process.env.NEWSLETTER_ENDPOINT;
+  process.env.NEWSLETTER_ENDPOINT = "https://subscribe.example.com/join";
+
+  try {
+    const response = await render("/");
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    assert.match(html, /<form[^>]*action="https:\/\/subscribe\.example\.com\/join"[^>]*method="post"/);
+    assert.doesNotMatch(html, /newsletter-form[^>]*action="http:\/\//);
+    assert.match(html, /<input[^>]*id="newsletter-email"[^>]*required/);
+    assert.match(html, /<input(?=[^>]*name="newsletter-consent")(?=[^>]*required)[^>]*>/);
+    assert.doesNotMatch(html, /<input[^>]*id="newsletter-email"[^>]*disabled/);
+    assert.doesNotMatch(html, /<input[^>]*name="newsletter-consent"[^>]*disabled/);
+    assert.doesNotMatch(html, /<button[^>]*type="submit"[^>]*disabled/);
+    assert.match(html, /id="newsletter-consent"/);
+    assert.match(html, /id="newsletter-status"/);
+  } finally {
+    if (previousEndpoint === undefined) delete process.env.NEWSLETTER_ENDPOINT;
+    else process.env.NEWSLETTER_ENDPOINT = previousEndpoint;
+  }
 });
 
 test("server-renders an evidence-bound entity hub with dated briefs and public sources", async () => {

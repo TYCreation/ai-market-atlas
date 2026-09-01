@@ -11,16 +11,23 @@ Run this checklist from the repository root before the final production release 
 - [x] `npm run test` — 21/21 passed.
 - [x] Focused release tests: `node --experimental-strip-types --test tests/market-data/export-pages.test.ts tests/market-data/deployment.test.ts tests/market-data/deploy-pages.test.ts tests/market-data/end-to-end.test.ts` — 100/100 passed.
 - [x] `npm run market:export` — local export passed for the current published fixture (`2026-08-08-saturday`), producing 81 routes and `/rss.xml`, `/news-sitemap.xml`, and `/llms.txt`.
-- [x] `npm run market:release:verify -- --base-url <base-url> --manifest work/pages-candidate/.market-deployment.json` — executable fail-closed endpoint checklist. It invokes `verifyDeployment`, then verifies real 404, unique trailing-slash canonicals/hreflang, exact sitemap lastmods, market-brief noindex and `data.json` identity, dated brief/entity identities, discovery content types, and newsletter mode (`--newsletter=enabled` when configured; disabled is the default).
+- [x] `npm run market:release:verify -- --base-url <base-url> --manifest work/pages-candidate/.market-deployment.json --expected-manifest-sha256 <reviewed-manifest-sha256>` — executable fail-closed endpoint checklist. It loads the manifest only through the trusted deployment-manifest validator, then verifies real 404, unique trailing-slash canonicals/hreflang (including `x-default`), exact sitemap route+`lastmod` parity, market-brief noindex and `data.json` identity, dated brief/entity identities, discovery content types, and newsletter mode (`--newsletter=enabled` when configured; disabled is the default).
 - [ ] `npm run market:pages:rehearse` — BLOCKED in this environment: the real Pages runtime exits before readiness with `No such module "wrangler:modules-watch"` (or Wrangler's generated middleware facade). The command is fail-closed and does not substitute a static server.
 
 The exported manifest must continue to bind route HTML to the run/cutoff/source identity, keep all canonical and alternate URLs trailing-slash normalized, and retain historical sitemap `lastmod` values. The market brief remains a noindex presentation artifact and is excluded from `sitemap.xml`; RSS contains permanent dated briefs, while the news sitemap is limited to the explicit recent-publication window.
+
+For local rehearsal, `npm run market:pages:rehearse` computes a hash from the
+local `work/pages-candidate/.market-deployment.json` only to prove the exact
+artifact under rehearsal. Preview and production must instead pass the reviewed
+manifest SHA-256 recorded at approval time; do not recompute a fresh hash on the
+target environment and treat it as review authorization.
 
 ## Production-only release checkpoint
 
 These checks require release authority and must be completed separately. They were intentionally not run in Task 9:
 
 - [ ] Confirm the reviewed branch and candidate/review hashes at the scheduled runtime checkout.
+- [ ] Record the reviewed manifest SHA-256 from the approved export and pass that exact value to every `market:release:verify` invocation.
 - [ ] Deploy the candidate to its hash-authorized preview branch with the fixed Wrangler argument vector.
 - [ ] Run deployment verification against the real preview URL, including route identities, real 404 behavior, trailing-slash canonicals/hreflang, historical sitemap lastmods, all discovery artifact content types, market-brief `data.json` identity, and newsletter disabled/configured behavior.
 - [ ] Obtain the explicit production release approval, deploy `main`, wait for propagation, and run production verification.

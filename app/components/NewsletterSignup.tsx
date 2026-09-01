@@ -29,7 +29,7 @@ export function NewsletterSignup({ endpoint }: { endpoint?: string }) {
           disabled={!enabled}
           aria-describedby="newsletter-consent newsletter-status"
         />
-        <label className="newsletter-consent">
+        <label id="newsletter-consent" className="newsletter-consent">
           <input
             type="checkbox"
             name="newsletter-consent"
@@ -39,7 +39,7 @@ export function NewsletterSignup({ endpoint }: { endpoint?: string }) {
           />
           <span>我同意接收週報，並了解可隨時取消。 / I agree to receive the brief and can unsubscribe anytime.</span>
         </label>
-        <button type="submit" disabled={!enabled} aria-disabled={!enabled}>
+        <button type="submit" disabled={!enabled} aria-disabled={enabled ? undefined : true}>
           訂閱 / Subscribe
         </button>
         <p id="newsletter-status" className="newsletter-status" role="status">

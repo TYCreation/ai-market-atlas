@@ -193,6 +193,20 @@ canonical `data.json`. It also contains the permanent `/rss.xml`, recent-brief
 binds the candidate, artifact tree, route identities, sources, discovery
 artifacts, and brief payload. Preview and production must use these exact bytes.
 
+Release endpoint verification must also be bound to the reviewed manifest hash:
+
+```bash
+npm run market:release:verify -- \
+  --base-url https://preview.example.workers.dev \
+  --manifest work/pages-candidate/.market-deployment.json \
+  --expected-manifest-sha256 <reviewed-manifest-sha256>
+```
+
+Use the reviewed SHA-256 captured from the approved export/review checkpoint for
+preview and production. The local `npm run market:pages:rehearse` command may
+compute a rehearsal-only hash from the local candidate tree, but that value does
+not replace the reviewed production hash.
+
 ### Promotion, archives, and retention
 
 Promotion is allowed only through the reviewed storage gate. It first archives

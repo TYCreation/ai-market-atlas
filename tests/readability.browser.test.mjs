@@ -92,11 +92,20 @@ async function assertNewsletterAccessibility(page) {
   assert.equal(await email.getAttribute("name"), "email");
   assert.equal(await email.getAttribute("autocomplete"), "email");
   assert.equal(await email.getAttribute("aria-describedby"), "newsletter-consent newsletter-status");
+  for (const id of ["newsletter-consent", "newsletter-status"]) {
+    assert.equal(
+      await newsletter.locator(`#${id}`).count(),
+      1,
+      `newsletter aria-describedby must reference an existing #${id}`,
+    );
+  }
   assert.equal(await newsletter.locator('label[for="newsletter-email"]').count(), 1);
-  assert.equal(await newsletter.locator('input[name="newsletter-consent"]').count(), 1);
+  const consent = newsletter.locator('input[name="newsletter-consent"]');
+  assert.equal(await consent.count(), 1);
+  assert.equal(await consent.evaluate((element) => element.closest("label")?.id ?? null), "newsletter-consent");
   assert.equal(await newsletter.locator('button[type="submit"]').count(), 1);
   assert.equal(await email.isDisabled(), true, "unconfigured newsletter email must be disabled");
-  assert.equal(await newsletter.locator('input[name="newsletter-consent"]').isDisabled(), true);
+  assert.equal(await consent.isDisabled(), true);
   assert.equal(await newsletter.locator('button[type="submit"]').isDisabled(), true);
   assert.match(await newsletter.locator("#newsletter-status").innerText(), /not configured|尚未開放/);
 }
