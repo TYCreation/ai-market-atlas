@@ -6,151 +6,87 @@ export const ENTITY_EVIDENCE_FLOOR = {
   sourceReferences: 2,
 } as const;
 
-const METRIC_NAMESPACE_TOKENS = new Set([
-  "compute",
-  "energy",
-  // Descriptive metric components are not entities by themselves; the same
-  // tokens remain eligible when observed as a source name below.
-  "frontier",
-  "helix",
-  "models",
-  "pulse",
-  "sic",
-  "stocks",
-]);
-
-const ENTITY_STOPWORDS = new Set([
-  "acceptance",
-  "agency",
-  "ai",
-  "announced",
-  "august",
-  "b",
-  "basket",
-  "breadth",
-  "capacity",
-  "carbide",
-  "catalyst",
-  "center",
-  "change",
-  "coding",
-  "co",
-  "commission",
-  "commitment",
-  "committed",
-  "contract",
-  "cost",
-  "count",
-  "critical",
-  "customer",
-  "cyber",
-  "data",
-  "delivers",
-  "demand",
-  "department",
-  "deployment",
-  "developer",
-  "developers",
-  "directional",
-  "economy",
-  "efficiency",
-  "enterprise",
-  "ev",
-  "executive",
-  "factories",
+// Source names are prose-like identifiers.  These tokens describe the
+// document, its period, or the connective grammar around a name; they are not
+// a vocabulary of disallowed entities.  Everything else is eligible evidence.
+const SOURCE_BOILERPLATE_TOKENS = new Set([
+  "a",
+  "an",
+  "and",
+  "announcement",
+  "announcements",
+  "at",
+  "earnings",
+  "filing",
   "filed",
-  "findings",
-  "first",
-  "fiscal",
   "form",
-  "forward",
-  "fourth",
-  "full",
-  "generation",
-  "global",
+  "for",
+  "from",
   "globenewswire",
-  "growth",
-  "guidance",
-  "gw",
-  "how",
-  "infrastructure",
-  "international",
+  "in",
   "investor",
-  "joins",
-  "lead",
-  "liquid",
-  "managed",
-  "market",
-  "median",
-  "milestone",
-  "mm",
-  "model",
-  "monitoring",
-  "networks",
-  "latest",
+  "month",
+  "months",
   "news",
   "newswire",
-  "next",
-  "orders",
-  "overhead",
-  "pacing",
-  "pe",
-  "penetration",
-  "performance",
-  "pool",
-  "ports",
-  "positive",
-  "powering",
+  "of",
+  "on",
+  "or",
+  "press",
   "pr",
-  "pricing",
-  "product",
-  "production",
-  "project",
-  "queue",
-  "relations",
-  "quarter",
   "q1",
   "q2",
   "q3",
   "q4",
-  "report",
+  "quarter",
   "release",
+  "relations",
+  "report",
   "results",
-  "revenue",
-  "s",
-  "second",
-  "securities",
-  "share",
-  "silicon",
-  "stack",
-  "summary",
-  "technical",
-  "technology",
-  "third",
-  "token",
-  "tokens",
-  "u",
+  "the",
+  "to",
+  "update",
   "updates",
-  "usd",
-  "use",
-  "value",
   "via",
-  "watts",
-  "weekly",
+  "week",
   "weeks",
-  "press",
-  "file",
   "year",
   "years",
 ]);
 
-const COMPOUND_ENTITY_HEAD_TOKENS = new Set([
-  "announced",
-  "committed",
-  "managed",
-  "production",
-  "sharon",
+// These tokens are measurement fields only when they occur at the end of a
+// metric field.  They remain valid source-derived names and valid interior
+// metric tokens (for example, "liquid-cooling"), rather than global bans.
+const METRIC_MEASUREMENT_SUFFIXES = new Set([
+  "b",
+  "capacity",
+  "change",
+  "commitment",
+  "count",
+  "demand",
+  "efficiency",
+  "growth",
+  "gw",
+  "mm",
+  "orders",
+  "overhead",
+  "pe",
+  "penetration",
+  "pool",
+  "price",
+  "queue",
+  "return",
+  "revenue",
+  "share",
+  "tokens",
+  "usd",
+  "value",
+  "watts",
+  "weeks",
+  "years",
 ]);
+
+const SOURCE_ID_CHANNEL_SUFFIXES = new Set(["gnw", "prn", "sec"]);
 
 const ENTITY_ALIAS_NORMALIZATION = new Map<string, string>([
   ["advanced-micro-devices", "amd"],
@@ -160,6 +96,7 @@ const ENTITY_ALIAS_NORMALIZATION = new Map<string, string>([
   ["stm", "stmicroelectronics"],
   ["tsm", "tsmc"],
   ["vrt", "vertiv"],
+  ["vertiv-holdings-co", "vertiv"],
 ]);
 
 const ENTITY_LABEL_OVERRIDES: Record<string, { en: string; zh: string }> = {
@@ -198,8 +135,7 @@ type EntityCandidateChannel =
   | "metric-token"
   | "metric-compound"
   | "source-id"
-  | "source-publisher"
-  | "source-title";
+  | "source-publisher";
 
 export type EntityEvidenceMetric = {
   date: string;
@@ -258,6 +194,10 @@ function isNumericBoilerplateToken(token: string): boolean {
   return /^\d/.test(token) || /^fy\d+$/.test(token);
 }
 
+function isSourceBoilerplateToken(token: string): boolean {
+  return isNumericBoilerplateToken(token) || SOURCE_BOILERPLATE_TOKENS.has(token) || /^fy$/.test(token);
+}
+
 function tokenizeEntityText(value: string): string[] {
   return value
     .normalize("NFKC")
@@ -269,20 +209,12 @@ function tokenizeEntityText(value: string): string[] {
     .filter(Boolean);
 }
 
-function normalizeCandidateTokens(
-  tokens: string[],
-  options: { allowCompoundStopwords?: boolean } = {},
-): string | undefined {
+function normalizeCandidateTokens(tokens: string[]): string | undefined {
   if (tokens.length === 0 || new Set(tokens).size !== tokens.length) return undefined;
+  if (tokens.some(isNumericBoilerplateToken)) return undefined;
   const phrase = tokens.join("-");
   const alias = ENTITY_ALIAS_NORMALIZATION.get(phrase);
   if (alias !== undefined) return alias;
-  if (!options.allowCompoundStopwords && tokens.every((token) => ENTITY_STOPWORDS.has(token) || isNumericBoilerplateToken(token))) {
-    return undefined;
-  }
-  if (!options.allowCompoundStopwords && tokens.some((token) => ENTITY_STOPWORDS.has(token) || isNumericBoilerplateToken(token))) {
-    return undefined;
-  }
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(phrase)) return undefined;
   return phrase;
 }
@@ -291,20 +223,27 @@ function formatTitleCase(value: string): string {
   return value.replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 }
 
-function metricEntityCandidates(metricId: string): string[] {
-  const tokens = metricId
-    .split(/[._]/)
+function metricFieldTokens(metricId: string): string[] {
+  const [, ...fieldSegments] = metricId.split(".");
+  const tokens = fieldSegments
+    .flatMap((segment) => segment.split("_"))
     .filter(Boolean)
-    .filter((token) => !METRIC_NAMESPACE_TOKENS.has(token));
+    .filter((token) => !isNumericBoilerplateToken(token) && !/^q[1-4]$/.test(token));
+  while (tokens.length > 0 && METRIC_MEASUREMENT_SUFFIXES.has(tokens[tokens.length - 1])) {
+    tokens.pop();
+  }
+  return tokens;
+}
+
+function metricEntityCandidates(metricId: string): Array<{ slug: string; channel: Extract<EntityCandidateChannel, "metric-token" | "metric-compound"> }> {
+  const tokens = metricFieldTokens(metricId);
   const candidates = new Map<string, Extract<EntityCandidateChannel, "metric-token" | "metric-compound">>();
   for (const token of tokens) {
     const slug = normalizeCandidateTokens([token]);
     if (slug !== undefined && !candidates.has(slug)) candidates.set(slug, "metric-token");
   }
-  for (let index = 0; index < tokens.length - 1; index += 1) {
-    const head = tokens[index];
-    if (!COMPOUND_ENTITY_HEAD_TOKENS.has(head)) continue;
-    const slug = normalizeCandidateTokens([head, tokens[index + 1]], { allowCompoundStopwords: true });
+  if (tokens.length > 1) {
+    const slug = normalizeCandidateTokens(tokens);
     if (slug !== undefined) candidates.set(slug, "metric-compound");
   }
   return [...candidates.entries()]
@@ -314,38 +253,23 @@ function metricEntityCandidates(metricId: string): string[] {
 
 function sourceLeadingCandidate(
   rawValue: string,
-  channel: Exclude<EntityCandidateChannel, "metric-token" | "metric-compound">,
+  channel: Extract<EntityCandidateChannel, "source-id" | "source-publisher">,
 ): { slug: string; channel: typeof channel; observedName?: string } | undefined {
-  const tokens = tokenizeEntityText(rawValue);
-  const leading: string[] = [];
-  for (const token of tokens) {
-    if (isNumericBoilerplateToken(token) || ENTITY_STOPWORDS.has(token)) break;
-    leading.push(token);
-    if (leading.length === 3) break;
+  const tokens = tokenizeEntityText(rawValue).filter((token) => !isSourceBoilerplateToken(token));
+  if (channel === "source-id" && SOURCE_ID_CHANNEL_SUFFIXES.has(tokens[tokens.length - 1] ?? "")) {
+    tokens.pop();
   }
-  for (let length = Math.min(3, leading.length); length >= 1; length -= 1) {
-    const slug = normalizeCandidateTokens(leading.slice(0, length));
-    if (slug === undefined) continue;
-    const observedName = rawValue
-      .normalize("NFKC")
-      .trim()
-      .split(/[^0-9A-Za-z]+/)
-      .filter(Boolean)
-      .slice(0, length)
-      .join(" ");
-    return { slug, channel, observedName: observedName || undefined };
-  }
-  return undefined;
+  const slug = normalizeCandidateTokens(tokens);
+  return slug === undefined ? undefined : { slug, channel, observedName: rawValue.trim() || undefined };
 }
 
 function sourceEntityCandidates(
   sourceId: string,
   source: SourceRecord,
-): Array<{ slug: string; channel: Exclude<EntityCandidateChannel, "metric-token" | "metric-compound">; observedName?: string }> {
+): Array<{ slug: string; channel: Extract<EntityCandidateChannel, "source-id" | "source-publisher">; observedName?: string }> {
   return [
     sourceLeadingCandidate(sourceId, "source-id"),
     sourceLeadingCandidate(source.publisher, "source-publisher"),
-    sourceLeadingCandidate(source.title, "source-title"),
   ].filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== undefined);
 }
 
@@ -423,7 +347,7 @@ function keepEligible(record: CandidateAccumulator): boolean {
   ) return false;
   const hasMetricEvidence = record.channels.has("metric-token") || record.channels.has("metric-compound");
   if (hasMetricEvidence) return true;
-  return record.channels.has("source-publisher") && (record.channels.has("source-id") || record.channels.has("source-title"));
+  return record.channels.has("source-id") || record.channels.has("source-publisher");
 }
 
 function sourceLookup(briefs: PublishedBrief[]): Map<string, SourceRecord> {
@@ -439,10 +363,7 @@ function sourceLookup(briefs: PublishedBrief[]): Map<string, SourceRecord> {
 export function normalizeEntitySlug(value: string): string | undefined {
   if (value.includes("/")) return undefined;
   const tokens = tokenizeEntityText(value);
-  const compoundSlug = normalizeCandidateTokens(tokens, {
-    allowCompoundStopwords: COMPOUND_ENTITY_HEAD_TOKENS.has(tokens[0] ?? ""),
-  });
-  if (compoundSlug !== undefined) return compoundSlug;
+  if (tokens.some(isSourceBoilerplateToken)) return undefined;
   return normalizeCandidateTokens(tokens);
 }
 

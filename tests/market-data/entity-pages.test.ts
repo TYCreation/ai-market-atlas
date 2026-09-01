@@ -15,34 +15,94 @@ import {
 const projectRoot = new URL("../..", import.meta.url).pathname;
 const EXPECTED_ELIGIBLE_ENTITY_SLUGS = [
   "accelerator",
+  "accelerator-market",
   "agents",
+  "ai",
+  "ai-market-atlas",
   "amd",
+  "amd-data-center",
+  "announced",
   "announced-power",
   "api",
+  "api-deployment",
+  "atlas-model",
+  "basket",
+  "breadth",
   "broadcom",
+  "catalyst",
+  "center",
   "cisco",
+  "cisco-ai-infrastructure",
+  "committed",
   "committed-power",
+  "contract",
   "cooling",
+  "cost",
+  "data",
+  "deployment",
+  "doe-data-centers",
+  "enterprise",
+  "enterprise-agents",
+  "ev",
+  "forward",
+  "frontier",
+  "gemini-pricing",
+  "google-ai-developers",
   "hbm",
+  "helix",
+  "iea-data-centres",
+  "iea-energy-ai",
   "inference",
+  "inference-cost",
   "infineon",
+  "infrastructure",
+  "infrastructure-spend",
   "interconnection",
-  "managed-tokens",
+  "international-energy-agency",
+  "lead",
+  "liquid",
+  "liquid-cooling",
+  "managed",
+  "market",
+  "median",
+  "median-forward",
+  "monitoring",
   "nvidia",
   "onsemi",
+  "onsemi-ai",
   "openai",
+  "openai-cyber-pacing",
+  "openai-monitoring",
+  "openai-ports",
+  "openai-ports-pike",
+  "openai-pricing",
   "packaging",
+  "packaging-lead",
+  "ports",
+  "positive",
+  "positive-breadth",
   "power",
+  "production",
   "production-agents",
   "sharon-ai",
+  "sharon-ai-contract",
+  "sharon-ai-deployment-acceptance",
   "software",
+  "software-spend",
   "spend",
+  "stanford-economy",
+  "stanford-hai",
   "stmicroelectronics",
   "tsmc",
+  "u-s-department-energy-lbnl",
+  "u-s-securities-exchange-commission",
   "vertiv",
   "vistra",
+  "vistra-helix",
   "wafer",
+  "wafer-frontier",
   "wolfspeed",
+  "wolfspeed-ai",
 ] as const;
 
 async function retainedBriefs() {
@@ -83,9 +143,12 @@ function syntheticPageState(metricIds: string[]): PageState {
   };
 }
 
-function syntheticObservedEntityBrief(date: string, observedName = "Gemini"): PublishedBrief {
+function syntheticObservedEntityBrief(
+  date: string,
+  observedName = "Gemini",
+  metricId = "models.managed_tokens",
+): PublishedBrief {
   const dataCutoff = `${date}T01:00:00.000Z`;
-  const metricId = "models.managed_tokens";
   const sourceSlug = observedName
     .trim()
     .toLowerCase()
@@ -206,19 +269,52 @@ test("source-derived observed entities are not suppressed by name when evidence 
   assert.equal(gemini.sourceReferenceCount, 2);
 });
 
-test("entity-like observed tokens qualify while generic boilerplate and date tokens stay rejected", () => {
+test("source identifiers and publishers retain observed domain names while stripping only document and date boilerplate", () => {
   const qualifyingCases = [
+    ["AI", "ai"],
+    ["Agency", "agency"],
+    ["Carbide", "carbide"],
+    ["Catalyst", "catalyst"],
+    ["Center", "center"],
+    ["Commission", "commission"],
+    ["Cyber", "cyber"],
+    ["Enterprise", "enterprise"],
+    ["EV", "ev"],
     ["Frontier", "frontier"],
     ["Helix", "helix"],
+    ["Infrastructure", "infrastructure"],
     ["LBNL", "lbnl"],
+    ["Lead", "lead"],
+    ["Liquid", "liquid"],
+    ["Market", "market"],
+    ["Networks", "networks"],
     ["Pike", "pike"],
+    ["Product", "product"],
+    ["Project", "project"],
+    ["Silicon", "silicon"],
+    ["Stack", "stack"],
+    ["Technology", "technology"],
   ] as const;
   const rejectedCases = [
     "2026",
+    "Announcement",
+    "and",
+    "Earnings",
+    "FY2026",
+    "Investor",
+    "Month",
+    "News",
+    "Press",
+    "Release",
     "Results",
     "Report",
     "Q2",
     "Filed",
+    "Relations",
+    "The",
+    "Update",
+    "Week",
+    "Year",
   ] as const;
 
   for (const [observedName, expectedSlug] of qualifyingCases) {
@@ -245,6 +341,22 @@ test("entity-like observed tokens qualify while generic boilerplate and date tok
       `${observedName} should stay rejected as generic boilerplate/date text`,
     );
   }
+});
+
+test("metric fields retain domain tokens but remove measurement suffixes by position", () => {
+  const entities = discoverEligibleEntityRecords([
+    syntheticObservedEntityBrief("2026-08-26", "Observed Publisher", "compute.ai_agency_capacity_gw"),
+    syntheticObservedEntityBrief("2026-08-22", "Observed Publisher", "compute.ai_agency_capacity_gw"),
+  ]);
+
+  for (const expectedSlug of ["ai", "agency", "ai-agency"] as const) {
+    assert.ok(
+      entities.some((entity) => entity.slug === expectedSlug),
+      `${expectedSlug} should be discovered from the metric field`,
+    );
+  }
+  assert.equal(entities.some((entity) => entity.slug === "capacity"), false);
+  assert.equal(entities.some((entity) => entity.slug === "gw"), false);
 });
 
 test("entity hubs only link dated briefs and pillars with report metric references", async () => {
