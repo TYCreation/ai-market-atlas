@@ -83,9 +83,14 @@ function syntheticPageState(metricIds: string[]): PageState {
   };
 }
 
-function syntheticPublishedBrief(date: string): PublishedBrief {
+function syntheticObservedEntityBrief(date: string, observedName = "Gemini"): PublishedBrief {
   const dataCutoff = `${date}T01:00:00.000Z`;
   const metricId = "models.managed_tokens";
+  const sourceSlug = observedName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   const emptyMetricIds: string[] = [];
   const emptyPage = syntheticPageState(emptyMetricIds);
   const modelPage = syntheticPageState([metricId]);
@@ -105,16 +110,16 @@ function syntheticPublishedBrief(date: string): PublishedBrief {
     dataCutoff,
     pages,
     sources: {
-      "gemini-pricing": {
-        id: "gemini-pricing",
+      [`${sourceSlug}-pricing`]: {
+        id: `${sourceSlug}-pricing`,
         kind: "pricing",
-        publisher: "Gemini",
-        title: "Gemini pricing",
+        publisher: observedName,
+        title: `${observedName} pricing`,
         publishedAt: dataCutoff,
         retrievedAt: dataCutoff,
         scope: {
-          en: "Synthetic Gemini pricing source",
-          zh: "Synthetic Gemini pricing source",
+          en: `Synthetic ${observedName} pricing source`,
+          zh: `Synthetic ${observedName} pricing source`,
         },
       },
     },
@@ -128,8 +133,8 @@ function syntheticPublishedBrief(date: string): PublishedBrief {
         display: { en: "1", zh: "1" },
         unit: "count",
         asOf: dataCutoff,
-        sourceIds: ["gemini-pricing"],
-        observations: [{ sourceId: "gemini-pricing", numericValue: 1, asOf: dataCutoff }],
+        sourceIds: [`${sourceSlug}-pricing`],
+        observations: [{ sourceId: `${sourceSlug}-pricing`, numericValue: 1, asOf: dataCutoff }],
         confidence: "high",
         status: "verified",
       },
@@ -141,6 +146,10 @@ function syntheticPublishedBrief(date: string): PublishedBrief {
     snapshot,
     review: {} as PublishedBrief["review"],
   };
+}
+
+function syntheticPublishedBrief(date: string): PublishedBrief {
+  return syntheticObservedEntityBrief(date, "Gemini");
 }
 
 test("discovers the current retained eligible entity corpus from report evidence instead of a curated allowlist", async () => {
@@ -195,6 +204,47 @@ test("source-derived observed entities are not suppressed by name when evidence 
   assert.ok(gemini);
   assert.equal(gemini.briefs.length, 2);
   assert.equal(gemini.sourceReferenceCount, 2);
+});
+
+test("entity-like observed tokens qualify while generic boilerplate and date tokens stay rejected", () => {
+  const qualifyingCases = [
+    ["Frontier", "frontier"],
+    ["Helix", "helix"],
+    ["LBNL", "lbnl"],
+    ["Pike", "pike"],
+  ] as const;
+  const rejectedCases = [
+    "2026",
+    "Results",
+    "Report",
+    "Q2",
+    "Filed",
+  ] as const;
+
+  for (const [observedName, expectedSlug] of qualifyingCases) {
+    const entities = discoverEligibleEntityRecords([
+      syntheticObservedEntityBrief("2026-08-26", observedName),
+      syntheticObservedEntityBrief("2026-08-22", observedName),
+    ]);
+
+    const entity = entities.find((candidate) => candidate.slug === expectedSlug);
+    assert.ok(entity, `${observedName} should qualify once the evidence floor is met`);
+    assert.equal(entity.briefs.length, 2);
+    assert.equal(entity.sourceReferenceCount, 2);
+  }
+
+  for (const observedName of rejectedCases) {
+    const entities = discoverEligibleEntityRecords([
+      syntheticObservedEntityBrief("2026-08-26", observedName),
+      syntheticObservedEntityBrief("2026-08-22", observedName),
+    ]);
+
+    assert.equal(
+      entities.some((entity) => entity.slug === observedName.trim().toLowerCase()),
+      false,
+      `${observedName} should stay rejected as generic boilerplate/date text`,
+    );
+  }
 });
 
 test("entity hubs only link dated briefs and pillars with report metric references", async () => {
