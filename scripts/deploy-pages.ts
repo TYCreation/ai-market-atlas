@@ -682,25 +682,17 @@ export async function readDeploymentManifest(
     typeof (value as { routeIdentities?: unknown }).routeIdentities !==
       "object" ||
     Array.isArray((value as { routeIdentities?: unknown }).routeIdentities) ||
-    ("artifacts" in (value as Record<string, unknown>) &&
-      (!Array.isArray((value as { artifacts?: unknown }).artifacts) ||
-        !(value as { artifacts: unknown[] }).artifacts.every(
-          (artifact) =>
-            typeof artifact === "string" &&
-            DISCOVERY_ARTIFACTS.includes(
-              artifact as (typeof DISCOVERY_ARTIFACTS)[number],
-            ),
-        )))
+    !Array.isArray((value as { artifacts?: unknown }).artifacts) ||
+    (value as { artifacts: unknown[] }).artifacts.length !== DISCOVERY_ARTIFACTS.length ||
+    (value as { artifacts: unknown[] }).artifacts.length !==
+      new Set((value as { artifacts: unknown[] }).artifacts).size ||
+    JSON.stringify(
+      [...(value as { artifacts: string[] }).artifacts].sort(),
+    ) !== JSON.stringify([...DISCOVERY_ARTIFACTS].sort())
   ) {
     throw new Error("deployment manifest is invalid");
   }
   const manifest = value as DeploymentManifest;
-  if (
-    manifest.artifacts &&
-    JSON.stringify(manifest.artifacts) !== JSON.stringify([...DISCOVERY_ARTIFACTS])
-  ) {
-    throw new Error("deployment manifest discovery artifacts do not match");
-  }
   if (
     expected.expectedCandidateSha256 !== undefined &&
     manifest.candidateSha256 !== expected.expectedCandidateSha256

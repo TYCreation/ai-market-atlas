@@ -11,8 +11,25 @@ export const DISCOVERY_ARTIFACT_CONTENT_TYPES: Record<DiscoveryArtifact, string>
 export const NEWS_WINDOW_MS = 48 * 60 * 60 * 1_000;
 export const SITE_ORIGIN = "https://aimarketatlas.net";
 
-function escapeXml(value: string): string {
-  return value
+/** Remove code points forbidden by XML 1.0 while preserving tab, LF, CR, and valid Unicode. */
+export function sanitizeXmlText(value: string): string {
+  return Array.from(value)
+    .filter((character) => {
+      const codePoint = character.codePointAt(0) ?? 0;
+      return (
+        codePoint === 0x09 ||
+        codePoint === 0x0a ||
+        codePoint === 0x0d ||
+        (codePoint >= 0x20 && codePoint <= 0xd7ff) ||
+        (codePoint >= 0xe000 && codePoint <= 0xfffd) ||
+        (codePoint >= 0x10000 && codePoint <= 0x10ffff)
+      );
+    })
+    .join("");
+}
+
+export function escapeXml(value: string): string {
+  return sanitizeXmlText(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")

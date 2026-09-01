@@ -58,7 +58,7 @@ export type VerificationExpectation = {
   sourceIds: string[];
   archiveSourceIds: Record<string, string[]>;
   routeIdentities: Record<string, RouteVerificationIdentity>;
-  artifacts?: string[];
+  artifacts: string[];
 };
 
 export type RouteVerificationIdentity =
@@ -229,6 +229,15 @@ function assertSafeRoutes(routes: string[]): void {
 function assertVerificationExpectation(
   expectation: VerificationExpectation,
 ): void {
+  if (
+    !Array.isArray(expectation.artifacts) ||
+    expectation.artifacts.length !== DISCOVERY_ARTIFACTS.length ||
+    expectation.artifacts.length !== new Set(expectation.artifacts).size ||
+    JSON.stringify([...expectation.artifacts].sort()) !==
+      JSON.stringify([...DISCOVERY_ARTIFACTS].sort())
+  ) {
+    throw new Error("deployment discovery artifacts are invalid");
+  }
   if (
     expectation.archiveSourceIds === null ||
     typeof expectation.archiveSourceIds !== "object" ||
@@ -572,19 +581,7 @@ export async function verifyDeployment(
     }
   }
 
-  const artifacts = expectation.artifacts ?? [];
-  if (
-    artifacts.length !== new Set(artifacts).size ||
-    artifacts.some(
-      (artifact) =>
-        !DISCOVERY_ARTIFACTS.includes(
-          artifact as (typeof DISCOVERY_ARTIFACTS)[number],
-        ),
-    )
-  ) {
-    throw new Error("deployment discovery artifacts are invalid");
-  }
-  for (const artifact of artifacts) {
+  for (const artifact of expectation.artifacts) {
     const response = await fetchVerifiedResponse(
       new URL(artifact, base),
       artifact,

@@ -6,6 +6,7 @@ import {
   publishWithRestore,
   verifyDeployment,
 } from "../../market-data/deployment.ts";
+import { DISCOVERY_ARTIFACTS } from "../../market-data/discovery-feeds.ts";
 import {
   buildMarketBrief,
   marketBriefPayloadSha256,
@@ -570,6 +571,7 @@ const verificationExpectation = {
   archiveMonths: ["2026-07"],
   sourceIds: ["atlas-model"],
   archiveSourceIds: { "2026-07": ["atlas-model"] },
+  artifacts: [...DISCOVERY_ARTIFACTS],
   routeIdentities: {
     "/": {
       kind: "current" as const,
@@ -596,6 +598,21 @@ const verificationExpectation = {
 };
 
 const verificationBrief = buildMarketBrief(candidateSnapshot as MarketSnapshot);
+
+function discoveryArtifactResponse(path: string): Response | undefined {
+  const contentTypes: Record<string, string> = {
+    "/rss.xml": "application/rss+xml; charset=utf-8",
+    "/news-sitemap.xml": "application/xml; charset=utf-8",
+    "/llms.txt": "text/plain; charset=utf-8",
+  };
+  const contentType = contentTypes[path];
+  return contentType
+    ? new Response("artifact", {
+        status: 200,
+        headers: { "content-type": contentType },
+      })
+    : undefined;
+}
 
 function marketBriefHtml(payload = verificationBrief) {
   return `AI MARKET ATLAS <script id="embedded-market-brief" type="application/json">${JSON.stringify(
@@ -624,13 +641,21 @@ test("market brief verification fetches both HTML and canonical data.json", asyn
     async (input) => {
       const path = new URL(input.toString()).pathname;
       paths.push(path);
+      const artifact = discoveryArtifactResponse(path);
+      if (artifact) return artifact;
       return path.endsWith("/data.json")
         ? Response.json(payload)
         : new Response(marketBriefHtml(), { status: 200 });
     },
   );
 
-  assert.deepEqual(paths, ["/market-brief/", "/market-brief/data.json"]);
+  assert.deepEqual(paths, [
+    "/market-brief/",
+    "/market-brief/data.json",
+    "/rss.xml",
+    "/news-sitemap.xml",
+    "/llms.txt",
+  ]);
 });
 
 test("deployment verification checks discovery artifacts and their content types", async () => {
@@ -655,6 +680,21 @@ test("deployment verification checks discovery artifacts and their content types
   assert.deepEqual(paths, ["/", "/rss.xml", "/news-sitemap.xml", "/llms.txt"]);
 });
 
+test("deployment verification rejects missing, duplicate, or unknown discovery artifacts before fetching", async () => {
+  for (const artifacts of [undefined, ["/rss.xml", "/rss.xml", "/news-sitemap.xml"], ["/rss.xml", "/news-sitemap.xml", "/unknown.txt"]]) {
+    let calls = 0;
+    const expectation = { ...verificationExpectation, artifacts };
+    await assert.rejects(
+      () => verifyDeployment("https://preview.pages.dev", ["/"], expectation as never, async () => {
+        calls += 1;
+        return new Response("unexpected", { status: 500 });
+      }),
+      /discovery artifacts/i,
+    );
+    assert.equal(calls, 0);
+  }
+});
+
 test("deployment verification binds a dated brief route to its retained snapshot identity", async () => {
   const expectation = {
     ...verificationExpectation,
@@ -674,10 +714,12 @@ test("deployment verification binds a dated brief route to its retained snapshot
     "https://preview.pages.dev",
     ["/brief/2026-08-01/"],
     expectation,
-    async () => new Response(
-      '2026-08-01 2026-08-01-saturday 2026-08-01T01:00:00.000Z <article id="source-atlas-model"></article>',
-      { status: 200 },
-    ),
+    async (input) =>
+      discoveryArtifactResponse(new URL(input.toString()).pathname) ??
+      new Response(
+        '2026-08-01 2026-08-01-saturday 2026-08-01T01:00:00.000Z <article id="source-atlas-model"></article>',
+        { status: 200 },
+      ),
   );
 });
 
@@ -699,7 +741,8 @@ test("deployment verification binds an entity route to its retained source ident
     "https://preview.pages.dev",
     ["/entity/amd/"],
     expectation,
-    async () =>
+    async (input) =>
+      discoveryArtifactResponse(new URL(input.toString()).pathname) ??
       new Response(
         'https://aimarketatlas.net/entity/amd/ 2026-08-26T01:00:00.000Z <article id="source-amd-q2-2026"></article><article id="source-tsmc-july-2026"></article>',
         { status: 200 },
@@ -773,6 +816,13 @@ test("verification follows redirects and checks route-specific publication marke
   const requests: string[] = [];
   const server = createServer((request, response) => {
     requests.push(request.url ?? "");
+    const artifact = discoveryArtifactResponse(request.url ?? "");
+    if (artifact) {
+      response.statusCode = 200;
+      response.setHeader("content-type", artifact.headers.get("content-type") ?? "");
+      response.end("artifact");
+      return;
+    }
     if (request.url === "/") {
       response.statusCode = 302;
       response.setHeader("location", "/landing");
@@ -832,7 +882,10 @@ test("verification retries only temporary network failures at most twice", async
     "https://preview.pages.dev",
     ["/"],
     verificationExpectation,
-    async () => {
+    async (input) => {
+      const path = new URL(input.toString()).pathname;
+      const artifact = discoveryArtifactResponse(path);
+      if (artifact) return artifact;
       attempts += 1;
       if (attempts < 3) throw new TypeError("temporary connection reset");
       return new Response(

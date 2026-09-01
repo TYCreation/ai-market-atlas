@@ -36,6 +36,18 @@ test("RSS lists every permanent dated brief with canonical trailing URLs", () =>
   assert.equal((xml.match(/<item>/g) ?? []).length, 2);
 });
 
+test("XML output removes XML 1.0-forbidden controls from RSS and news titles", () => {
+  const briefWithControl = brief("2026-08-26");
+  briefWithControl.snapshot.pages["/"].report.title.en = "Weekly\u0001 <AI> brief";
+  briefWithControl.snapshot.pages["/"].report.title.zh = "每週\u0001 AI 快報";
+  const rss = buildRssXml([briefWithControl]);
+  const news = buildNewsSitemapXml([briefWithControl], "2026-08-26T12:00:00.000Z");
+  assert.doesNotMatch(rss, /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/);
+  assert.doesNotMatch(news, /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/);
+  assert.match(rss, /Weekly &lt;AI&gt; brief/);
+  assert.match(news, /每週 AI 快報/);
+});
+
 test("news sitemap is a deterministic 48-hour window around an explicit reference time", () => {
   const briefs = [brief("2026-08-26"), brief("2026-08-25"), brief("2026-08-23")];
   assert.deepEqual(

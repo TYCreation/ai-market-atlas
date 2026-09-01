@@ -35,6 +35,7 @@ import {
   hashArtifactTree,
 } from "../../market-data/artifact-tree.ts";
 import { hashCandidate } from "../../market-data/review.ts";
+import { DISCOVERY_ARTIFACTS } from "../../market-data/discovery-feeds.ts";
 import { makeFixtureWorkspace } from "./helpers.ts";
 
 async function writeLastGoodFixture(
@@ -55,6 +56,7 @@ async function writeLastGoodFixture(
     archiveSourceIds: {},
     candidateSha256,
     artifactTreeSha256,
+    artifacts: [...DISCOVERY_ARTIFACTS],
     routeIdentities: {},
   };
   await writeFile(
@@ -161,6 +163,7 @@ test("replaces last-good atomically and rejects symlinked candidate content", as
     archiveSourceIds: {},
     candidateSha256: "a".repeat(64),
     artifactTreeSha256: candidateDigest,
+    artifacts: [...DISCOVERY_ARTIFACTS],
     routeIdentities: {},
   };
   const manifestDigest = hashCandidate(manifest);
@@ -223,6 +226,7 @@ test("manifest loading rejects candidate identity and artifact-tree tampering", 
     archiveSourceIds: {},
     candidateSha256,
     artifactTreeSha256,
+    artifacts: [...DISCOVERY_ARTIFACTS],
     routeIdentities: {
       "/": {
         kind: "current",
@@ -242,6 +246,29 @@ test("manifest loading rejects candidate identity and artifact-tree tampering", 
     expectedArtifactTreeSha256: artifactTreeSha256,
     expectedManifestSha256: hashCandidate(manifest),
   });
+
+  for (const artifacts of [
+    undefined,
+    ["/rss.xml", "/rss.xml", "/news-sitemap.xml"],
+    [...DISCOVERY_ARTIFACTS, "/unknown.txt"],
+  ]) {
+    const invalidManifest = { ...manifest } as Record<string, unknown>;
+    if (artifacts === undefined) delete invalidManifest.artifacts;
+    else invalidManifest.artifacts = artifacts;
+    await writeFile(
+      join(directory, ARTIFACT_MANIFEST_NAME),
+      `${JSON.stringify(invalidManifest)}\n`,
+    );
+    await assert.rejects(
+      () => readDeploymentManifest(directory),
+      /manifest|discovery artifact/i,
+    );
+  }
+
+  await writeFile(
+    join(directory, ARTIFACT_MANIFEST_NAME),
+    `${JSON.stringify(manifest)}\n`,
+  );
 
   await writeFile(
     join(directory, ARTIFACT_MANIFEST_NAME),
@@ -315,6 +342,7 @@ test("publication-state revalidation binds candidate, review, manifest, and live
     archiveSourceIds: {},
     candidateSha256,
     artifactTreeSha256,
+    artifacts: [...DISCOVERY_ARTIFACTS],
     routeIdentities: {},
   };
   await writeFile(
@@ -611,6 +639,7 @@ test("initial verified last-good seed creates its independent anchor", async () 
           candidateSha256: expectedAnchor.candidateSha256,
           artifactTreeSha256: expectedAnchor.artifactTreeSha256,
           manifestSha256: expectedAnchor.manifestSha256,
+          artifacts: [...DISCOVERY_ARTIFACTS],
           routeIdentities: {},
         };
       }
@@ -625,6 +654,7 @@ test("initial verified last-good seed creates its independent anchor", async () 
         candidateSha256: "b".repeat(64),
         artifactTreeSha256: "c".repeat(64),
         manifestSha256: "d".repeat(64),
+        artifacts: [...DISCOVERY_ARTIFACTS],
         routeIdentities: {},
       };
     },
@@ -766,6 +796,7 @@ test("orchestration acquires its publication lock before the first export and re
         candidateSha256: seeded?.candidateSha256 ?? "a".repeat(64),
         artifactTreeSha256: seeded?.artifactTreeSha256 ?? "b".repeat(64),
         manifestSha256: seeded?.manifestSha256 ?? "c".repeat(64),
+        artifacts: [...DISCOVERY_ARTIFACTS],
         routeIdentities: {},
       };
     },
@@ -908,6 +939,7 @@ test("orchestration binds the authorized candidate hash to candidate export", as
         candidateSha256: seeded?.candidateSha256 ?? review.candidateSha256,
         artifactTreeSha256: seeded?.artifactTreeSha256 ?? "b".repeat(64),
         manifestSha256: seeded?.manifestSha256 ?? "c".repeat(64),
+        artifacts: [...DISCOVERY_ARTIFACTS],
         routeIdentities: {},
       };
     },
