@@ -4,6 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import test from "node:test";
 import {
   publishWithRestore,
+  redeployCurrentWithRestore,
   verifyDeployment,
 } from "../../market-data/deployment.ts";
 import { DISCOVERY_ARTIFACTS } from "../../market-data/discovery-feeds.ts";
@@ -37,6 +38,106 @@ async function authorizedOptions() {
     expectedManifestSha256: "d".repeat(64),
   };
 }
+
+async function authorizedCurrentRedeployOptions() {
+  const paths = await makeFixtureWorkspace();
+  const current = JSON.parse(await readFile(paths.currentPath, "utf8"));
+  const reviewPath = `${paths.root}/reviews/${current.runId}.json`;
+  await writePublishableReview(paths.currentPath, reviewPath);
+  return {
+    runId: current.runId,
+    currentPath: paths.currentPath,
+    reviewPath,
+    candidateDirectory: "work/pages-candidate",
+    lastGoodDirectory: "work/pages-last-good",
+    productionBaseUrl: "https://aimarketatlas.net",
+    routes: publishOptions.routes,
+    expectedCandidateSha256: (await import("../../market-data/review.ts")).hashCandidate(current),
+    expectedArtifactTreeSha256: "c".repeat(64),
+    expectedManifestSha256: "d".repeat(64),
+  };
+}
+
+test("current-only redeployment never promotes or restores market storage", async () => {
+  const options = await authorizedCurrentRedeployOptions();
+  const deps = fakeDependencies({ verificationResults: [undefined, undefined] });
+  const result = await redeployCurrentWithRestore(deps, options);
+
+  assert.deepEqual(result, {
+    published: true,
+    promoted: false,
+    runId: options.runId,
+  });
+  assert.equal(deps.promoteCount, 0);
+  assert.equal(deps.snapshotRestored, false);
+  assert.deepEqual(deps.actions, [
+    `deploy:market-update-${options.runId.slice(0, 10)}-sat:work/pages-candidate`,
+    `verify:https://market-update-${options.runId.slice(0, 10)}-sat.ai-market-atlas.pages.dev`,
+    "deploy:main:work/pages-candidate",
+    "verify:https://aimarketatlas.net",
+    "copy:work/pages-candidate:work/pages-last-good",
+  ]);
+});
+
+test("current-only redeployment rejects tampered current or review before external deployment", async (t) => {
+  for (const mutation of ["current", "review"] as const) {
+    await t.test(mutation, async () => {
+      const options = await authorizedCurrentRedeployOptions();
+      if (mutation === "current") {
+        const current = JSON.parse(await readFile(options.currentPath, "utf8"));
+        current.pages["/"].report.title.en = "tampered after review";
+        await writeFile(options.currentPath, `${JSON.stringify(current)}\n`);
+      } else {
+        const review = JSON.parse(await readFile(options.reviewPath, "utf8"));
+        review.decision = "manual_review";
+        await writeFile(options.reviewPath, `${JSON.stringify(review)}\n`);
+      }
+      const deps = fakeDependencies();
+      await assert.rejects(
+        () => redeployCurrentWithRestore(deps, options),
+        /hash does not match|auto_publish|manual_review/i,
+      );
+      assert.deepEqual(deps.actions, []);
+      assert.equal(deps.promoteCount, 0);
+      assert.equal(deps.snapshotRestored, false);
+    });
+  }
+});
+
+test("current-only redeployment keeps production untouched after preview failure", async () => {
+  const options = await authorizedCurrentRedeployOptions();
+  const deps = fakeDependencies({ verificationResults: [new Error("preview mismatch")] });
+
+  await assert.rejects(() => redeployCurrentWithRestore(deps, options), /preview mismatch/i);
+  assert.deepEqual(deps.deployments, [
+    {
+      directory: "work/pages-candidate",
+      branch: `market-update-${options.runId.slice(0, 10)}-sat`,
+    },
+  ]);
+  assert.equal(deps.promoteCount, 0);
+  assert.equal(deps.snapshotRestored, false);
+});
+
+test("current-only redeployment restores only the site on production failure", async () => {
+  const options = await authorizedCurrentRedeployOptions();
+  const deps = fakeDependencies({
+    verificationResults: [undefined, new Error("production mismatch"), undefined],
+  });
+
+  await assert.rejects(
+    () => redeployCurrentWithRestore(deps, options),
+    /production mismatch.*site restoration succeeded/i,
+  );
+  assert.deepEqual(deps.deployments.map(({ branch }) => branch), [
+    `market-update-${options.runId.slice(0, 10)}-sat`,
+    "main",
+    "main",
+  ]);
+  assert.equal(deps.promoteCount, 0);
+  assert.equal(deps.snapshotRestored, false);
+  assert.deepEqual(deps.copies, []);
+});
 
 test("redeploys last-known-good assets when production verification fails", async () => {
   const options = await authorizedOptions();

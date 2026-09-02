@@ -10,7 +10,7 @@ import {
   getPageMeta,
   loadMarketSnapshot,
 } from "../../market-data/view-model.ts";
-import { hydrateDashboard, stocks } from "../../app/content.ts";
+import { hydrateDashboard, marketPulse, stocks } from "../../app/content.ts";
 import type { MarketSnapshot } from "../../market-data/types.ts";
 
 test("returns both locales from one metric record", () => {
@@ -150,4 +150,34 @@ test("hydrates the stocks reader without loading stale per-ticker quotes", () =>
   assert.equal("price" in equity, false);
   assert.equal("week" in equity, false);
   assert.equal("month" in equity, false);
+});
+
+test("hydrates a permanent brief without serializing live dashboard configuration", () => {
+  const snapshot = JSON.parse(
+    readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8"),
+  ) as MarketSnapshot;
+  const viewModel = createMarketViewModel(snapshot, { historical: true });
+  const historical = hydrateDashboard(marketPulse, "en", viewModel, { historical: true });
+  const changedStaticConfig = structuredClone(marketPulse);
+  changedStaticConfig.eyebrow = "Changed live eyebrow";
+  changedStaticConfig.title = "Changed live title";
+  changedStaticConfig.summary = "Changed live summary";
+  changedStaticConfig.signal = "Changed live signal";
+  changedStaticConfig.orbitValue = "999";
+  changedStaticConfig.orbitLabel = "Changed live orbit";
+  changedStaticConfig.kpis = [{ label: "Changed live KPI", value: "999", foot: "now", delta: "up" }];
+  changedStaticConfig.thesis = { title: "Changed live thesis", body: "Changed live body", tags: ["changed"] };
+  changedStaticConfig.chart = { label: "Changed live chart", values: [999], caption: { "30D": "changed", Q3: "changed", "2027": "changed" } };
+  changedStaticConfig.clusters = [{ name: "Changed", score: 999, state: "Changed", note: "Changed" }];
+  changedStaticConfig.table = { title: "Changed live table", columns: ["Changed"], rows: [["Changed"]] };
+  changedStaticConfig.watchlist = [{ priority: "Changed", title: "Changed", body: "Changed", owner: "Changed" }];
+
+  assert.deepEqual(
+    hydrateDashboard(changedStaticConfig, "en", viewModel, { historical: true }),
+    historical,
+  );
+  assert.doesNotMatch(JSON.stringify(historical), /Changed live|999/);
+  assert.ok(historical.kpis.every((kpi) => !kpi.label.includes(".")));
+  assert.ok(historical.kpis.every((kpi) => !("metricId" in kpi)));
+  assert.ok(historical.watchlist.every((item) => !item.comparison?.includes(".")));
 });

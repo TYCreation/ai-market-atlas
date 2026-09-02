@@ -43,6 +43,7 @@ export async function MarketDashboardPage({
   const viewModel = snapshot
     ? createMarketViewModel(snapshot, { historical: true })
     : await loadMarketViewModel();
+  const historical = snapshot !== undefined;
   const edition = {
     en: toReaderEdition(viewModel.getEditionMeta("en")),
     zh: toReaderEdition(viewModel.getEditionMeta("zh")),
@@ -54,7 +55,7 @@ export async function MarketDashboardPage({
   const basePath = config.slug as DashboardPath;
   const path = routePath ?? (locale === "en" ? (basePath === "/" ? "/en" : `/en${basePath}`) : basePath);
   const hydratedChineseConfig = normalizeTaiwanCopy(
-    hydrateDashboard(chineseConfig, "zh", viewModel),
+    hydrateDashboard(chineseConfig, "zh", viewModel, { historical }),
   );
   const localizedSourceBundle = normalizeTaiwanCopy(
     viewModel.sourceBundles[config.slug],
@@ -68,12 +69,12 @@ export async function MarketDashboardPage({
       />
       <ReportStructuredData
         path={path}
-        headline={dashboardHeadings[basePath][locale]}
-        description={(locale === "en" ? pageSeoEn : pageSeo)[basePath].description}
+        headline={historical ? pageEdition[locale].report.title : dashboardHeadings[basePath][locale]}
+        description={historical ? pageEdition[locale].report.summary : (locale === "en" ? pageSeoEn : pageSeo)[basePath].description}
         dateModified={viewModel.snapshot.dataCutoff}
       />
       <MarketDashboard
-        config={hydrateDashboard(config, "en", viewModel)}
+        config={hydrateDashboard(config, "en", viewModel, { historical })}
         chineseConfig={hydratedChineseConfig}
         sourceBundle={localizedSourceBundle}
         edition={edition}
@@ -81,6 +82,7 @@ export async function MarketDashboardPage({
         initialLocale={locale}
         alternateLocaleHref={alternateRoutePath}
         newsletterEndpoint={configuredNewsletterEndpoint()}
+        historical={historical}
       />
       {showPillarIndex ? <BriefPillarIndex pillar={basePath} locale={locale} /> : null}
     </>

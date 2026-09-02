@@ -27,7 +27,7 @@ const EXPECTED_ELIGIBLE_ENTITY_SLUGS = [
   "iea",
   "infineon",
   "liquid-cooling",
-  "market-2030",
+  "median-forward",
   "nvidia",
   "onsemi",
   "openai",
@@ -174,6 +174,7 @@ test("selects a capped, evidence-ranked corpus from the larger discovered candid
   assert.ok(first.find((entity) => entity.slug === "tsmc"));
   assert.ok(first.find((entity) => entity.slug === "vistra"));
   assert.ok(first.find((entity) => entity.slug === "sharon-ai"));
+  assert.equal(first.some((entity) => entity.slug === "market-2030"), false);
   for (const thinSlug of [
     "announced",
     "atlas-model",
@@ -395,5 +396,7 @@ test("entity routes are bilingual and reject unknown slugs", async () => {
   assert.ok(routes.includes("/en/entity/tsmc/"));
   assert.ok(routes.includes("/en/entity/vistra/"));
   assert.ok(routes.includes("/en/entity/sharon-ai/"));
+  assert.equal(routes.includes("/entity/market-2030/"), false);
+  assert.equal(routes.includes("/en/entity/market-2030/"), false);
   assert.equal(getEntityHub(hubs, "not-a-retained-entity"), undefined);
 });

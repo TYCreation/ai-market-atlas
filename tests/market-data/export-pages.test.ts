@@ -47,7 +47,7 @@ const EXPECTED_ELIGIBLE_ENTITY_SLUGS = [
   "iea",
   "infineon",
   "liquid-cooling",
-  "market-2030",
+  "median-forward",
   "nvidia",
   "onsemi",
   "openai",
@@ -224,7 +224,7 @@ test("exports evidence-bound bilingual entity hubs with historical metadata and 
 });
 
 test("exports every current/archive route and public asset without localhost metadata", async () => {
-  const isolatedRoot = await isolatedExportProject(false);
+  const isolatedRoot = await isolatedExportProject(true);
   const isolatedOutput = join(isolatedRoot, "work", "pages-candidate");
   const isolatedSnapshot = join(
     isolatedRoot,
@@ -237,7 +237,7 @@ test("exports every current/archive route and public asset without localhost met
       projectRoot: isolatedRoot,
       snapshotPath: isolatedSnapshot,
       outputDirectory: isolatedOutput,
-      build: false,
+      build: true,
     });
     const entities = extractEntityHubs(
       await loadPublishedBriefs(
@@ -345,6 +345,23 @@ test("exports every current/archive route and public asset without localhost met
     assert.match(datedEn, /hrefLang="zh-Hant" href="https:\/\/aimarketatlas\.net\/brief\/2026-08-26\/"/);
     assert.match(datedZh, /2026-08-26-wednesday/);
     assert.match(datedEn, /2026-08-26-wednesday/);
+    for (const datedBrief of [datedZh, datedEn]) {
+      assert.doesNotMatch(datedBrief, /class="signal-orbit"/);
+      assert.doesNotMatch(datedBrief, /class="chart-panel"/);
+      assert.doesNotMatch(datedBrief, /class="signal-grid"/);
+      assert.doesNotMatch(datedBrief, /class="market-table"/);
+      assert.doesNotMatch(datedBrief, /class="equity-table"/);
+      assert.doesNotMatch(datedBrief, /class="sic-deep-dive"/);
+    }
+    assert.doesNotMatch(datedEn, /AI infrastructure pipeline|Forward P\/E|Revenue growth|52-week range/);
+    assert.doesNotMatch(datedZh, /市場熱度|預估本益比|52 週區間/);
+    const currentZh = await readFile(join(isolatedOutput, "index.html"), "utf8");
+    const currentStocks = await readFile(join(isolatedOutput, "stocks", "index.html"), "utf8");
+    assert.match(currentZh, /class="signal-orbit"/);
+    assert.match(currentStocks, /class="market-table equity-table"/);
+    assert.doesNotMatch(sitemap, /entity\/market-2030\//);
+    assert.equal(result.routes.includes("/entity/market-2030/"), false);
+    assert.equal(result.routes.includes("/en/entity/market-2030/"), false);
     assert.match(await readFile(join(isolatedOutput, "stocks", "index.html"), "utf8"), /Historical briefs for this pillar|本主題的歷史市場快報/);
 
     const brief = await readFile(

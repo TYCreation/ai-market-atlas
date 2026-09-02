@@ -565,13 +565,6 @@ export const sicZh: DashboardConfig = {
     },
   ],
   deepDive: {
-    updated: "2026 年 7 月 27 日",
-    stocks: [
-      { ticker: "WOLF", market: "NYSE", price: "$23.09", day: "▼ 11.06%", week: "▼ 21.41%", range: "$8.05–$80.82" },
-      { ticker: "ON", market: "NASDAQ", price: "$86.81", day: "▼ 3.68%", week: "▲ 0.13%", range: "$44.56–$134.92" },
-      { ticker: "STM", market: "NYSE", price: "$51.54", day: "▼ 3.65%", week: "▼ 16.57%", range: "$21.11–$81.42" },
-      { ticker: "MRVL", market: "NASDAQ", price: "$194.23", day: "▼ 7.21%", week: "▼ 0.36%", range: "$61.44–$329.88" },
-    ],
     forecast: [
       { year: "2023", value: 2.1 },
       { year: "2024", value: 3.5 },

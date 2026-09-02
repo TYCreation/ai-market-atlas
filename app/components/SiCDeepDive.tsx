@@ -4,12 +4,7 @@ type Locale = "zh" | "en";
 
 const copy = {
   zh: {
-    pulseKicker: "04 · 每週市場脈動",
-    pulseTitle: "關鍵股票與市場規模",
-    updated: "更新",
-    day: "日",
-    week: "週",
-    range: "52 週區間",
+    forecastKicker: "04 · 產業尺度",
     forecastTitle: "SiC 市場規模預測",
     forecastUnit: "十億美元",
     newsKicker: "05 · 產業動態",
@@ -29,12 +24,7 @@ const copy = {
     bearTitle: "Bear Case · 看空論點",
   },
   en: {
-    pulseKicker: "04 · Weekly market pulse",
-    pulseTitle: "Key stocks and market scale",
-    updated: "Updated",
-    day: "Day",
-    week: "Week",
-    range: "52-week range",
+    forecastKicker: "04 · Industry scale",
     forecastTitle: "SiC market size forecast",
     forecastUnit: "USD billions",
     newsKicker: "05 · Industry developments",
@@ -109,66 +99,29 @@ export function SiCDeepDive({
       <section className="section">
         <div className="section-head">
           <div>
-            <p className="section-kicker">{ui.pulseKicker}</p>
-            <h2>{ui.pulseTitle}</h2>
+            <p className="section-kicker">{ui.forecastKicker}</p>
+            <h2>{ui.forecastTitle}</h2>
           </div>
-          <span className="deep-dive-updated">
-            {ui.updated} · {data.updated}
-          </span>
         </div>
 
-        <div className="sic-pulse-grid">
-          <div className="sic-stock-grid">
-            {data.stocks.map((stock) => (
-              <article className="sic-stock-card" key={stock.ticker}>
-                <div className="sic-stock-head">
-                  <div>
-                    <strong>{stock.ticker}</strong>
-                    <span>{stock.market}</span>
-                  </div>
-                  <span className="sic-stock-price">{stock.price}</span>
-                </div>
-                <dl className="sic-stock-moves">
-                  <div>
-                    <dt>{ui.day}</dt>
-                    <dd className={stock.day.startsWith("▲") ? "positive" : "negative"}>
-                      {stock.day}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{ui.week}</dt>
-                    <dd className={stock.week.startsWith("▲") ? "positive" : "negative"}>
-                      {stock.week}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{ui.range}</dt>
-                    <dd>{stock.range}</dd>
-                  </div>
-                </dl>
-              </article>
+        <article className="panel sic-forecast">
+          <div className="sic-subhead">
+            <h3>{ui.forecastTitle}</h3>
+            <span>{ui.forecastUnit}</span>
+          </div>
+          <div className="forecast-bars" aria-label={`${ui.forecastTitle}, ${ui.forecastUnit}`}>
+            {data.forecast.map((item) => (
+              <div className="forecast-column" key={item.year}>
+                <span className="forecast-value">{item.value}</span>
+                <span
+                  className="forecast-bar"
+                  style={{ height: `${Math.max(9, (item.value / maxForecast) * 100)}%` }}
+                />
+                <span className="forecast-year">{item.year}</span>
+              </div>
             ))}
           </div>
-
-          <article className="panel sic-forecast">
-            <div className="sic-subhead">
-              <h3>{ui.forecastTitle}</h3>
-              <span>{ui.forecastUnit}</span>
-            </div>
-            <div className="forecast-bars" aria-label={`${ui.forecastTitle}, ${ui.forecastUnit}`}>
-              {data.forecast.map((item) => (
-                <div className="forecast-column" key={item.year}>
-                  <span className="forecast-value">{item.value}</span>
-                  <span
-                    className="forecast-bar"
-                    style={{ height: `${Math.max(9, (item.value / maxForecast) * 100)}%` }}
-                  />
-                  <span className="forecast-year">{item.year}</span>
-                </div>
-              ))}
-            </div>
-          </article>
-        </div>
+        </article>
       </section>
 
       <section className="section">

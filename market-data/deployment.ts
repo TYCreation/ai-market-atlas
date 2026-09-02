@@ -6,7 +6,7 @@ import {
   isSafeMarketRunId,
   type AutomatedReview,
 } from "./review.ts";
-import { assertMarketSnapshot } from "./schema.ts";
+import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "./schema.ts";
 import type { PromotionResult } from "./storage.ts";
 import type { MarketSnapshot } from "./types.ts";
 import {
@@ -50,6 +50,29 @@ export type PublishOptions = {
 export type PublicationResult =
   | PromotionResult
   | { published: true; promoted: false; runId: string };
+
+/**
+ * A separately authorized, non-promoting deployment of the exact published
+ * snapshot. This deliberately has no candidate path: callers cannot turn a
+ * site repair into a data publication.
+ */
+export type CurrentRedeployOptions = Omit<
+  PublishOptions,
+  "candidatePath" | "snapshotAlreadyCurrent"
+> & {
+  currentPath: string;
+};
+
+export type CurrentRedeployDependencies = Pick<
+  PublishDependencies,
+  "deploy" | "verify" | "revalidate" | "copyDirectory"
+>;
+
+export type AuthorizedCurrentRedeployment = {
+  current: MarketSnapshot;
+  review: AutomatedReview;
+  candidateSha256: string;
+};
 
 export type VerificationExpectation = {
   runId: string;
@@ -656,6 +679,46 @@ export async function authorizeCandidatePublication(
   };
 }
 
+/**
+ * Authorizes the existing published snapshot only. The review is required to
+ * be the persisted accepted review for the same run and semantic snapshot
+ * bytes; it is never regenerated here.
+ */
+export async function authorizeCurrentRedeployment(
+  options: Pick<CurrentRedeployOptions, "runId" | "currentPath" | "reviewPath">,
+): Promise<AuthorizedCurrentRedeployment> {
+  if (!isSafeMarketRunId(options.runId)) {
+    throw new Error("publication runId is unsafe");
+  }
+  const currentPath = resolve(options.currentPath);
+  const reviewPath = resolve(options.reviewPath);
+  if (
+    basename(currentPath) !== "current.json" ||
+    dirname(reviewPath) !== join(dirname(currentPath), "reviews") ||
+    basename(reviewPath) !== `${options.runId}.json`
+  ) {
+    throw new Error("current snapshot or review path is invalid or unsafe");
+  }
+  await Promise.all([
+    rejectDirectorySymlinkIfPresent(dirname(currentPath), "market directory"),
+    rejectDirectorySymlinkIfPresent(dirname(reviewPath), "reviews directory"),
+  ]);
+  const [current, review] = await Promise.all([
+    readRegularJson(currentPath, "current snapshot"),
+    readRegularJson(reviewPath, "persisted automated review"),
+  ]);
+  assertPublishedMarketSnapshot(current);
+  if (current.runId !== options.runId) {
+    throw new Error("current snapshot runId does not match publication runId");
+  }
+  assertAutoPublishReview(review, current);
+  return {
+    current,
+    review,
+    candidateSha256: hashCandidate(current),
+  };
+}
+
 async function authorize(options: PublishOptions): Promise<void> {
   assertSafeDirectory(options.candidateDirectory, "pages-candidate");
   assertSafeDirectory(options.lastGoodDirectory, "pages-last-good");
@@ -675,12 +738,37 @@ async function authorize(options: PublishOptions): Promise<void> {
   }
 }
 
-export async function publishWithRestore(
-  dependencies: PublishDependencies,
-  options: PublishOptions,
-): Promise<PublicationResult> {
-  await authorize(options);
-  if (options.expectedCandidateSha256 === undefined) {
+async function authorizeCurrentRedeploy(options: CurrentRedeployOptions): Promise<void> {
+  assertSafeDirectory(options.candidateDirectory, "pages-candidate");
+  assertSafeDirectory(options.lastGoodDirectory, "pages-last-good");
+  assertSafeRoutes(options.routes);
+  assertProductionUrl(options.productionBaseUrl);
+  await Promise.all([
+    rejectDirectorySymlinkIfPresent("work", "work directory"),
+    rejectSymlinkIfPresent(options.candidateDirectory, "candidate directory"),
+    rejectSymlinkIfPresent(options.lastGoodDirectory, "last-good directory"),
+  ]);
+  const authorization = await authorizeCurrentRedeployment(options);
+  if (
+    options.expectedCandidateSha256 !== undefined &&
+    authorization.candidateSha256 !== options.expectedCandidateSha256
+  ) {
+    throw new Error("current snapshot does not match the exported manifest hash");
+  }
+}
+
+function assertDeploymentHashes(options: Pick<
+  PublishOptions,
+  "expectedCandidateSha256" | "expectedArtifactTreeSha256" | "expectedManifestSha256"
+>): asserts options is Pick<
+  PublishOptions,
+  "expectedCandidateSha256" | "expectedArtifactTreeSha256" | "expectedManifestSha256"
+> & {
+  expectedCandidateSha256: string;
+  expectedArtifactTreeSha256: string;
+  expectedManifestSha256: string;
+} {
+  if (options.expectedCandidateSha256 === undefined || !/^[a-f0-9]{64}$/.test(options.expectedCandidateSha256)) {
     throw new Error("authorized candidate hash is required");
   }
   if (
@@ -695,6 +783,14 @@ export async function publishWithRestore(
   ) {
     throw new Error("deployment manifest hash is required");
   }
+}
+
+export async function publishWithRestore(
+  dependencies: PublishDependencies,
+  options: PublishOptions,
+): Promise<PublicationResult> {
+  await authorize(options);
+  assertDeploymentHashes(options);
   const branch = previewBranchForRunId(options.runId);
 
   try {
@@ -784,4 +880,62 @@ export async function publishWithRestore(
       runId: options.runId,
     }
   );
+}
+
+/**
+ * Deploys a reviewed current snapshot without any snapshot promotion or
+ * restoration capability. Every network boundary is preceded by caller-owned
+ * revalidation of current, review, artifact tree, and manifest identities.
+ */
+export async function redeployCurrentWithRestore(
+  dependencies: CurrentRedeployDependencies,
+  options: CurrentRedeployOptions,
+): Promise<{ published: true; promoted: false; runId: string }> {
+  await authorizeCurrentRedeploy(options);
+  assertDeploymentHashes(options);
+  const branch = previewBranchForRunId(options.runId);
+
+  try {
+    await dependencies.revalidate();
+    const previewUrl = await dependencies.deploy(options.candidateDirectory, branch);
+    await dependencies.revalidate();
+    await dependencies.verify(previewUrl, options.candidateDirectory);
+  } catch (error) {
+    throw new Error(`Current site preview failed: ${errorMessage(error)}`);
+  }
+
+  let mainTouched = false;
+  try {
+    await dependencies.revalidate();
+    mainTouched = true;
+    await dependencies.deploy(options.candidateDirectory, "main");
+    await dependencies.revalidate();
+    await dependencies.verify(options.productionBaseUrl, options.candidateDirectory);
+    await dependencies.revalidate();
+    await dependencies.copyDirectory(
+      options.candidateDirectory,
+      options.lastGoodDirectory,
+      options.expectedArtifactTreeSha256,
+      options.expectedManifestSha256,
+    );
+  } catch (currentSiteError) {
+    let siteOutcome = mainTouched
+      ? "site restoration succeeded"
+      : "site restoration not required";
+    if (mainTouched) {
+      try {
+        await dependencies.revalidate();
+        await dependencies.deploy(options.lastGoodDirectory, "main");
+        await dependencies.revalidate();
+        await dependencies.verify(options.productionBaseUrl, options.lastGoodDirectory);
+      } catch (restoreError) {
+        siteOutcome = `site restoration failed: ${errorMessage(restoreError)}`;
+      }
+    }
+    throw new Error(
+      `Current site production failed: ${errorMessage(currentSiteError)}; ${siteOutcome}`,
+    );
+  }
+
+  return { published: true, promoted: false, runId: options.runId };
 }

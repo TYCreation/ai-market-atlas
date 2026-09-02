@@ -1,18 +1,52 @@
 import type { createMarketViewModel, LocalizedPageReport, MetricView } from "../market-data/view-model";
+import { KPI_CATALOG } from "../market-data/catalog.ts";
 import type { Locale, MetricStatus, PageSlug } from "../market-data/types";
 
 type MarketViewModel = ReturnType<typeof createMarketViewModel>;
 
+// Historical editions are reconstructed from the retained snapshot and this
+// code-owned presentation map. They must not borrow mutable live-dashboard
+// labels (or expose storage-oriented metric IDs) from the current config.
+const historicalKpiLabels: Record<string, Record<Locale, string>> = {
+  "pulse.infrastructure_spend": { en: "AI infrastructure investment", zh: "AI 基礎設施投資" },
+  "pulse.accelerator_market": { en: "Accelerator market", zh: "加速器市場" },
+  "pulse.power_queue": { en: "Power queue", zh: "電力排隊容量" },
+  "pulse.enterprise_agents": { en: "Enterprise agents", zh: "企業代理" },
+  "stocks.basket_30d": { en: "AI stock basket", zh: "AI 股票籃子" },
+  "stocks.positive_breadth": { en: "Positive breadth", zh: "正向市場廣度" },
+  "stocks.median_forward_pe": { en: "Median forward P/E", zh: "預估本益比中位數" },
+  "stocks.catalyst_count": { en: "Recent catalysts", zh: "近期催化劑" },
+  "compute.accelerator_pool": { en: "Accelerator revenue pool", zh: "加速器營收池" },
+  "compute.hbm_demand": { en: "HBM bit demand", zh: "HBM 位元需求" },
+  "compute.packaging_lead_weeks": { en: "Packaging lead time", zh: "封裝交期" },
+  "compute.inference_cost_change": { en: "Inference unit cost", zh: "推論單位成本" },
+  "energy.announced_power_gw": { en: "Announced AI-ready power", zh: "已公佈 AI 可用電力" },
+  "energy.committed_power_gw": { en: "Firmly committed", zh: "已確定承諾" },
+  "energy.interconnection_years": { en: "Interconnection wait", zh: "併網等待時間" },
+  "energy.liquid_cooling_share": { en: "Liquid-cooled share", zh: "液冷設計占比" },
+  "models.production_agents": { en: "Production agent programs", zh: "正式環境代理計畫" },
+  "models.software_spend_growth": { en: "AI software spend", zh: "AI 軟體支出" },
+  "models.managed_tokens": { en: "Managed tokens", zh: "受管理 Token" },
+  "models.api_deployment_share": { en: "API-led deployments", zh: "API 主導部署" },
+  "sic.market_2030_usd_b": { en: "SiC market size", zh: "SiC 市場規模" },
+  "sic.wafer_frontier_mm": { en: "12-inch wafer progress", zh: "12 吋晶圓進展" },
+  "sic.packaging_watts": { en: "AI package thermal load", zh: "AI 封裝熱負載" },
+  "sic.ev_penetration": { en: "EV SiC penetration", zh: "電動車 SiC 滲透率" },
+};
+
+function historicalKpiLabel(metricId: string, locale: Locale): string {
+  const label = historicalKpiLabels[metricId]?.[locale];
+  if (!label) throw new Error(`No historical KPI label for ${metricId}`);
+  return label;
+}
+
+function historicalComparisonLabel(metricId: string, locale: Locale): string {
+  return historicalKpiLabels[metricId]?.[locale] ?? metricId
+    .replace(/^[^.]+\./, "")
+    .replace(/[._]+/g, " ");
+}
+
 export type DeepDiveConfig = {
-  updated: string;
-  stocks: Array<{
-    ticker: string;
-    market: string;
-    price: string;
-    day: string;
-    week: string;
-    range: string;
-  }>;
   forecast: Array<{
     year: string;
     value: number;
@@ -152,9 +186,11 @@ export function hydrateDashboard(
   config: DashboardConfig,
   locale: Locale,
   viewModel: MarketViewModel,
+  options: { historical?: boolean } = {},
 ): DashboardConfig {
   const report = viewModel.getPageReport(config.slug, locale);
   const edition = viewModel.getEditionMeta(locale);
+  const historical = options.historical === true;
   const equityDive = config.equityDive
     ? {
         ...config.equityDive,
@@ -162,31 +198,62 @@ export function hydrateDashboard(
       }
     : undefined;
 
+  // A permanent brief must not serialize live dashboard configuration into
+  // its RSC payload. Keep only its route identity and reconstruct every
+  // rendered datum from the immutable snapshot/report instead.
+  const snapshotOnlyConfig: DashboardConfig = {
+    slug: config.slug,
+    eyebrow: "",
+    title: "",
+    summary: "",
+    signal: "",
+    orbitValue: "",
+    orbitLabel: "",
+    kpis: [],
+    thesis: { title: "", body: "", tags: [] },
+    chart: { label: "", values: [], caption: { "30D": "", Q3: "", "2027": "" } },
+    clusters: [],
+    table: { title: "", columns: [], rows: [] },
+    watchlist: [],
+  };
+
   return {
-    ...config,
+    ...(historical ? snapshotOnlyConfig : config),
     eyebrow: report.eyebrow,
     title: report.title,
     summary: report.summary,
     signal: report.signal,
     thesis: report.thesis,
-    kpis: config.kpis.map((kpi, index) => {
-      const metric = viewModel.getKpi(config.slug, index, locale);
-      return {
-        ...kpi,
-        metricId: metric.metricId,
-        value: metric.value,
-        status: viewModel.getMetricStatus(metric.metricId),
-        provenance: metric,
-      };
-    }),
+    kpis: historical
+      ? KPI_CATALOG.filter(([page]) => page === config.slug).map(([, , metricId]) => {
+          const metric = viewModel.getMetric(metricId, locale);
+          if (!metric) throw new Error(`Historical KPI is unavailable: ${metricId}`);
+          return {
+            label: historicalKpiLabel(metric.metricId, locale),
+            value: metric.value,
+            foot: metric.asOf,
+            delta: "",
+            status: viewModel.getMetricStatus(metric.metricId),
+            provenance: metric,
+          };
+        })
+      : config.kpis.map((kpi, index) => {
+          const metric = viewModel.getKpi(config.slug, index, locale);
+          return {
+            ...kpi,
+            metricId: metric.metricId,
+            value: metric.value,
+            status: viewModel.getMetricStatus(metric.metricId),
+            provenance: metric,
+          };
+        }),
     watchlist: Array.from({ length: Math.max(report.risks.length, report.nextObservations.length) }, (_, index) => {
       const risk = report.risks[index];
       const observation = report.nextObservations[index];
-      const fallback = config.watchlist[index] ?? config.watchlist[0];
+      const fallback = historical ? undefined : (config.watchlist[index] ?? config.watchlist[0]);
       const comparison = risk?.comparison ?? observation?.comparison;
       return {
-        ...fallback,
-        priority: fallback?.priority ?? `${index + 1}`,
+        priority: historical ? `${index + 1}` : (fallback?.priority ?? `${index + 1}`),
         title: observation?.what ?? fallback?.title ?? risk?.condition ?? report.title,
         body: risk?.condition ?? observation?.consequence ?? fallback?.body ?? "",
         owner: observation?.threshold ?? fallback?.owner ?? "",
@@ -194,15 +261,13 @@ export function hydrateDashboard(
         legacy: observation?.legacy,
         consequence: observation?.consequence,
         comparison: comparison
-          ? `${comparison.metricId} ${comparison.operator} ${comparison.value}${comparison.unit}${comparison.currency ? ` ${comparison.currency}` : ""}`
+          ? `${historical ? historicalComparisonLabel(comparison.metricId, locale) : comparison.metricId} ${comparison.operator} ${comparison.value}${comparison.unit}${comparison.currency ? ` ${comparison.currency}` : ""}`
           : undefined,
       };
     }),
     report,
-    ...(config.deepDive
-      ? { deepDive: { ...config.deepDive, updated: edition.dataCutoff } }
-      : {}),
-    ...(equityDive ? { equityDive } : {}),
+    ...(!historical && config.deepDive ? { deepDive: config.deepDive } : {}),
+    ...(!historical && equityDive ? { equityDive } : {}),
   };
 }
 
@@ -780,13 +845,6 @@ export const sic: DashboardConfig = {
     },
   ],
   deepDive: {
-    updated: "July 27, 2026",
-    stocks: [
-      { ticker: "WOLF", market: "NYSE", price: "$23.09", day: "▼ 11.06%", week: "▼ 21.41%", range: "$8.05–$80.82" },
-      { ticker: "ON", market: "NASDAQ", price: "$86.81", day: "▼ 3.68%", week: "▲ 0.13%", range: "$44.56–$134.92" },
-      { ticker: "STM", market: "NYSE", price: "$51.54", day: "▼ 3.65%", week: "▼ 16.57%", range: "$21.11–$81.42" },
-      { ticker: "MRVL", market: "NASDAQ", price: "$194.23", day: "▼ 7.21%", week: "▼ 0.36%", range: "$61.44–$329.88" },
-    ],
     forecast: [
       { year: "2023", value: 2.1 },
       { year: "2024", value: 3.5 },

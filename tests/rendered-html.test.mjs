@@ -148,6 +148,18 @@ for (const [pathname, heading, metricIds] of [
       assert.doesNotMatch(equityTable, /<th[^>]*>股價<\/th>|<th[^>]*>一週<\/th>|<th[^>]*>一個月<\/th>/);
       assert.doesNotMatch(equityTable, /metric-source-stocks\.[^.]+\.(?:price|weekReturn|monthReturn)/);
     }
+    if (pathname === "/sic") {
+      for (const quoteMarker of [
+        "NYSE",
+        "NASDAQ",
+        "$23.09",
+        "$86.81",
+        "52 週區間",
+        "更新 ·",
+      ]) {
+        assert.doesNotMatch(html, new RegExp(quoteMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), quoteMarker);
+      }
+    }
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
   });
 }
@@ -171,6 +183,15 @@ for (const [pathname, heading] of [
     if (pathname === "/en/stocks") {
       assert.match(html, /Atlas model/);
       assert.doesNotMatch(html, /Market observation/);
+      const equityTable = html.match(/<table class="market-table equity-table">[\s\S]*?<\/table>/)?.[0];
+      assert.ok(equityTable, "English stocks page must render the equity watchlist table");
+      assert.doesNotMatch(equityTable, /<th[^>]*>Price<\/th>|<th[^>]*>1 week<\/th>|<th[^>]*>1 month<\/th>/);
+      assert.doesNotMatch(equityTable, /metric-source-stocks\.[^.]+\.(?:price|weekReturn|monthReturn)/);
+    }
+    if (pathname === "/en/sic") {
+      for (const quoteMarker of ["NYSE", "NASDAQ", "$23.09", "$86.81", "52-week range", "Updated ·"]) {
+        assert.doesNotMatch(html, new RegExp(quoteMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), quoteMarker);
+      }
     } else {
       assert.match(html, /Atlas model/);
     }

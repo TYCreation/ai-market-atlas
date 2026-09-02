@@ -173,6 +173,10 @@ test("the built homepage preserves reader-facing type, viewport, target, and foc
         await assertNewsletterAccessibility(page);
         await assertTargetsAndFocus(page);
         await assertTextVisibilityCensusRegressions(page);
+        assert.ok(
+          await page.locator(".report-evidence .watch-card").count() > 3,
+          "the rendered homepage must expose more than three evidence cards",
+        );
 
         if (viewport.width === 1440) {
           for (const selector of [

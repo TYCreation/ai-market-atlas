@@ -9,6 +9,11 @@ export const ENTITY_EVIDENCE_FLOOR = {
 
 export const ENTITY_SELECTION_LIMIT = 24;
 
+// This incomplete forecast fragment is not a useful standalone hub. Keep the
+// evidence-ranked corpus deterministic by excluding it before ranking, rather
+// than relabeling it into a misleading entity page.
+const EXCLUDED_ENTITY_SLUGS = new Set(["market-2030"]);
+
 // A source ID is an entity prefix followed by document/event/date grammar.
 // These are suffix boundaries, never a denylist of valid entity names.
 const SOURCE_DOCUMENT_SUFFIXES = [
@@ -569,7 +574,7 @@ function entitySelectionScore(record: CandidateAccumulator): number {
 export function discoverEligibleEntityRecords(briefs: PublishedBrief[]): EligibleEntityRecord[] {
   const { records, sourceRecords } = accumulateEntityCandidates(briefs);
   return records
-    .filter(keepEligible)
+    .filter((record) => !EXCLUDED_ENTITY_SLUGS.has(record.slug) && keepEligible(record))
     .sort((left, right) =>
       entitySelectionScore(right) - entitySelectionScore(left) || left.slug.localeCompare(right.slug),
     )

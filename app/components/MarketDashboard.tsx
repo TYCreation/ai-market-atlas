@@ -110,6 +110,7 @@ export function MarketDashboard({
   initialLocale = "zh",
   alternateLocaleHref,
   newsletterEndpoint,
+  historical = false,
 }: {
   config: DashboardConfig;
   chineseConfig: DashboardConfig;
@@ -119,13 +120,15 @@ export function MarketDashboard({
   initialLocale?: Locale;
   alternateLocaleHref?: string;
   newsletterEndpoint?: string;
+  historical?: boolean;
 }) {
   const [horizon, setHorizon] = useState<(typeof horizons)[number]>("Q3");
   const locale = initialLocale;
   const activeConfig = locale === "zh" ? chineseConfig : config;
   const ui = copy[locale];
-  const searchHeading =
-    dashboardHeadings[activeConfig.slug as DashboardPath][locale];
+  const searchHeading = historical
+    ? activeConfig.title
+    : dashboardHeadings[activeConfig.slug as DashboardPath][locale];
   const evidenceItems = activeConfig.report
     ? [
         ...activeConfig.report.supportingEvidence.map((item) => ({
@@ -270,7 +273,7 @@ export function MarketDashboard({
             <EditionStatus locale={locale} edition={edition} page={pageEdition} />
           </div>
 
-          <div className="signal-orbit" aria-label={`${activeConfig.orbitLabel}: ${activeConfig.orbitValue}`}>
+          {!historical ? <div className="signal-orbit" aria-label={`${activeConfig.orbitLabel}: ${activeConfig.orbitValue}`}>
             <span className="orbit-axis" aria-hidden="true" />
             <span className="orbit-dot one" aria-hidden="true" />
             <span className="orbit-dot two" aria-hidden="true" />
@@ -279,7 +282,7 @@ export function MarketDashboard({
               <strong>{activeConfig.orbitValue}</strong>
               <span>{activeConfig.orbitLabel}</span>
             </div>
-          </div>
+          </div> : null}
         </section>
 
         <section className="metric-strip" aria-label={ui.headlineMetrics}>
@@ -291,15 +294,15 @@ export function MarketDashboard({
               </div>
               <EditionStatus locale={locale} metricStatus={kpi.status} />
               {kpi.provenance ? <MetricProvenance metric={kpi.provenance} locale={locale} /> : null}
-              <div className="metric-foot">
+              {!historical ? <div className="metric-foot">
                 <span>{kpi.foot}</span>
                 <MarketDelta value={kpi.delta} className="metric-delta" />
-              </div>
+              </div> : null}
               <MetricSources
                 bundle={sourceBundle}
                 index={index}
                 locale={locale}
-                metricId={kpi.metricId}
+                metricId={historical ? undefined : kpi.metricId}
               />
             </article>
           ))}
@@ -328,7 +331,7 @@ export function MarketDashboard({
           </section>
         ) : null}
 
-        {activeConfig.slug === "/" ? (
+        {!historical && activeConfig.slug === "/" ? (
           <WeeklyMarketBrief locale={locale} />
         ) : null}
 
@@ -338,7 +341,7 @@ export function MarketDashboard({
               <p className="section-kicker">{ui.sectionOneKicker}</p>
               <h2>{ui.sectionOneTitle}</h2>
             </div>
-            <div className="horizon-selector" aria-label={ui.horizonLabel}>
+            {!historical ? <div className="horizon-selector" aria-label={ui.horizonLabel}>
               {horizons.map((item) => (
                 <button
                   className={horizon === item ? "active" : ""}
@@ -350,7 +353,7 @@ export function MarketDashboard({
                   {item}
                 </button>
               ))}
-            </div>
+            </div> : null}
           </div>
 
           <div className="brief-grid">
@@ -367,7 +370,7 @@ export function MarketDashboard({
               </div>
             </article>
 
-            <aside className="panel chart-panel" aria-label={activeConfig.chart.label}>
+            {!historical ? <aside className="panel chart-panel" aria-label={activeConfig.chart.label}>
               <span className="panel-label">{activeConfig.chart.label} · {horizon}</span>
               <div className="bar-chart" aria-hidden="true">
                 {activeConfig.chart.values.map((value, index) => (
@@ -379,11 +382,11 @@ export function MarketDashboard({
                 ))}
               </div>
               <p className="chart-caption">{activeConfig.chart.caption[horizon]}</p>
-            </aside>
+            </aside> : null}
           </div>
         </section>
 
-        <section className="section">
+        {!historical ? <section className="section">
           <div className="section-head">
             <div>
               <p className="section-kicker">{ui.sectionTwoKicker}</p>
@@ -408,9 +411,9 @@ export function MarketDashboard({
               </article>
             ))}
           </div>
-        </section>
+        </section> : null}
 
-        <section className="section">
+        {!historical ? <section className="section">
           <div className="section-head">
             <div>
               <p className="section-kicker">{ui.sectionThreeKicker}</p>
@@ -442,7 +445,7 @@ export function MarketDashboard({
               </tbody>
             </table>
           </div>
-        </section>
+        </section> : null}
 
         {activeConfig.deepDive ? (
           <SiCDeepDive data={activeConfig.deepDive} locale={locale} />

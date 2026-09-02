@@ -241,6 +241,21 @@ active. On restart, an interrupted last-good transition either restores the
 directory matching the old anchor or retains the current directory matching the
 new anchor; ambiguous state fails closed for operator investigation.
 
+For a site-only repair when `current.json` is already the intended published
+snapshot, use the exact current-site mode:
+
+```bash
+npm run market:deploy -- --redeploy-current
+```
+
+This mode requires the accepted review for the current snapshot and rechecks
+the snapshot, review, export manifest, and artifact-tree hashes before every
+external call. It deploys the current snapshot to an isolated preview and then
+to `main`; it never reads or promotes `candidate.json`, rewrites market
+storage, or restores a snapshot. A production failure rolls back only the
+site to the independently anchored last-good export. If that anchor is absent,
+the mode first bootstraps it from a verified export of the current snapshot.
+
 ## Learn More
 
 - [vinext Documentation](https://github.com/cloudflare/vinext)

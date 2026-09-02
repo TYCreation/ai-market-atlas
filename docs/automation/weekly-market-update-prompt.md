@@ -56,7 +56,12 @@ existing active Wednesday/Saturday 09:00 Asia/Taipei schedule.
 7. Run `npm run market:deploy`. This command verifies preview, promotes the
    reviewed candidate, publishes production, verifies production, and restores
    both the prior snapshot and last-known-good site if a post-promotion step
-   fails. Never bypass or reproduce these steps manually.
+   fails. Never bypass or reproduce these steps manually. When repairing the
+   site without changing the already-published data, use only the exact
+   `npm run market:deploy -- --redeploy-current` mode. It requires the accepted
+   review for `current.json`, deploys only that snapshot, never reads or
+   promotes `candidate.json`, never rewrites or restores market storage, and
+   rolls back only the site to the independently anchored last-good export.
 8. Retain accepted weekly run and review provenance indefinitely; do not invoke
    `npm run market:prune` as part of publication.
 9. Report the data cutoff; cadence; changed and unchanged pages; sources;

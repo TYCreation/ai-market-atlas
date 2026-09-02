@@ -19,8 +19,10 @@ import {
 } from "../market-data/artifact-tree.ts";
 import {
   authorizeCandidatePublication,
+  authorizeCurrentRedeployment,
   previewBranchForRunId,
   publishWithRestore,
+  redeployCurrentWithRestore,
   verifyDeployment,
   type VerificationExpectation,
 } from "../market-data/deployment.ts";
@@ -930,6 +932,26 @@ export async function revalidatePublicationState(options: {
   });
 }
 
+export async function revalidateCurrentRedeploymentState(options: {
+  runId: string;
+  currentPath: string;
+  reviewPath: string;
+  candidateDirectory: string;
+  expectedCandidateSha256: string;
+  expectedArtifactTreeSha256: string;
+  expectedManifestSha256: string;
+}): Promise<void> {
+  const authorization = await authorizeCurrentRedeployment(options);
+  if (authorization.candidateSha256 !== options.expectedCandidateSha256) {
+    throw new Error("current snapshot hash does not match redeployment authorization");
+  }
+  await readDeploymentManifest(options.candidateDirectory, {
+    expectedCandidateSha256: options.expectedCandidateSha256,
+    expectedArtifactTreeSha256: options.expectedArtifactTreeSha256,
+    expectedManifestSha256: options.expectedManifestSha256,
+  });
+}
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await lstat(path);
@@ -959,6 +981,7 @@ export type DeployPagesRuntime = {
   verifyDeployment: typeof verifyDeployment;
   verifyProduction?: typeof verifyDeployment;
   publishWithRestore: typeof publishWithRestore;
+  redeployCurrentWithRestore?: typeof redeployCurrentWithRestore;
   bootstrapPreview?: (directory: string, branch: string) => Promise<string>;
 };
 
@@ -986,6 +1009,7 @@ const defaultRuntime: DeployPagesRuntime = {
   verifyDeployment,
   verifyProduction: verifyProductionAfterPropagation,
   publishWithRestore,
+  redeployCurrentWithRestore,
   bootstrapPreview: wranglerDeploy,
 };
 
@@ -1252,13 +1276,264 @@ export async function runDeployPagesAtProjectRoot(
   );
 }
 
-async function runDeployPages(args: string[]): Promise<void> {
-  if (args.length !== 0) {
-    throw new Error("market:deploy does not accept command-line arguments");
+async function runLockedRedeployCurrentPagesAtProjectRoot(
+  projectRoot: string,
+  runtime: DeployPagesRuntime,
+  lockedRunId: string,
+): Promise<void> {
+  const marketRoot = join(projectRoot, "data", "market");
+  const currentPath = join(marketRoot, "current.json");
+  const candidateDirectory = join(projectRoot, "work", "pages-candidate");
+  const lastGoodDirectory = join(projectRoot, "work", "pages-last-good");
+  const current = await readSnapshot(currentPath, "current snapshot", "published");
+  if (current.runId !== lockedRunId) {
+    throw new Error("current snapshot runId changed after publication lock acquisition");
   }
-  await runDeployPagesAtProjectRoot(
-    resolve(fileURLToPath(new URL("../", import.meta.url))),
+  const reviewPath = join(marketRoot, "reviews", `${current.runId}.json`);
+  const authorization = await authorizeCurrentRedeployment({
+    runId: current.runId,
+    currentPath,
+    reviewPath,
+  });
+
+  await recoverLastGoodTransition(projectRoot);
+  let lastGoodAnchor: LastGoodAnchor;
+  try {
+    lastGoodAnchor = await readLastGoodAnchor(projectRoot);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !/last-good anchor is missing/i.test(error.message) ||
+      (await pathExists(lastGoodDirectory))
+    ) {
+      throw error;
+    }
+    const currentExport = await runtime.exportPages({
+      projectRoot,
+      snapshotPath: currentPath,
+      outputDirectory: lastGoodDirectory,
+      authorizedCandidateSha256: authorization.candidateSha256,
+    });
+    try {
+      const beforeBootstrap = await authorizeCurrentRedeployment({
+        runId: current.runId,
+        currentPath,
+        reviewPath,
+      });
+      if (beforeBootstrap.candidateSha256 !== authorization.candidateSha256) {
+        throw new Error("current snapshot changed before last-good bootstrap");
+      }
+      const bootstrapUrl = runtime.bootstrapPreview
+        ? await runtime.bootstrapPreview(
+            lastGoodDirectory,
+            previewBranchForRunId(current.runId).replace(
+              "market-update-",
+              "market-seed-",
+            ),
+          )
+        : PRODUCTION_BASE_URL;
+      const beforeVerification = await authorizeCurrentRedeployment({
+        runId: current.runId,
+        currentPath,
+        reviewPath,
+      });
+      if (beforeVerification.candidateSha256 !== authorization.candidateSha256) {
+        throw new Error("current snapshot changed before last-good bootstrap verification");
+      }
+      await runtime.verifyDeployment(
+        bootstrapUrl,
+        currentExport.routes,
+        {
+          runId: current.runId,
+          dataCutoff: current.dataCutoff,
+          archiveMonths: currentExport.archiveMonths,
+          sourceIds: currentExport.sourceIds,
+          archiveSourceIds: currentExport.archiveSourceIds,
+          routeIdentities: currentExport.routeIdentities,
+          artifacts: [...DISCOVERY_ARTIFACTS],
+        },
+      );
+      const seededAnchor: LastGoodAnchor = {
+        schemaVersion: 1,
+        runId: currentExport.runId,
+        candidateSha256: currentExport.candidateSha256,
+        artifactTreeSha256: currentExport.artifactTreeSha256,
+        manifestSha256: currentExport.manifestSha256,
+      };
+      await validateLastGoodDirectory(lastGoodDirectory, seededAnchor);
+      await writeLastGoodAnchorAtomically(projectRoot, seededAnchor);
+      lastGoodAnchor = seededAnchor;
+    } catch (error) {
+      await rm(lastGoodDirectory, { recursive: true, force: true });
+      throw new Error(
+        `Cannot seed last-known-good from unverified current snapshot: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+  await validateLastGoodDirectory(lastGoodDirectory, lastGoodAnchor);
+
+  const currentExport = await runtime.exportPages({
+    projectRoot,
+    snapshotPath: currentPath,
+    outputDirectory: candidateDirectory,
+    authorizedCandidateSha256: authorization.candidateSha256,
+  });
+  if (
+    currentExport.runId !== current.runId ||
+    currentExport.candidateSha256 !== authorization.candidateSha256
+  ) {
+    throw new Error("current snapshot export does not match redeployment authorization");
+  }
+  const activeDirectoryByUrl = new Map<
+    string,
+    {
+      directory: string;
+      candidateSha256: string;
+      artifactTreeSha256: string;
+      manifestSha256: string;
+    }
+  >();
+  const dependencies = {
+    deploy: async (directory: string, branch: string) => {
+      const resolvedDirectory = resolve(directory);
+      const manifest = resolvedDirectory === resolve(lastGoodDirectory)
+        ? await validateLastGoodDirectory(directory, lastGoodAnchor)
+        : await readDeploymentManifest(directory, {
+            expectedCandidateSha256: authorization.candidateSha256,
+            expectedArtifactTreeSha256: currentExport.artifactTreeSha256,
+            expectedManifestSha256: currentExport.manifestSha256,
+          });
+      const url = await wranglerDeploy(directory, branch);
+      const active = {
+        directory,
+        candidateSha256: manifest.candidateSha256,
+        artifactTreeSha256: manifest.artifactTreeSha256,
+        manifestSha256: hashCandidate(manifest),
+      };
+      activeDirectoryByUrl.set(url, active);
+      if (branch === "main") activeDirectoryByUrl.set(PRODUCTION_BASE_URL, active);
+      return url;
+    },
+    verify: async (baseUrl: string, directory: string) => {
+      const active = activeDirectoryByUrl.get(baseUrl);
+      if (!active || resolve(active.directory) !== resolve(directory)) {
+        throw new Error("verification directory does not match deployed assets");
+      }
+      const manifest = await readDeploymentManifest(directory, {
+        expectedCandidateSha256: active.candidateSha256,
+        expectedArtifactTreeSha256: active.artifactTreeSha256,
+        expectedManifestSha256: active.manifestSha256,
+      });
+      const expectation: VerificationExpectation = {
+        runId: manifest.runId,
+        dataCutoff: manifest.dataCutoff,
+        archiveMonths: manifest.archiveMonths,
+        sourceIds: manifest.sourceIds,
+        archiveSourceIds: manifest.archiveSourceIds,
+        routeIdentities: manifest.routeIdentities,
+        artifacts: manifest.artifacts,
+      };
+      const verifier = baseUrl === PRODUCTION_BASE_URL && runtime.verifyProduction
+        ? runtime.verifyProduction
+        : runtime.verifyDeployment;
+      await verifier(baseUrl, manifest.routes, expectation);
+    },
+    revalidate: () => revalidateCurrentRedeploymentState({
+      runId: current.runId,
+      currentPath,
+      reviewPath,
+      candidateDirectory,
+      expectedCandidateSha256: authorization.candidateSha256,
+      expectedArtifactTreeSha256: currentExport.artifactTreeSha256,
+      expectedManifestSha256: currentExport.manifestSha256,
+    }),
+    copyDirectory: async (
+      from: string,
+      to: string,
+      expectedArtifactTreeSha256: string,
+      expectedManifestSha256: string,
+    ) => {
+      if (
+        resolve(from) !== resolve(candidateDirectory) ||
+        resolve(to) !== resolve(lastGoodDirectory) ||
+        expectedArtifactTreeSha256 !== currentExport.artifactTreeSha256 ||
+        expectedManifestSha256 !== currentExport.manifestSha256
+      ) {
+        throw new Error("last-good replacement identities changed");
+      }
+      const nextAnchor: LastGoodAnchor = {
+        schemaVersion: 1,
+        runId: currentExport.runId,
+        candidateSha256: currentExport.candidateSha256,
+        artifactTreeSha256: currentExport.artifactTreeSha256,
+        manifestSha256: currentExport.manifestSha256,
+      };
+      await replaceLastGoodTransactionally({
+        projectRoot,
+        sourceDirectory: from,
+        previousAnchor: lastGoodAnchor,
+        nextAnchor,
+      });
+      lastGoodAnchor = nextAnchor;
+    },
+  };
+  const result = await (runtime.redeployCurrentWithRestore ?? redeployCurrentWithRestore)(
+    dependencies,
+    {
+      runId: current.runId,
+      currentPath,
+      reviewPath,
+      candidateDirectory,
+      lastGoodDirectory,
+      productionBaseUrl: PRODUCTION_BASE_URL,
+      routes: currentExport.routes,
+      expectedCandidateSha256: currentExport.candidateSha256,
+      expectedArtifactTreeSha256: currentExport.artifactTreeSha256,
+      expectedManifestSha256: currentExport.manifestSha256,
+    },
   );
+  process.stdout.write(`${JSON.stringify({
+    published: true,
+    mode: "redeploy-current",
+    runId: result.runId,
+    candidateSha256: currentExport.candidateSha256,
+    artifactTreeSha256: currentExport.artifactTreeSha256,
+    manifestSha256: currentExport.manifestSha256,
+  })}\n`);
+}
+
+export async function runRedeployCurrentPagesAtProjectRoot(
+  projectRoot: string,
+  runtime: DeployPagesRuntime = defaultRuntime,
+): Promise<void> {
+  projectRoot = resolve(projectRoot);
+  const current = await readSnapshot(
+    join(projectRoot, "data", "market", "current.json"),
+    "current snapshot",
+    "published",
+  );
+  await withPublicationLock(projectRoot, current.runId, () =>
+    runLockedRedeployCurrentPagesAtProjectRoot(projectRoot, runtime, current.runId),
+  );
+}
+
+export function parseDeployMode(args: string[]): "candidate" | "redeploy-current" {
+  if (args.length === 0) return "candidate";
+  if (args.length === 1 && args[0] === "--redeploy-current") {
+    return "redeploy-current";
+  }
+  throw new Error("market:deploy does not accept these command-line arguments");
+}
+
+async function runDeployPages(args: string[]): Promise<void> {
+  const projectRoot = resolve(fileURLToPath(new URL("../", import.meta.url)));
+  if (parseDeployMode(args) === "candidate") {
+    await runDeployPagesAtProjectRoot(projectRoot);
+    return;
+  }
+  await runRedeployCurrentPagesAtProjectRoot(projectRoot);
 }
 
 if (

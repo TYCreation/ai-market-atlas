@@ -17,12 +17,14 @@ import test from "node:test";
 import {
   copyDirectoryAtomically,
   LAST_GOOD_ANCHOR_NAME,
+  parseDeployMode,
   readDeploymentManifest,
   readLastGoodAnchor,
   recoverLastGoodTransition,
   replaceLastGoodTransactionally,
   revalidatePublicationState,
   runDeployPagesAtProjectRoot,
+  runRedeployCurrentPagesAtProjectRoot,
   validateLastGoodDirectory,
   withPublicationLock,
   writeLastGoodAnchorAtomically,
@@ -36,7 +38,7 @@ import {
 } from "../../market-data/artifact-tree.ts";
 import { hashCandidate } from "../../market-data/review.ts";
 import { DISCOVERY_ARTIFACTS } from "../../market-data/discovery-feeds.ts";
-import { makeFixtureWorkspace } from "./helpers.ts";
+import { autoPublishReview, makeFixtureWorkspace } from "./helpers.ts";
 
 async function writeLastGoodFixture(
   directory: string,
@@ -121,6 +123,98 @@ test("wrangler deployment uses a fixed argument vector without shell interpolati
       ],
     },
   ]);
+});
+
+test("deployment CLI admits only the normal mode or exact current-site redeployment mode", () => {
+  assert.equal(parseDeployMode([]), "candidate");
+  assert.equal(parseDeployMode(["--redeploy-current"]), "redeploy-current");
+  for (const args of [
+    ["--redeploy-current", "--verbose"],
+    ["--candidate"],
+    ["redeploy-current"],
+    ["--redeploy-current=true"],
+  ]) {
+    assert.throws(() => parseDeployMode(args), /does not accept|invalid|arguments/i);
+  }
+});
+
+test("current-site redeployment reads no candidate and transactionally replaces only the site anchor", async () => {
+  const fixture = await makeFixtureWorkspace();
+  const current = JSON.parse(await readFile(fixture.currentPath, "utf8"));
+  const projectRoot = await mkdtemp(join(tmpdir(), "market-current-redeploy-"));
+  const marketRoot = join(projectRoot, "data", "market");
+  const candidateDirectory = join(projectRoot, "work", "pages-candidate");
+  const lastGoodDirectory = join(projectRoot, "work", "pages-last-good");
+  await mkdir(join(marketRoot, "reviews"), { recursive: true });
+  await writeFile(join(marketRoot, "current.json"), `${JSON.stringify(current)}\n`);
+  await writeFile(
+    join(marketRoot, "reviews", `${current.runId}.json`),
+    `${JSON.stringify(autoPublishReview(current))}\n`,
+  );
+  const originalAnchor = await writeLastGoodFixture(
+    lastGoodDirectory,
+    "2026-07-25-saturday",
+    "a".repeat(64),
+    "previous verified site",
+  );
+  await writeLastGoodAnchorAtomically(projectRoot, originalAnchor);
+  const currentHash = hashCandidate(current);
+  let receivedDependencies: Record<string, unknown> | undefined;
+  const runtime: DeployPagesRuntime = {
+    exportPages: async (options) => {
+      assert.equal(options.snapshotPath, join(marketRoot, "current.json"));
+      assert.equal(options.authorizedCandidateSha256, currentHash);
+      const anchor = await writeLastGoodFixture(
+        String(options.outputDirectory),
+        current.runId,
+        currentHash,
+        "current site bytes",
+      );
+      return {
+        outputDirectory: String(options.outputDirectory),
+        routes: ["/"],
+        runId: current.runId,
+        dataCutoff: current.dataCutoff,
+        archiveMonths: [],
+        sourceIds: ["atlas-model"],
+        archiveSourceIds: {},
+        candidateSha256: currentHash,
+        artifactTreeSha256: anchor.artifactTreeSha256,
+        manifestSha256: anchor.manifestSha256,
+        artifacts: [...DISCOVERY_ARTIFACTS],
+        routeIdentities: {},
+      };
+    },
+    verifyDeployment: async () => {},
+    publishWithRestore: async () => {
+      throw new Error("candidate publication must not be reachable");
+    },
+    redeployCurrentWithRestore: async (dependencies, options) => {
+      receivedDependencies = dependencies as unknown as Record<string, unknown>;
+      assert.equal("promote" in receivedDependencies, false);
+      assert.equal("restoreSnapshot" in receivedDependencies, false);
+      await dependencies.copyDirectory(
+        options.candidateDirectory,
+        options.lastGoodDirectory,
+        options.expectedArtifactTreeSha256,
+        options.expectedManifestSha256,
+      );
+      return { published: true, promoted: false, runId: options.runId };
+    },
+  };
+
+  await runRedeployCurrentPagesAtProjectRoot(projectRoot, runtime);
+
+  assert.ok(receivedDependencies);
+  assert.equal(await readFile(join(marketRoot, "current.json"), "utf8"), `${JSON.stringify(current)}\n`);
+  await assert.rejects(readFile(join(marketRoot, "candidate.json"), "utf8"), /ENOENT/);
+  assert.deepEqual(await readLastGoodAnchor(projectRoot), {
+    schemaVersion: 1,
+    runId: current.runId,
+    candidateSha256: currentHash,
+    artifactTreeSha256: (await readDeploymentManifest(candidateDirectory)).artifactTreeSha256,
+    manifestSha256: hashCandidate(await readDeploymentManifest(candidateDirectory)),
+  });
 });
 
 test("wrangler deployment rejects command-like branches and traversal before running", async () => {
