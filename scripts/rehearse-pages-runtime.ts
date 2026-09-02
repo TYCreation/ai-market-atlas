@@ -1,5 +1,6 @@
 import { createServer, request as httpRequest } from "node:http";
-import { spawn, type ChildProcess } from "node:child_process";
+import { execFile, spawn, type ChildProcess } from "node:child_process";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { readFile } from "node:fs/promises";
@@ -10,6 +11,7 @@ import { hashCandidate } from "../market-data/review.ts";
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const candidateDirectory = join(projectRoot, "work", "pages-candidate");
 const manifestPath = join(candidateDirectory, ARTIFACT_MANIFEST_NAME);
+const execFileAsync = promisify(execFile);
 
 async function reservePort(): Promise<number> {
   const server = createServer();
@@ -48,12 +50,39 @@ async function waitForExit(child: ChildProcess, timeoutMs: number): Promise<bool
   });
 }
 
+async function processGroupExists(pid: number): Promise<boolean> {
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (error) {
+    if (isMissingProcess(error)) return false;
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "EPERM") {
+      try {
+        const result = await execFileAsync("ps", ["-eo", "pgid="], { encoding: "utf8" });
+        return result.stdout.split(/\s+/).includes(String(pid));
+      } catch {
+        return true;
+      }
+    }
+    throw error;
+  }
+}
+
+async function waitForProcessGroupGone(pid: number, timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  do {
+    if (!(await processGroupExists(pid))) return true;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, Math.min(25, Math.max(1, deadline - Date.now()))));
+  } while (Date.now() < deadline);
+  return !(await processGroupExists(pid));
+}
+
 function signalRuntime(
   child: ChildProcess,
   signal: NodeJS.Signals,
   killProcessGroup: boolean,
 ): void {
-  if (hasExited(child)) return;
+  if (hasExited(child) && !killProcessGroup) return;
   if (
     killProcessGroup &&
     process.platform !== "win32" &&
@@ -80,7 +109,18 @@ export async function stopSpawnedRuntime(
   forceMs = 2_000,
   killProcessGroup = false,
 ): Promise<void> {
-  if (hasExited(child)) return;
+  const groupedPosix = killProcessGroup && process.platform !== "win32" && typeof child.pid === "number";
+  if (!groupedPosix && hasExited(child)) return;
+  if (groupedPosix) {
+    const pid = child.pid as number;
+    signalRuntime(child, "SIGTERM", true);
+    await waitForExit(child, graceMs);
+    if (await waitForProcessGroupGone(pid, forceMs)) return;
+    signalRuntime(child, "SIGKILL", true);
+    await waitForExit(child, forceMs);
+    if (await waitForProcessGroupGone(pid, forceMs)) return;
+    throw new Error("Wrangler Pages local runtime process group did not exit after forced termination");
+  }
   signalRuntime(child, "SIGTERM", killProcessGroup);
   if (await waitForExit(child, graceMs)) return;
   signalRuntime(child, "SIGKILL", killProcessGroup);
@@ -147,12 +187,18 @@ async function main(): Promise<void> {
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
+  let spawnError: Error | undefined;
+  child.once("error", (error) => {
+    spawnError = error;
+    output += `\nspawn error: ${error.message}`;
+  });
   child.stdout?.setEncoding("utf8").on("data", (chunk) => { output += chunk; });
   child.stderr?.setEncoding("utf8").on("data", (chunk) => { output += chunk; });
   const origin = `http://127.0.0.1:${port}`;
   const deadline = Date.now() + 30_000;
   try {
     while (Date.now() < deadline) {
+      if (spawnError) throw new Error(`failed to spawn Wrangler Pages local runtime: ${spawnError.message}`);
       if (child.exitCode !== null) {
         throw new Error(`Wrangler Pages local runtime exited before readiness.\n${output}`);
       }
@@ -178,7 +224,9 @@ async function main(): Promise<void> {
     }
     throw error;
   } finally {
-    await stopSpawnedRuntime(child, 3_000, 2_000, process.platform !== "win32");
+    if (!spawnError) {
+      await stopSpawnedRuntime(child, 3_000, 2_000, process.platform !== "win32");
+    }
   }
 }
 

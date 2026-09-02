@@ -199,8 +199,12 @@ Release endpoint verification must also be bound to the reviewed manifest hash:
 npm run market:release:verify -- \
   --base-url https://preview.example.workers.dev \
   --manifest work/pages-candidate/.market-deployment.json \
-  --expected-manifest-sha256 <reviewed-manifest-sha256>
+  --expected-manifest-sha256 <reviewed-manifest-sha256> \
+  --newsletter disabled
 ```
+
+The `--newsletter` value is mandatory and must be exactly `enabled` or
+`disabled`; use `enabled` only when the reviewed endpoint is configured.
 
 Use the reviewed SHA-256 captured from the approved export/review checkpoint for
 preview and production. The local `npm run market:pages:rehearse` command may

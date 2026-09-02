@@ -53,6 +53,7 @@
     "gsap": "^3.14.2",
     "playwright": "1.54.1",
     "react-server-dom-webpack": "19.2.6",
+    "saxes": "^6.0.0",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vinext": "0.0.50",

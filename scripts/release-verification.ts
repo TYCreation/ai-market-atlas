@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { basename, dirname, resolve } from "node:path";
+import { SaxesParser } from "saxes";
 import { verifyDeployment, type VerificationExpectation } from "../market-data/deployment.ts";
 import { ARTIFACT_MANIFEST_NAME } from "../market-data/artifact-tree.ts";
 import { readDeploymentManifest } from "./deploy-pages.ts";
@@ -16,12 +17,10 @@ type ParsedTag = {
   attributes: Map<string, string>;
 };
 
+const RAW_TEXT_ELEMENTS = new Set(["script", "style", "template", "textarea", "title", "xmp"]);
+
 function canonical(route: string): string {
   return `${SITE_ORIGIN}${route === "/" ? "/" : route.endsWith("/") ? route : `${route}/`}`;
-}
-
-function escaped(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function fetchChecked(baseUrl: string, path: string, accept = "text/html"): Promise<Response> {
@@ -48,9 +47,78 @@ function parseTag(tag: string): ParsedTag {
   return { name, attributes };
 }
 
+function findTagEnd(html: string, start: number): number {
+  let quote: string | undefined;
+  for (let index = start + 1; index < html.length; index += 1) {
+    const character = html[index];
+    if (quote) {
+      if (character === quote) quote = undefined;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === ">") {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function crawlerVisibleHtml(html: string): string {
+  let visible = "";
+  let index = 0;
+  while (index < html.length) {
+    if (html.startsWith("<!--", index)) {
+      const end = html.indexOf("-->", index + 4);
+      index = end < 0 ? html.length : end + 3;
+      continue;
+    }
+    if (html[index] !== "<") {
+      visible += html[index++];
+      continue;
+    }
+    const opening = /^<([a-z][a-z0-9:-]*)\b/i.exec(html.slice(index));
+    if (!opening) {
+      visible += html[index++];
+      continue;
+    }
+    const end = findTagEnd(html, index);
+    if (end < 0) break;
+    const tagName = opening[1].toLowerCase();
+    const openingTag = html.slice(index, end + 1);
+    visible += openingTag;
+    index = end + 1;
+    if (RAW_TEXT_ELEMENTS.has(tagName) && !/\/\s*>$/.test(openingTag)) {
+      const closing = new RegExp(`</${tagName}\\s*>`, "ig");
+      closing.lastIndex = index;
+      const match = closing.exec(html);
+      index = match ? match.index + match[0].length : html.length;
+    }
+  }
+  return visible;
+}
+
+function parseAllTags(html: string): ParsedTag[] {
+  const visible = crawlerVisibleHtml(html);
+  const tags: ParsedTag[] = [];
+  let index = 0;
+  while (index < visible.length) {
+    const start = visible.indexOf("<", index);
+    if (start < 0) break;
+    const opening = /^<([a-z][a-z0-9:-]*)\b/i.exec(visible.slice(start));
+    if (!opening) {
+      index = start + 1;
+      continue;
+    }
+    const end = findTagEnd(visible, start);
+    if (end < 0) break;
+    tags.push(parseTag(visible.slice(start, end + 1)));
+    index = end + 1;
+  }
+  return tags;
+}
+
 function parseTags(html: string, name: string): ParsedTag[] {
-  const expression = new RegExp(`<${name}\\b[^>]*>`, "gi");
-  return [...html.matchAll(expression)].map((match) => parseTag(match[0]));
+  const expected = name.toLowerCase();
+  return parseAllTags(html).filter((tag) => tag.name === expected);
 }
 
 function hasRel(tag: ParsedTag, rel: string): boolean {
@@ -68,9 +136,10 @@ function classIncludes(tag: ParsedTag, className: string): boolean {
 }
 
 function idsInDocument(html: string): Set<string> {
-  return new Set(
-    [...html.matchAll(/\bid=(["'])([^"']+)\1/gi)].map((match) => match[2]),
-  );
+  return new Set(parseAllTags(html).flatMap((tag) => {
+    const id = tag.attributes.get("id");
+    return id ? [id] : [];
+  }));
 }
 
 function assertCanonicalAndAlternates(route: string, html: string): void {
@@ -93,7 +162,7 @@ function assertCanonicalAndAlternates(route: string, html: string): void {
   const actualAlternates = new Map<string, string>();
   for (const tag of links.filter((candidate) => hasRel(candidate, "alternate"))) {
     const language = tag.attributes.get("hreflang")?.toLowerCase();
-    if (!language) continue;
+    if (!language) throw new Error(`${route} has an alternate link without hreflang`);
     if (!expectedAlternates.has(language)) {
       throw new Error(`${route} has an unexpected hreflang alternate: ${language}`);
     }
@@ -113,21 +182,34 @@ function assertCanonicalAndAlternates(route: string, html: string): void {
 }
 
 function assertRouteIdentityMarker(route: string, html: string, identity: VerificationExpectation["routeIdentities"][string]): void {
+  const visible = crawlerVisibleHtml(html);
+  const emptyMarkers = (attribute: string, value: string): ParsedTag[] => {
+    const matches: ParsedTag[] = [];
+    const expression = /<span\b[^>]*>/gi;
+    for (const match of visible.matchAll(expression)) {
+      const tag = parseTag(match[0]);
+      if (
+        tag.attributes.get(attribute) === value &&
+        tag.attributes.has("hidden") &&
+        /^\s*<\/span>/i.test(visible.slice((match.index ?? 0) + match[0].length))
+      ) {
+        matches.push(tag);
+      }
+    }
+    return matches;
+  };
   if (identity.kind === "current") {
     const value = `${identity.runId} ${identity.dataCutoff}`;
-    const found = html.match(new RegExp(`<span\\b[^>]*hidden=""[^>]*data-market-route-identity="${escaped(value)}"[^>]*><\\/span>`, "g")) ?? [];
-    if (found.length !== 1) {
+    if (emptyMarkers("data-market-route-identity", value).length !== 1) {
       throw new Error(`${route} current route identity marker is missing or not hidden`);
     }
   }
   if (identity.kind === "archive-detail") {
     const value = `${identity.runId} ${identity.dataCutoff}`;
-    const found = html.match(/<span\b[^>]*\bdata-archive-route-identity="([^"]+)"[^>]*>/g) ?? [];
-    if (found.length !== 1 || !found[0].includes(`data-archive-route-identity="${value}"`)) {
+    const archiveMarkers = parseTags(html, "span").filter((tag) => tag.attributes.has("data-archive-route-identity"));
+    if (archiveMarkers.length !== 1 || emptyMarkers("data-archive-route-identity", value).length !== 1) {
       throw new Error(`${route} archive route identity marker is missing or incorrect`);
     }
-    const marker = new RegExp(`<span[^>]*hidden=""[^>]*data-archive-route-identity="${escaped(value)}"[^>]*><\\/span>`);
-    if (!marker.test(html)) throw new Error(`${route} archive route identity marker is not hidden and empty`);
   }
 }
 
@@ -139,32 +221,77 @@ function expectedLastmod(route: string, manifest: ReleaseManifest): string {
   return manifest.dataCutoff;
 }
 
-function assertSitemap(xml: string, manifest: ReleaseManifest): void {
+export function assertSitemap(xml: string, manifest: ReleaseManifest): void {
   const expectedEntries = new Map(
     manifest.routes
       .filter((route) => route !== "/market-brief/")
       .map((route) => [canonical(route), expectedLastmod(route, manifest)]),
   );
   const actualEntries = new Map<string, string>();
-  const duplicates = new Set<string>();
-  for (const match of xml.matchAll(/<url\b[^>]*>([\s\S]*?)<\/url>/gi)) {
-    const entry = match[1];
-    const location = /<loc>([^<]+)<\/loc>/i.exec(entry)?.[1];
-    const lastmod = /<lastmod>([^<]+)<\/lastmod>/i.exec(entry)?.[1];
-    if (!location || !lastmod) {
-      throw new Error("sitemap entries must include both loc and lastmod");
+  const parser = new SaxesParser({ xmlns: true });
+  const sitemapNamespace = "http://www.sitemaps.org/schemas/sitemap/0.9";
+  const stack: Array<{ name: string; uri: string; text: string; children: Set<string>; fields: Map<string, string> }> = [];
+  let rootSeen = false;
+  let parserError: unknown;
+  const fail = (message: string): never => { throw new Error(`sitemap XML is invalid: ${message}`); };
+  parser.on("error", (error) => { parserError ??= error; });
+  parser.on("doctype", () => fail("DOCTYPE is not supported"));
+  parser.on("processinginstruction", () => fail("processing instructions are not supported"));
+  parser.on("opentag", (tag) => {
+    const name = tag.local ?? tag.name;
+    const uri = tag.uri ?? "";
+    if (stack.length === 0) {
+      if (rootSeen || name !== "urlset" || uri !== sitemapNamespace) fail("root must be the sitemap urlset schema");
+      rootSeen = true;
+      const attributes = Object.keys(tag.attributes);
+      if (attributes.some((attribute) => attribute !== "xmlns")) fail("urlset has unexpected attributes");
+    } else {
+      const parent = stack[stack.length - 1];
+      if (uri !== sitemapNamespace) fail(`unexpected namespace on ${name}`);
+      if (parent.name === "urlset" && name !== "url") fail(`urlset has unexpected child ${name}`);
+      if (parent.name === "url" && (name !== "loc" && name !== "lastmod")) fail(`url has unexpected child ${name}`);
+      if (parent.name === "loc" || parent.name === "lastmod") fail(`${parent.name} cannot contain child elements`);
+      if (parent.name === "url" && parent.children.has(name)) fail(`url has duplicate ${name}`);
+      if (parent.name === "url") parent.children.add(name);
+      if (Object.keys(tag.attributes).length > 0) fail(`${name} has unexpected attributes`);
     }
-    if (location.includes("/market-brief/")) {
-      throw new Error("sitemap must exclude market-brief");
+    stack.push({ name, uri, text: "", children: new Set(), fields: new Map() });
+  });
+  parser.on("text", (text) => {
+    const current = stack[stack.length - 1];
+    if (current) current.text += text;
+    else if (/\S/.test(text)) fail("text is outside the root element");
+  });
+  parser.on("cdata", (text) => {
+    const current = stack[stack.length - 1];
+    if (current) current.text += text;
+    else if (/\S/.test(text)) fail("CDATA is outside the root element");
+  });
+  parser.on("closetag", (tag) => {
+    const current = stack.pop();
+    const name = typeof tag === "string" ? tag : tag.local ?? tag.name;
+    if (!current || current.name !== name) fail("element nesting is malformed");
+    if (current.name === "loc" || current.name === "lastmod") {
+      const parent = stack[stack.length - 1];
+      if (!parent || parent.name !== "url") fail(`${current.name} is outside a url entry`);
+      parent.fields.set(current.name, current.text);
     }
-    if (actualEntries.has(location)) {
-      duplicates.add(location);
+    if (current.name === "url") {
+      const location = current.fields.get("loc");
+      const lastmod = current.fields.get("lastmod");
+      if (!location || !lastmod || current.fields.size !== 2) fail("url entries must include exactly loc and lastmod");
+      if (location.includes("/market-brief/")) fail("sitemap must exclude market-brief");
+      if (actualEntries.has(location)) fail(`sitemap has duplicate route entries: ${location}`);
+      actualEntries.set(location, lastmod);
     }
-    actualEntries.set(location, lastmod);
+  });
+  try {
+    parser.write(xml).close();
+  } catch (error) {
+    parserError ??= error;
   }
-  if (duplicates.size > 0) {
-    throw new Error(`sitemap has duplicate route entries: ${[...duplicates].sort().join(", ")}`);
-  }
+  if (parserError) fail(parserError instanceof Error ? parserError.message : String(parserError));
+  if (!rootSeen || stack.length !== 0) fail("document has no complete root element");
   if (actualEntries.size !== expectedEntries.size) {
     throw new Error("sitemap route map does not match the reviewed manifest");
   }
@@ -263,7 +390,10 @@ export async function verifyReleaseEndpoint(
     if (route !== "/market-brief/") {
       assertCanonicalAndAlternates(route, html);
       assertRouteIdentityMarker(route, html, manifest.routeIdentities[route]);
-    } else if (!/<meta\b[^>]*name="robots"[^>]*content="noindex, follow"/i.test(html)) {
+    } else if (!parseTags(html, "meta").some((tag) =>
+      tag.attributes.get("name")?.toLowerCase() === "robots" &&
+      tag.attributes.get("content")?.toLowerCase() === "noindex, follow"
+    )) {
       throw new Error("market-brief must remain noindex");
     }
   }
@@ -290,28 +420,68 @@ export async function loadReleaseManifest(
   }) as ReleaseManifest;
 }
 
-async function main(args: string[]): Promise<void> {
-  const baseIndex = args.indexOf("--base-url");
-  const baseUrl = baseIndex >= 0 ? args[baseIndex + 1] : undefined;
-  if (!baseUrl || baseUrl.startsWith("--")) throw new Error("--base-url is required");
-  const manifestIndex = args.indexOf("--manifest");
-  const expectedManifestIndex = args.indexOf("--expected-manifest-sha256");
-  const expectedManifestSha256 =
-    expectedManifestIndex >= 0 ? args[expectedManifestIndex + 1] : undefined;
-  if (
-    !expectedManifestSha256 ||
-    expectedManifestSha256.startsWith("--") ||
-    !/^[a-f0-9]{64}$/.test(expectedManifestSha256)
-  ) {
-    throw new Error("--expected-manifest-sha256 is required");
+export type ReleaseVerificationArgs = {
+  baseUrl: string;
+  manifestPath: string | undefined;
+  expectedManifestSha256: string;
+  newsletterMode: "enabled" | "disabled";
+};
+
+export function parseReleaseVerificationArgs(args: string[]): ReleaseVerificationArgs {
+  let baseUrl: string | undefined;
+  let manifestPath: string | undefined;
+  let expectedManifestSha256: string | undefined;
+  let newsletterMode: "enabled" | "disabled" | undefined;
+  const singleton = (name: string, current: unknown): void => {
+    if (current !== undefined) throw new Error(`duplicate ${name} flag`);
+  };
+  const valueFor = (argsIndex: number, flag: string): string => {
+    const value = args[argsIndex + 1];
+    if (!value || value.startsWith("--")) throw new Error(`${flag} requires a value`);
+    return value;
+  };
+  for (let index = 0; index < args.length; index += 1) {
+    const flag = args[index];
+    if (flag === "--base-url") {
+      singleton(flag, baseUrl);
+      baseUrl = valueFor(index, flag);
+      index += 1;
+    } else if (flag === "--manifest") {
+      singleton(flag, manifestPath);
+      manifestPath = valueFor(index, flag);
+      index += 1;
+    } else if (flag === "--expected-manifest-sha256") {
+      singleton(flag, expectedManifestSha256);
+      expectedManifestSha256 = valueFor(index, flag);
+      index += 1;
+    } else if (flag === "--newsletter") {
+      singleton(flag, newsletterMode);
+      const value = valueFor(index, flag);
+      if (value !== "enabled" && value !== "disabled") throw new Error("--newsletter must be enabled or disabled");
+      newsletterMode = value;
+      index += 1;
+    } else if (flag.startsWith("--newsletter=")) {
+      singleton("--newsletter", newsletterMode);
+      const value = flag.slice("--newsletter=".length);
+      if (value !== "enabled" && value !== "disabled") throw new Error("--newsletter must be enabled or disabled");
+      newsletterMode = value;
+    } else {
+      throw new Error(`unknown flag: ${flag}`);
+    }
   }
-  const manifest = await loadReleaseManifest(
-    manifestIndex >= 0 ? args[manifestIndex + 1] : undefined,
-    expectedManifestSha256,
-  );
-  const newsletterMode = args.includes("--newsletter=enabled") ? "enabled" : "disabled";
-  await verifyReleaseEndpoint(baseUrl, manifest, newsletterMode);
-  process.stdout.write(`Release verification passed for ${baseUrl}\n`);
+  if (!baseUrl) throw new Error("--base-url is required");
+  if (!expectedManifestSha256 || !/^[a-f0-9]{64}$/.test(expectedManifestSha256)) {
+    throw new Error("--expected-manifest-sha256 is required and must be 64 lowercase hex characters");
+  }
+  if (!newsletterMode) throw new Error("--newsletter enabled|disabled is required");
+  return { baseUrl, manifestPath, expectedManifestSha256, newsletterMode };
+}
+
+async function main(args: string[]): Promise<void> {
+  const parsed = parseReleaseVerificationArgs(args);
+  const manifest = await loadReleaseManifest(parsed.manifestPath, parsed.expectedManifestSha256);
+  await verifyReleaseEndpoint(parsed.baseUrl, manifest, parsed.newsletterMode);
+  process.stdout.write(`Release verification passed for ${parsed.baseUrl}\n`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

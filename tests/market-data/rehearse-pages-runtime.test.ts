@@ -61,3 +61,36 @@ test("runtime shutdown is bounded for a stubborn child", async () => {
   );
   assert.ok(elapsed < 1_000, `runtime shutdown exceeded its bound: ${elapsed}ms`);
 });
+
+test("detached runtime shutdown kills a stubborn descendant after its group leader exits", async (t) => {
+  if (process.platform === "win32") {
+    t.skip("POSIX process groups are not available on Windows");
+    return;
+  }
+  const child = spawn(
+    process.execPath,
+    [
+      "-e",
+      [
+        "const {spawn}=require('node:child_process');",
+        "const descendant=spawn(process.execPath,['-e',\"process.on('SIGTERM',()=>{});process.stdout.write(String(process.pid));setInterval(()=>{},1000);\"],{stdio:['ignore','pipe','ignore']});",
+        "descendant.stdout.pipe(process.stdout);",
+        "setInterval(()=>{},1000);",
+      ].join(""),
+    ],
+    { detached: true, stdio: ["ignore", "pipe", "ignore"] },
+  );
+  assert.ok(child.stdout);
+  const [data] = await once(child.stdout, "data");
+  const descendantPid = Number(String(data));
+  assert.ok(Number.isInteger(descendantPid) && descendantPid > 0);
+
+  try {
+    await stopSpawnedRuntime(child, 50, 500, true);
+    assert.ok(child.exitCode !== null || child.signalCode !== null);
+    assert.throws(() => process.kill(descendantPid, 0), /ESRCH/);
+  } finally {
+    try { process.kill(descendantPid, "SIGKILL"); } catch { /* already gone */ }
+    try { process.kill(-(child.pid ?? 0), "SIGKILL"); } catch { /* already gone */ }
+  }
+});
