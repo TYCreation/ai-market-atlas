@@ -17,7 +17,17 @@ type ParsedTag = {
   attributes: Map<string, string>;
 };
 
-const RAW_TEXT_ELEMENTS = new Set(["script", "style", "template", "textarea", "title", "xmp"]);
+const RAW_TEXT_ELEMENTS = new Set([
+  "iframe",
+  "noembed",
+  "noframes",
+  "script",
+  "style",
+  "template",
+  "textarea",
+  "title",
+  "xmp",
+]);
 
 function canonical(route: string): string {
   return `${SITE_ORIGIN}${route === "/" ? "/" : route.endsWith("/") ? route : `${route}/`}`;
@@ -42,6 +52,9 @@ function parseTag(tag: string): ParsedTag {
   for (const match of source.matchAll(expression)) {
     const attributeName = match[1].toLowerCase();
     const attributeValue = match[2] ?? match[3] ?? match[4] ?? "";
+    if (attributes.has(attributeName)) {
+      throw new Error(`duplicate attribute ${attributeName} in ${tag}`);
+    }
     attributes.set(attributeName, attributeValue);
   }
   return { name, attributes };
@@ -86,7 +99,13 @@ function crawlerVisibleHtml(html: string): string {
     const openingTag = html.slice(index, end + 1);
     visible += openingTag;
     index = end + 1;
-    if (RAW_TEXT_ELEMENTS.has(tagName) && !/\/\s*>$/.test(openingTag)) {
+    if (tagName === "plaintext") {
+      // PLAINTEXT consumes the remainder of the document as text; apparent
+      // closing tags must not become live markup.
+      index = html.length;
+      continue;
+    }
+    if (RAW_TEXT_ELEMENTS.has(tagName)) {
       const closing = new RegExp(`</${tagName}\\s*>`, "ig");
       closing.lastIndex = index;
       const match = closing.exec(html);

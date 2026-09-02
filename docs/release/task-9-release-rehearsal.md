@@ -6,10 +6,10 @@ Run this checklist from the repository root before the final production release 
 
 - [x] `node --test tests/lint-generated-artifacts.test.mjs` — 1/1 passed.
 - [x] `npm run lint` — 0 errors; two existing unused-variable warnings in `market-data/freshness.ts` and `market-data/storage.ts`.
-- [x] `npm run test:market` — 380/380 passed, including market-data, export, deployment, browser market-brief, discovery-feed, newsletter, and fixture pipeline coverage.
+- [x] `npm run test:market` — 406/406 passed, including market-data, export, deployment, browser market-brief, discovery-feed, newsletter, and fixture pipeline coverage.
 - [x] `npm run test:readability` — 1/1 passed.
 - [x] `npm run test` — 22/22 passed.
-- [x] Focused release tests: `node --experimental-strip-types --test tests/market-data/export-pages.test.ts tests/market-data/deployment.test.ts tests/market-data/deploy-pages.test.ts tests/market-data/end-to-end.test.ts tests/market-data/release-verification.test.ts tests/market-data/rehearse-pages-runtime.test.ts` — 116/116 passed.
+- [x] Focused release/deployment tests: `node --experimental-strip-types --test tests/market-data/export-pages.test.ts tests/market-data/deployment.test.ts tests/market-data/deploy-pages.test.ts tests/market-data/end-to-end.test.ts tests/market-data/release-verification.test.ts tests/market-data/rehearse-pages-runtime.test.ts` — 142/142 passed.
 - [x] `npm run market:export` — local export passed for the current published fixture (`2026-08-08-saturday`), producing 81 routes and `/rss.xml`, `/news-sitemap.xml`, and `/llms.txt`.
 - [x] `npm run market:release:verify -- --base-url <base-url> --manifest work/pages-candidate/.market-deployment.json --expected-manifest-sha256 <reviewed-manifest-sha256> --newsletter disabled` — executable fail-closed endpoint checklist. It loads the manifest only through the trusted deployment-manifest validator, then verifies real 404, unique trailing-slash canonicals/hreflang (including `x-default`), exact sitemap route+`lastmod` parity, market-brief noindex and `data.json` identity, dated brief/entity identities, discovery content types, and the explicitly selected newsletter mode (`--newsletter enabled` when configured).
 - [ ] `npm run market:pages:rehearse` — BLOCKED in this environment: the real Pages runtime exits before readiness with `No such module "wrangler:modules-watch"` (or Wrangler's generated middleware facade). The command is fail-closed and does not substitute a static server.

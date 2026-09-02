@@ -120,6 +120,298 @@ test("release verifier does not treat canonical markup inside an HTML comment as
   );
 });
 
+const nonLiveTagCases = [
+  ["iframe", "<iframe><link rel=\"canonical\" href=\"https://aimarketatlas.net/\">"] as const,
+  ["noembed", "<noembed><link rel=\"canonical\" href=\"https://aimarketatlas.net/\"></noembed>"] as const,
+  ["noframes", "<noframes><link rel=\"canonical\" href=\"https://aimarketatlas.net/\"></noframes>"] as const,
+  ["plaintext", "<plaintext><link rel=\"canonical\" href=\"https://aimarketatlas.net/\"></plaintext>"] as const,
+];
+
+for (const [container, spoof] of nonLiveTagCases) {
+  test(`release verifier does not treat canonical markup inside ${container} text as live HTML`, async () => {
+    const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+    const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+    await withReleaseServer(
+      manifestPath,
+      (pathname, body) => pathname === "/"
+        ? body.replace(/<link rel="canonical"[^>]*>/i, spoof)
+        : undefined,
+      async (baseUrl) => {
+        await assert.rejects(
+          () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+          /canonical/i,
+        );
+      },
+    );
+  });
+}
+
+for (const [container] of nonLiveTagCases) {
+  test(`release verifier does not treat hreflang markup inside ${container} text as live HTML`, async () => {
+    const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+    const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+    await withReleaseServer(
+      manifestPath,
+      (pathname, body) => pathname === "/"
+        ? body.replace(
+            /<link rel="alternate" hrefLang="en"[^>]*>/i,
+            `<${container}><link rel="alternate" hrefLang="en" href="https://aimarketatlas.net/en/"></${container}>`,
+          )
+        : undefined,
+      async (baseUrl) => {
+        await assert.rejects(
+          () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+          /hreflang|alternate/i,
+        );
+      },
+    );
+  });
+
+  test(`release verifier does not treat route identity markup inside ${container} text as live HTML`, async () => {
+    const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+    const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+    const identity = manifest.routeIdentities["/"];
+    if (identity.kind !== "current") throw new Error("fixture homepage identity must be current");
+    await withReleaseServer(
+      manifestPath,
+      (pathname, body) => pathname === "/"
+        ? body.replace(
+            /<span hidden="" data-market-route-identity="[^"]*"><\/span>/i,
+            `<${container}><span hidden data-market-route-identity="${identity.runId} ${identity.dataCutoff}"></span></${container}>`,
+          )
+        : undefined,
+      async (baseUrl) => {
+        await assert.rejects(
+          () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+          /identity/i,
+        );
+      },
+    );
+  });
+
+  test(`release verifier does not treat newsletter markup inside ${container} text as live HTML`, async () => {
+    const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+    const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+    await withReleaseServer(
+      manifestPath,
+      (pathname, body) => {
+        if (pathname !== "/") return undefined;
+        const start = body.indexOf('<section class="newsletter"');
+        const end = body.indexOf("</section>", start) + "</section>".length;
+        assert.ok(start >= 0 && end > start);
+        return `${body.slice(0, start)}<${container}>${body.slice(start, end)}</${container}>${body.slice(end)}`;
+      },
+      async (baseUrl) => {
+        await assert.rejects(
+          () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+          /newsletter/i,
+        );
+      },
+    );
+  });
+}
+
+test("release verifier fails closed for an unclosed iframe raw-text container", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(/<link rel="canonical"[^>]*>/i, '<iframe><link rel="canonical" href="https://aimarketatlas.net/">')
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /canonical/i,
+      );
+    },
+  );
+});
+
+test("release verifier treats a slash on an unclosed raw-text container as text, not as a close", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(/<link rel="canonical"[^>]*>/i, '<iframe/><link rel="canonical" href="https://aimarketatlas.net/">')
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /canonical/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate canonical attributes instead of accepting the last value", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(
+          /<link rel="canonical"[^>]*>/i,
+          '<link href="https://evil.example/" HREF="https://aimarketatlas.net/" rel="canonical">',
+        )
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate canonical rel attributes case-insensitively", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(
+          /<link rel="canonical"[^>]*>/i,
+          '<link rel="alternate" REL="canonical" href="https://aimarketatlas.net/">',
+        )
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate hreflang attributes instead of accepting the last value", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(
+          /<link rel="alternate" hrefLang="en"[^>]*>/i,
+          '<link rel="alternate" hrefLang="bogus" HREFLANG="en" href="https://aimarketatlas.net/en/">',
+        )
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate identity marker attributes instead of accepting the last value", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(
+          /<span hidden="" data-market-route-identity="[^"]*"><\/span>/i,
+          '<span hidden data-market-route-identity="bad" DATA-MARKET-ROUTE-IDENTITY="2026-08-08-saturday 2026-08-08T01:00:00.000Z"></span>',
+        )
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate newsletter form action and method attributes", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body
+          .replace(/<label class="newsletter-consent">/i, '<label id="newsletter-consent" class="newsletter-consent">')
+          .replace(
+            /<form\b([^>]*)>/i,
+            '<form$1 action="http://evil.example/" ACTION="https://subscribe.example/" method="get" METHOD="post">',
+          )
+          .replace(/\sdisabled(?:=""|\b)/g, "")
+          .replace(/\saria-disabled="true"/g, "")
+          .replace(/\srequired(?:=""|\b)/g, "")
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "enabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate newsletter form method attributes case-insensitively", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body
+          .replace(/<label class="newsletter-consent">/i, '<label id="newsletter-consent" class="newsletter-consent">')
+          .replace(/<form\b([^>]*)>/i, '<form$1 action="https://subscribe.example/" method="get" METHOD="post">')
+          .replace(/\sdisabled(?:=""|\b)/g, "")
+          .replace(/\saria-disabled="true"/g, "")
+          .replace(/\srequired(?:=""|\b)/g, "")
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "enabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate newsletter input boolean attributes", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(
+          /<input id="newsletter-email"([^>]*)>/i,
+          '<input id="newsletter-email"$1 DISABLED="false" disabled="disabled" REQUIRED="false" required>',
+        )
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
+test("release verifier rejects duplicate newsletter required attributes case-insensitively", async () => {
+  const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
+  const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
+  await withReleaseServer(
+    manifestPath,
+    (pathname, body) => pathname === "/"
+      ? body.replace(
+          /<input id="newsletter-email"([^>]*)>/i,
+          '<input id="newsletter-email"$1 REQUIRED="false" required="required">',
+        )
+      : undefined,
+    async (baseUrl) => {
+      await assert.rejects(
+        () => verifyReleaseEndpoint(baseUrl, manifest, "disabled"),
+        /duplicate attribute/i,
+      );
+    },
+  );
+});
+
 test("release verifier does not treat newsletter markup inside template text as live HTML", async () => {
   const manifestPath = join(candidate, ARTIFACT_MANIFEST_NAME);
   const manifest = await loadReleaseManifest(manifestPath, hashCandidate(JSON.parse(await readFile(manifestPath, "utf8"))));
