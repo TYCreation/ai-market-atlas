@@ -27,7 +27,7 @@ test("cited editions reject missing, cross-page, optional, modeled and unregiste
     (s) => { s.metrics["pulse.nvidia_data_center_revenue"].required = false; },
     (s) => { s.metrics["pulse.nvidia_data_center_revenue"].kind = "modeled"; },
     (s) => { const id = "pulse.unregistered"; s.metrics[id] = { ...s.metrics["pulse.nvidia_data_center_revenue"], id }; s.pages["/"].kpis![0].metricId = id; },
-    (s) => { s.metrics["stocks.nvda.price"] = structuredClone(legacy.metrics["stocks.nvda.price"]); },
+    (s) => { s.metrics["stocks.nvda.price"] = structuredClone((legacy as unknown as MarketSnapshot).metrics["stocks.nvda.price"]); },
   ];
   for (const mutate of cases) {
     const snapshot = citedEditionFixture();
