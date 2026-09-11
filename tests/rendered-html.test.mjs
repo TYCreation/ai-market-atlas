@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const currentSnapshot = JSON.parse(
-  await readFile(new URL("../data/market/current.json", import.meta.url), "utf8"),
+  await readFile(process.env.MARKET_SNAPSHOT_PATH ?? new URL("../data/market/current.json", import.meta.url), "utf8"),
 );
 
 const globalsCss = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -88,7 +88,8 @@ for (const [pathname, heading, metricIds] of [
     assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
     const html = await response.text();
-    assert.match(html, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    const expectedTitle = currentSnapshot.schemaVersion === 2 ? currentSnapshot.pages[pathname].report.title.zh : heading;
+    assert.match(html, new RegExp(expectedTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     assert.match(html, /AI Market Atlas/i);
     assert.match(
       html,
@@ -109,13 +110,18 @@ for (const [pathname, heading, metricIds] of [
     assert.doesNotMatch(html, /July 2026 illustrative dataset|2026 年 7 月的示意數據/i);
     assert.match(html, /資料來源與方法/);
     assert.match(html, /最後查閱/);
-    assert.match(html, /source-atlas-model/);
-    for (const metricId of metricIds) {
+    if (currentSnapshot.schemaVersion === 1) assert.match(html, /source-atlas-model/);
+    const expectedMetricIds = currentSnapshot.schemaVersion === 2 ? currentSnapshot.pages[pathname].kpis.map(({ metricId }) => metricId) : metricIds;
+    if (currentSnapshot.schemaVersion === 2) {
+      assert.doesNotMatch(html, /class="signal-orbit"|class="panel chart-panel"|metric-source-stocks\.[^.]+\.(?:price|weekReturn|monthReturn)/);
+      assert.match(html, /Published fact|已發布事實|已公佈事實|公司揭露/);
+    }
+    for (const metricId of expectedMetricIds) {
       assert.match(html, new RegExp(`metric-source-${metricId.replaceAll(".", "\\.")}`));
     }
     if (pathname === "/") {
       assert.match(html, /<time[^>]+dateTime="2026-[^"]+"/);
-      assert.match(html, /Atlas model|Atlas 模型/);
+      if (currentSnapshot.schemaVersion === 1) assert.match(html, /Atlas model|Atlas 模型/);
       assert.doesNotMatch(html, /class="edition-run"/);
       assert.match(html, /market-brief\/index\.html\?lang=zh/);
       assert.match(html, /30 秒掌握本週 AI 市場/);
@@ -124,7 +130,7 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, /class="atlas-field"/);
       assert.match(html, /href="#sources"/);
       assert.match(html, /支援、反向與催化信號/);
-      assert.match(html, /已公佈的 AI 可用容量/);
+      if (currentSnapshot.schemaVersion === 1) assert.match(html, /已公佈的 AI 可用容量/);
       assert.doesNotMatch(html, /支持、反向與催化信號|已公布的 AI 可用容量/);
       assert.match(html, /訂閱週報 \/ Subscribe/);
       assert.match(html, /aria-describedby="newsletter-consent newsletter-status"/);
@@ -134,7 +140,7 @@ for (const [pathname, heading, metricIds] of [
       assert.match(html, /<input[^>]*type="checkbox"[^>]*disabled[^>]*name="newsletter-consent"/);
       assert.match(html, /目前尚未開放訂閱|Newsletter signup is not configured/);
     }
-    if (pathname === "/stocks") {
+    if (pathname === "/stocks" && currentSnapshot.schemaVersion === 1) {
       assert.match(
         html,
         /class="market-delta positive"[^>]*>[^<]*<span aria-hidden="true">▲<\/span>/,
@@ -180,7 +186,7 @@ for (const [pathname, heading] of [
     const routeIdentity = html.match(/<span hidden="" data-market-route-identity="([^"]+)"[^>]*><\/span>/);
     assert.ok(routeIdentity, "English current route must expose a hidden route identity marker");
     assert.equal(routeIdentity[1], `${currentSnapshot.runId} ${currentSnapshot.dataCutoff}`);
-    if (pathname === "/en/stocks") {
+    if (pathname === "/en/stocks" && currentSnapshot.schemaVersion === 1) {
       assert.match(html, /Atlas model/);
       assert.doesNotMatch(html, /Market observation/);
       const equityTable = html.match(/<table class="market-table equity-table">[\s\S]*?<\/table>/)?.[0];
@@ -192,7 +198,7 @@ for (const [pathname, heading] of [
       for (const quoteMarker of ["NYSE", "NASDAQ", "$23.09", "$86.81", "52-week range", "Updated ·"]) {
         assert.doesNotMatch(html, new RegExp(quoteMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), quoteMarker);
       }
-    } else {
+    } else if (currentSnapshot.schemaVersion === 1) {
       assert.match(html, /Atlas model/);
     }
     assert.match(html, /hrefLang="zh-Hant"/);
@@ -293,10 +299,16 @@ test("rendered publication exposes route, source, brief, and archive markers", a
   assert.match(home, /href="\/models"/);
   assert.match(home, /href="\/sic"/);
   assert.match(home, /market-brief\/index\.html\?lang=zh&amp;embed=1/);
-  assert.match(home, /source-atlas-model/);
-
-  assert.match(stocks, /metric-source-stocks\.basket_30d/);
-  assert.match(stocks, /NVIDIA Investor Relations/);
+  if (currentSnapshot.schemaVersion === 1) {
+    assert.match(home, /source-atlas-model/);
+    assert.match(stocks, /metric-source-stocks\.basket_30d/);
+    assert.match(stocks, /NVIDIA Investor Relations/);
+  } else {
+    for (const kpi of currentSnapshot.pages["/stocks"].kpis) {
+      assert.ok(stocks.includes(`metric-source-${kpi.metricId}`));
+    }
+    assert.doesNotMatch(home, /source-atlas-model/);
+  }
   assert.match(stocks, /href="\/archive"/);
 
   assert.match(archiveIndex, /href="\/archive\/2026-07"/);

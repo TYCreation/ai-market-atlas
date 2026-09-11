@@ -603,6 +603,7 @@ export async function exportPages(
   const publishedBriefs = await loadPublishedBriefs(
     join(projectRoot, "data", "market", "runs"),
     join(projectRoot, "data", "market", "reviews"),
+    snapshot,
   );
   const eligibleEntities = discoverEligibleEntityRecords(publishedBriefs);
   const entities = extractEntityHubs(publishedBriefs);

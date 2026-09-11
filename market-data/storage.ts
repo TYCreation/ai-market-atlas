@@ -253,7 +253,9 @@ export async function promoteCandidate(
   const review = await readReview(paths, normalized);
   assertAutoPublishReview(review, normalized);
 
-  const archivedPath = safeRunPath(paths.runsDir, normalized.runId);
+  // Permanent provenance filenames identify the snapshot they contain, not the
+  // later publication that happened to archive it.
+  const archivedPath = safeRunPath(paths.runsDir, previous.runId);
   const monthlyArchiveMonth = normalized.cadence === "month-end" ? monthFor(normalized) : undefined;
   const monthlyIndex = monthlyArchiveMonth === undefined ? undefined : await readMonthlyIndex(paths.monthlyIndexPath);
   if (monthlyArchiveMonth !== undefined && monthlyIndex![monthlyArchiveMonth] !== undefined) {
@@ -304,7 +306,7 @@ export async function restoreCurrent(paths: StoragePaths, promotion: PromotionRe
   }
   if (
     !isSafeMarketRunId(archived.runId, archived.cadence) ||
-    `${promotion.runId}.json` !== filename
+    `${promotion.previousRunId}.json` !== filename
     || !sameArchiveIdentity(archived, promotion.previousRunId, promotion.archivedSha256)
   ) {
     throw new Error("promotion archive identity does not match");

@@ -27,6 +27,7 @@ import {
   type VerificationExpectation,
 } from "../market-data/deployment.ts";
 import { hashCandidate, isSafeMarketRunId } from "../market-data/review.ts";
+import { AUGUST_PRODUCTION_ANCHOR, isKnownLegacyRollbackManifest, verifyLegacyRollback } from "../market-data/legacy-rollback.ts";
 import { assertMarketSnapshot, assertPublishedMarketSnapshot } from "../market-data/schema.ts";
 import {
   promoteCandidate,
@@ -641,6 +642,11 @@ export async function readDeploymentManifest(
   } catch {
     throw new Error("deployment manifest must contain valid JSON");
   }
+  const legacyRollback = basename(directory) !== "pages-candidate" &&
+    expected.expectedManifestSha256 === AUGUST_PRODUCTION_ANCHOR.manifestSha256 &&
+    expected.expectedArtifactTreeSha256 === AUGUST_PRODUCTION_ANCHOR.artifactTreeSha256 &&
+    expected.expectedCandidateSha256 === AUGUST_PRODUCTION_ANCHOR.candidateSha256 &&
+    isKnownLegacyRollbackManifest(value);
   if (
     value === null ||
     typeof value !== "object" ||
@@ -684,13 +690,13 @@ export async function readDeploymentManifest(
     typeof (value as { routeIdentities?: unknown }).routeIdentities !==
       "object" ||
     Array.isArray((value as { routeIdentities?: unknown }).routeIdentities) ||
-    !Array.isArray((value as { artifacts?: unknown }).artifacts) ||
+    (!legacyRollback && (!Array.isArray((value as { artifacts?: unknown }).artifacts) ||
     (value as { artifacts: unknown[] }).artifacts.length !== DISCOVERY_ARTIFACTS.length ||
     (value as { artifacts: unknown[] }).artifacts.length !==
       new Set((value as { artifacts: unknown[] }).artifacts).size ||
     JSON.stringify(
       [...(value as { artifacts: string[] }).artifacts].sort(),
-    ) !== JSON.stringify([...DISCOVERY_ARTIFACTS].sort())
+    ) !== JSON.stringify([...DISCOVERY_ARTIFACTS].sort())))
   ) {
     throw new Error("deployment manifest is invalid");
   }
@@ -952,16 +958,6 @@ export async function revalidateCurrentRedeploymentState(options: {
   });
 }
 
-async function pathExists(path: string): Promise<boolean> {
-  try {
-    await lstat(path);
-    return true;
-  } catch (error) {
-    if (isMissing(error)) return false;
-    throw error;
-  }
-}
-
 async function readSnapshot(path: string, label: string, kind: "candidate" | "published") {
   const metadata = await lstat(path);
   if (metadata.isSymbolicLink() || !metadata.isFile()) {
@@ -1042,65 +1038,7 @@ async function runLockedDeployPagesAtProjectRoot(
   };
 
   await recoverLastGoodTransition(projectRoot);
-  let lastGoodAnchor: LastGoodAnchor;
-  try {
-    lastGoodAnchor = await readLastGoodAnchor(projectRoot);
-  } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !/last-good anchor is missing/i.test(error.message) ||
-      (await pathExists(lastGoodDirectory))
-    ) {
-      throw error;
-    }
-    const current = await readSnapshot(currentPath, "current snapshot", "published");
-    const currentExport = await runtime.exportPages({
-      projectRoot,
-      snapshotPath: currentPath,
-      outputDirectory: lastGoodDirectory,
-    });
-    try {
-      const bootstrapUrl = runtime.bootstrapPreview
-          ? await runtime.bootstrapPreview(
-              lastGoodDirectory,
-              previewBranchForRunId(current.runId).replace(
-                "market-update-",
-                "market-seed-",
-              ),
-            )
-        : PRODUCTION_BASE_URL;
-      await runtime.verifyDeployment(
-        bootstrapUrl,
-        currentExport.routes,
-        {
-          runId: current.runId,
-          dataCutoff: current.dataCutoff,
-          archiveMonths: currentExport.archiveMonths,
-          sourceIds: currentExport.sourceIds,
-          archiveSourceIds: currentExport.archiveSourceIds,
-          routeIdentities: currentExport.routeIdentities,
-          artifacts: [...DISCOVERY_ARTIFACTS],
-        },
-      );
-      const seededAnchor: LastGoodAnchor = {
-        schemaVersion: 1,
-        runId: currentExport.runId,
-        candidateSha256: currentExport.candidateSha256,
-        artifactTreeSha256: currentExport.artifactTreeSha256,
-        manifestSha256: currentExport.manifestSha256,
-      };
-      await validateLastGoodDirectory(lastGoodDirectory, seededAnchor);
-      await writeLastGoodAnchorAtomically(projectRoot, seededAnchor);
-      lastGoodAnchor = seededAnchor;
-    } catch (error) {
-      await rm(lastGoodDirectory, { recursive: true, force: true });
-      throw new Error(
-        `Cannot seed last-known-good from unverified production: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-  }
+  let lastGoodAnchor = await readLastGoodAnchor(projectRoot);
   await validateLastGoodDirectory(lastGoodDirectory, lastGoodAnchor);
   const currentSnapshot = await readSnapshot(currentPath, "current snapshot", "published");
 
@@ -1172,6 +1110,11 @@ async function runLockedDeployPagesAtProjectRoot(
       }
       if (resolve(active.directory) !== resolve(directory)) {
         throw new Error("verification directory does not match deployed assets");
+      }
+      if (resolve(directory) === resolve(lastGoodDirectory) && lastGoodAnchor.manifestSha256 === AUGUST_PRODUCTION_ANCHOR.manifestSha256) {
+        await validateLastGoodDirectory(directory, lastGoodAnchor);
+        await verifyLegacyRollback(baseUrl, directory);
+        return;
       }
       const manifest = await readDeploymentManifest(directory, {
         expectedCandidateSha256: active.candidateSha256,
@@ -1297,81 +1240,7 @@ async function runLockedRedeployCurrentPagesAtProjectRoot(
   });
 
   await recoverLastGoodTransition(projectRoot);
-  let lastGoodAnchor: LastGoodAnchor;
-  try {
-    lastGoodAnchor = await readLastGoodAnchor(projectRoot);
-  } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !/last-good anchor is missing/i.test(error.message) ||
-      (await pathExists(lastGoodDirectory))
-    ) {
-      throw error;
-    }
-    const currentExport = await runtime.exportPages({
-      projectRoot,
-      snapshotPath: currentPath,
-      outputDirectory: lastGoodDirectory,
-      authorizedCandidateSha256: authorization.candidateSha256,
-    });
-    try {
-      const beforeBootstrap = await authorizeCurrentRedeployment({
-        runId: current.runId,
-        currentPath,
-        reviewPath,
-      });
-      if (beforeBootstrap.candidateSha256 !== authorization.candidateSha256) {
-        throw new Error("current snapshot changed before last-good bootstrap");
-      }
-      const bootstrapUrl = runtime.bootstrapPreview
-        ? await runtime.bootstrapPreview(
-            lastGoodDirectory,
-            previewBranchForRunId(current.runId).replace(
-              "market-update-",
-              "market-seed-",
-            ),
-          )
-        : PRODUCTION_BASE_URL;
-      const beforeVerification = await authorizeCurrentRedeployment({
-        runId: current.runId,
-        currentPath,
-        reviewPath,
-      });
-      if (beforeVerification.candidateSha256 !== authorization.candidateSha256) {
-        throw new Error("current snapshot changed before last-good bootstrap verification");
-      }
-      await runtime.verifyDeployment(
-        bootstrapUrl,
-        currentExport.routes,
-        {
-          runId: current.runId,
-          dataCutoff: current.dataCutoff,
-          archiveMonths: currentExport.archiveMonths,
-          sourceIds: currentExport.sourceIds,
-          archiveSourceIds: currentExport.archiveSourceIds,
-          routeIdentities: currentExport.routeIdentities,
-          artifacts: [...DISCOVERY_ARTIFACTS],
-        },
-      );
-      const seededAnchor: LastGoodAnchor = {
-        schemaVersion: 1,
-        runId: currentExport.runId,
-        candidateSha256: currentExport.candidateSha256,
-        artifactTreeSha256: currentExport.artifactTreeSha256,
-        manifestSha256: currentExport.manifestSha256,
-      };
-      await validateLastGoodDirectory(lastGoodDirectory, seededAnchor);
-      await writeLastGoodAnchorAtomically(projectRoot, seededAnchor);
-      lastGoodAnchor = seededAnchor;
-    } catch (error) {
-      await rm(lastGoodDirectory, { recursive: true, force: true });
-      throw new Error(
-        `Cannot seed last-known-good from unverified current snapshot: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-  }
+  let lastGoodAnchor = await readLastGoodAnchor(projectRoot);
   await validateLastGoodDirectory(lastGoodDirectory, lastGoodAnchor);
 
   const currentExport = await runtime.exportPages({
@@ -1420,6 +1289,11 @@ async function runLockedRedeployCurrentPagesAtProjectRoot(
       const active = activeDirectoryByUrl.get(baseUrl);
       if (!active || resolve(active.directory) !== resolve(directory)) {
         throw new Error("verification directory does not match deployed assets");
+      }
+      if (resolve(directory) === resolve(lastGoodDirectory) && lastGoodAnchor.manifestSha256 === AUGUST_PRODUCTION_ANCHOR.manifestSha256) {
+        await validateLastGoodDirectory(directory, lastGoodAnchor);
+        await verifyLegacyRollback(baseUrl, directory);
+        return;
       }
       const manifest = await readDeploymentManifest(directory, {
         expectedCandidateSha256: active.candidateSha256,

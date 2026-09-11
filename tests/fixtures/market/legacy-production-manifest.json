@@ -1,0 +1,463 @@
+{
+  "routes": [
+    "/",
+    "/stocks",
+    "/compute",
+    "/energy",
+    "/models",
+    "/sic",
+    "/en",
+    "/en/stocks",
+    "/en/compute",
+    "/en/energy",
+    "/en/models",
+    "/en/sic",
+    "/archive",
+    "/en/archive",
+    "/archive/2026-08",
+    "/archive/2026-07",
+    "/en/archive/2026-08",
+    "/en/archive/2026-07",
+    "/market-brief/"
+  ],
+  "runId": "2026-08-29-month-end",
+  "dataCutoff": "2026-08-28T13:48:08.000Z",
+  "archiveMonths": [
+    "2026-08",
+    "2026-07"
+  ],
+  "sourceIds": [
+    "amd-q2-2026",
+    "amd-q2-2026-gnw",
+    "amd-q2-2026-sec",
+    "atlas-model",
+    "broadcom-q2-fy26",
+    "cisco-q4-fy26",
+    "cisco-q4-fy26-sec",
+    "doe-data-centers",
+    "gemini-pricing",
+    "iea-data-centres",
+    "iea-energy-ai",
+    "infineon-200mm",
+    "nvidia-q1-fy27",
+    "nvidia-q2-fy27",
+    "onsemi-ai",
+    "onsemi-q2-2026-gnw",
+    "onsemi-q2-2026-sec",
+    "openai-cyber-pacing",
+    "openai-full-stack",
+    "openai-ports-pike",
+    "openai-pricing",
+    "sharon-ai-deployment-acceptance",
+    "stanford-economy",
+    "stanford-technical",
+    "stm-q1-2026",
+    "tsmc-q2-2026",
+    "vertiv-q2-2026",
+    "vertiv-q2-2026-prn",
+    "vistra-q2-2026",
+    "wolfspeed-ai"
+  ],
+  "archiveSourceIds": {
+    "2026-08": [
+      "amd-q2-2026",
+      "amd-q2-2026-gnw",
+      "amd-q2-2026-sec",
+      "atlas-model",
+      "broadcom-q2-fy26",
+      "cisco-q4-fy26",
+      "cisco-q4-fy26-sec",
+      "doe-data-centers",
+      "gemini-pricing",
+      "iea-data-centres",
+      "iea-energy-ai",
+      "infineon-200mm",
+      "nvidia-q1-fy27",
+      "nvidia-q2-fy27",
+      "onsemi-ai",
+      "onsemi-q2-2026-gnw",
+      "onsemi-q2-2026-sec",
+      "openai-cyber-pacing",
+      "openai-full-stack",
+      "openai-ports-pike",
+      "openai-pricing",
+      "sharon-ai-deployment-acceptance",
+      "stanford-economy",
+      "stanford-technical",
+      "stm-q1-2026",
+      "tsmc-q2-2026",
+      "vertiv-q2-2026",
+      "vertiv-q2-2026-prn",
+      "vistra-q2-2026",
+      "wolfspeed-ai"
+    ],
+    "2026-07": [
+      "atlas-model",
+      "broadcom-q2-fy26",
+      "doe-data-centers",
+      "gemini-pricing",
+      "iea-data-centres",
+      "iea-energy-ai",
+      "infineon-200mm",
+      "nvidia-q1-fy27",
+      "onsemi-ai",
+      "openai-pricing",
+      "stanford-economy",
+      "stanford-technical",
+      "stm-q1-2026",
+      "tsmc-q1-2026",
+      "wolfspeed-ai"
+    ]
+  },
+  "candidateSha256": "7b8f080c8a1688aaf93375b2123dbd66319cfd003aa5f7b1d69aa5b96ed50088",
+  "artifactTreeSha256": "03087ceadb8a399c98f7f87cb197426e6af697d0cd3528e305f63c12076ffc3b",
+  "routeIdentities": {
+    "/": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "openai-full-stack",
+        "openai-ports-pike",
+        "sharon-ai-deployment-acceptance",
+        "stanford-economy"
+      ]
+    },
+    "/stocks": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "tsmc-q2-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/compute": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "openai-ports-pike",
+        "sharon-ai-deployment-acceptance",
+        "tsmc-q2-2026"
+      ]
+    },
+    "/energy": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "doe-data-centers",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "openai-ports-pike",
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn",
+        "vistra-q2-2026"
+      ]
+    },
+    "/models": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "gemini-pricing",
+        "openai-cyber-pacing",
+        "openai-full-stack",
+        "openai-pricing",
+        "stanford-economy"
+      ]
+    },
+    "/sic": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "infineon-200mm",
+        "onsemi-ai",
+        "onsemi-q2-2026-gnw",
+        "onsemi-q2-2026-sec",
+        "stm-q1-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/en": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "openai-full-stack",
+        "openai-ports-pike",
+        "sharon-ai-deployment-acceptance",
+        "stanford-economy"
+      ]
+    },
+    "/en/stocks": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "tsmc-q2-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/en/compute": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "openai-ports-pike",
+        "sharon-ai-deployment-acceptance",
+        "tsmc-q2-2026"
+      ]
+    },
+    "/en/energy": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "doe-data-centers",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "openai-ports-pike",
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn",
+        "vistra-q2-2026"
+      ]
+    },
+    "/en/models": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "gemini-pricing",
+        "openai-cyber-pacing",
+        "openai-full-stack",
+        "openai-pricing",
+        "stanford-economy"
+      ]
+    },
+    "/en/sic": {
+      "kind": "current",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "infineon-200mm",
+        "onsemi-ai",
+        "onsemi-q2-2026-gnw",
+        "onsemi-q2-2026-sec",
+        "stm-q1-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/archive": {
+      "kind": "archive-index",
+      "archiveMonths": [
+        "2026-08",
+        "2026-07"
+      ]
+    },
+    "/en/archive": {
+      "kind": "archive-index",
+      "archiveMonths": [
+        "2026-08",
+        "2026-07"
+      ]
+    },
+    "/archive/2026-08": {
+      "kind": "archive-detail",
+      "archiveMonth": "2026-08",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec",
+        "doe-data-centers",
+        "gemini-pricing",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "infineon-200mm",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "onsemi-ai",
+        "onsemi-q2-2026-gnw",
+        "onsemi-q2-2026-sec",
+        "openai-cyber-pacing",
+        "openai-full-stack",
+        "openai-ports-pike",
+        "openai-pricing",
+        "sharon-ai-deployment-acceptance",
+        "stanford-economy",
+        "stanford-technical",
+        "stm-q1-2026",
+        "tsmc-q2-2026",
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn",
+        "vistra-q2-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/archive/2026-07": {
+      "kind": "archive-detail",
+      "archiveMonth": "2026-07",
+      "runId": "2026-07-25-saturday",
+      "dataCutoff": "2026-07-25T01:00:00.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "doe-data-centers",
+        "gemini-pricing",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "infineon-200mm",
+        "nvidia-q1-fy27",
+        "onsemi-ai",
+        "openai-pricing",
+        "stanford-economy",
+        "stanford-technical",
+        "stm-q1-2026",
+        "tsmc-q1-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/en/archive/2026-08": {
+      "kind": "archive-detail",
+      "archiveMonth": "2026-08",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "amd-q2-2026",
+        "amd-q2-2026-gnw",
+        "amd-q2-2026-sec",
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "cisco-q4-fy26",
+        "cisco-q4-fy26-sec",
+        "doe-data-centers",
+        "gemini-pricing",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "infineon-200mm",
+        "nvidia-q1-fy27",
+        "nvidia-q2-fy27",
+        "onsemi-ai",
+        "onsemi-q2-2026-gnw",
+        "onsemi-q2-2026-sec",
+        "openai-cyber-pacing",
+        "openai-full-stack",
+        "openai-ports-pike",
+        "openai-pricing",
+        "sharon-ai-deployment-acceptance",
+        "stanford-economy",
+        "stanford-technical",
+        "stm-q1-2026",
+        "tsmc-q2-2026",
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn",
+        "vistra-q2-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/en/archive/2026-07": {
+      "kind": "archive-detail",
+      "archiveMonth": "2026-07",
+      "runId": "2026-07-25-saturday",
+      "dataCutoff": "2026-07-25T01:00:00.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "broadcom-q2-fy26",
+        "doe-data-centers",
+        "gemini-pricing",
+        "iea-data-centres",
+        "iea-energy-ai",
+        "infineon-200mm",
+        "nvidia-q1-fy27",
+        "onsemi-ai",
+        "openai-pricing",
+        "stanford-economy",
+        "stanford-technical",
+        "stm-q1-2026",
+        "tsmc-q1-2026",
+        "wolfspeed-ai"
+      ]
+    },
+    "/market-brief/": {
+      "kind": "market-brief",
+      "runId": "2026-08-29-month-end",
+      "dataCutoff": "2026-08-28T13:48:08.000Z",
+      "sourceIds": [
+        "atlas-model",
+        "infineon-200mm",
+        "nvidia-q2-fy27",
+        "openai-full-stack",
+        "openai-ports-pike",
+        "stm-q1-2026",
+        "wolfspeed-ai"
+      ],
+      "payloadSha256": "7aa1e00c4f44b8e84957a0d2976a1b03edc99584d95c45d91cab194c03b8fe6c"
+    }
+  }
+}

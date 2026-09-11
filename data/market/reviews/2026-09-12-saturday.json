@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "2026-09-12-saturday:8c40863a1d1529373a8a33008757ae9687a4f4323e3cebd2249d992772724ea8",
+  "runId": "2026-09-12-saturday",
+  "reviewedAt": "2026-09-11T08:39:09.819Z",
+  "candidateSha256": "8c40863a1d1529373a8a33008757ae9687a4f4323e3cebd2249d992772724ea8",
+  "decision": "auto_publish",
+  "checks": [
+    {
+      "id": "schema",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "completed-session",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "required-data",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "source-health",
+      "status": "warn",
+      "issueCodes": [
+        "SOURCE_UNREACHABLE"
+      ]
+    },
+    {
+      "id": "source-conflict",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "anomaly",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "bilingual",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "narrative-evidence",
+      "status": "pass",
+      "issueCodes": []
+    },
+    {
+      "id": "no-change-integrity",
+      "status": "pass",
+      "issueCodes": []
+    }
+  ],
+  "issues": [
+    {
+      "code": "SOURCE_UNREACHABLE",
+      "severity": "warn",
+      "metricId": "energy.vertiv_q2_revenue_growth",
+      "page": "/energy",
+      "message": "Source vertiv-q2-2026 denied automated access, but a second trusted source is reachable.",
+      "sourceIds": [
+        "vertiv-q2-2026"
+      ]
+    }
+  ],
+  "reviewedMetricCount": 13,
+  "reviewedSourceCount": 7
+}

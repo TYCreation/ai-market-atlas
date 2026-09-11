@@ -138,6 +138,25 @@ test("deployment CLI admits only the normal mode or exact current-site redeploym
   }
 });
 
+test("current-site redeployment rejects a missing production anchor before export or network calls", async () => {
+  const fixture = await makeFixtureWorkspace();
+  const current = JSON.parse(await readFile(fixture.currentPath, "utf8"));
+  const projectRoot = await mkdtemp(join(tmpdir(), "market-unanchored-redeploy-"));
+  const marketRoot = join(projectRoot, "data", "market");
+  await mkdir(join(marketRoot, "reviews"), { recursive: true });
+  await writeFile(join(marketRoot, "current.json"), JSON.stringify(current));
+  await writeFile(join(marketRoot, "reviews", `${current.runId}.json`), JSON.stringify(autoPublishReview(current)));
+  let calls = 0;
+  const forbidden = async (): Promise<never> => { calls += 1; throw new Error("unexpected external call"); };
+  await assert.rejects(() => runRedeployCurrentPagesAtProjectRoot(projectRoot, {
+    exportPages: forbidden,
+    verifyDeployment: forbidden,
+    publishWithRestore: forbidden,
+    bootstrapPreview: forbidden,
+  }), /last-good anchor is missing/);
+  assert.equal(calls, 0);
+});
+
 test("current-site redeployment reads no candidate and transactionally replaces only the site anchor", async () => {
   const fixture = await makeFixtureWorkspace();
   const current = JSON.parse(await readFile(fixture.currentPath, "utf8"));
@@ -700,77 +719,18 @@ test("orchestration never re-anchors an existing last-good directory", async () 
   assert.deepEqual(actions, []);
 });
 
-test("initial verified last-good seed creates its independent anchor", async () => {
+test("candidate deployment never constructs a rollback baseline from new code", async () => {
   const fixture = await makeFixtureWorkspace();
-  const projectRoot = await mkdtemp(join(tmpdir(), "market-anchored-seed-"));
-  const marketRoot = join(projectRoot, "data", "market");
-  const lastGood = join(projectRoot, "work", "pages-last-good");
-  await mkdir(dirname(marketRoot), { recursive: true });
-  await cp(fixture.root, marketRoot, { recursive: true });
-  let expectedAnchor:
-    | Awaited<ReturnType<typeof writeLastGoodFixture>>
-    | undefined;
-  let exportCount = 0;
-  let verificationCount = 0;
-  const runtime: DeployPagesRuntime = {
-    exportPages: async (options) => {
-      exportCount += 1;
-      if (exportCount === 1) {
-        expectedAnchor = await writeLastGoodFixture(
-          lastGood,
-          "2026-07-25-saturday",
-          "a".repeat(64),
-          "verified production seed",
-        );
-        return {
-          outputDirectory: lastGood,
-          routes: ["/"],
-          runId: expectedAnchor.runId,
-          dataCutoff: "2026-07-25T01:00:00.000Z",
-          archiveMonths: [],
-          sourceIds: ["atlas-model"],
-          archiveSourceIds: {},
-          candidateSha256: expectedAnchor.candidateSha256,
-          artifactTreeSha256: expectedAnchor.artifactTreeSha256,
-          manifestSha256: expectedAnchor.manifestSha256,
-          artifacts: [...DISCOVERY_ARTIFACTS],
-          routeIdentities: {},
-        };
-      }
-      return {
-        outputDirectory: String(options.outputDirectory),
-        routes: ["/"],
-        runId: "2026-08-01-saturday",
-        dataCutoff: "2026-08-01T01:00:00.000Z",
-        archiveMonths: [],
-        sourceIds: ["atlas-model"],
-        archiveSourceIds: {},
-        candidateSha256: "b".repeat(64),
-        artifactTreeSha256: "c".repeat(64),
-        manifestSha256: "d".repeat(64),
-        artifacts: [...DISCOVERY_ARTIFACTS],
-        routeIdentities: {},
-      };
-    },
-    verifyDeployment: async () => {
-      verificationCount += 1;
-    },
-    publishWithRestore: async () => ({
-      promoted: true,
-      runId: "2026-08-01-saturday",
-      archivedPath: join(marketRoot, "runs", "prior.json"),
-      previousRunId: "2026-07-25-saturday",
-      archivedSha256: "a".repeat(64),
-      promotedSha256: "b".repeat(64),
-    }),
-  };
-
-  await runDeployPagesAtProjectRoot(projectRoot, runtime);
-
-  assert.ok(expectedAnchor);
-  assert.deepEqual(await readLastGoodAnchor(projectRoot), expectedAnchor);
-  await validateLastGoodDirectory(lastGood, expectedAnchor);
-  assert.equal(verificationCount, 1);
+  const projectRoot = await mkdtemp(join(tmpdir(), "market-no-bootstrap-"));
+  await mkdir(join(projectRoot, "data"), { recursive: true });
+  await cp(fixture.root, join(projectRoot, "data/market"), { recursive: true });
+  let calls = 0;
+  const forbidden = async (): Promise<never> => { calls++; throw new Error("unexpected external call"); };
+  await assert.rejects(runDeployPagesAtProjectRoot(projectRoot, {
+    exportPages: forbidden, verifyDeployment: forbidden, publishWithRestore: forbidden,
+    bootstrapPreview: forbidden,
+  }), /last-good anchor is missing/);
+  assert.equal(calls, 0);
 });
 
 test("publication lock rejects concurrent ownership and releases after success or failure", async () => {
@@ -850,6 +810,7 @@ test("orchestration acquires its publication lock before the first export and re
   const marketRoot = join(projectRoot, "data", "market");
   await mkdir(dirname(marketRoot), { recursive: true });
   await cp(fixture.root, marketRoot, { recursive: true });
+  await writeLastGoodAnchorAtomically(projectRoot, await writeLastGoodFixture(join(projectRoot, "work/pages-last-good"), "2026-07-25-saturday", "a".repeat(64), "verified baseline"));
   let exportCount = 0;
   let releaseExport!: () => void;
   let markStarted!: () => void;
@@ -993,6 +954,7 @@ test("orchestration binds the authorized candidate hash to candidate export", as
   const marketRoot = join(projectRoot, "data", "market");
   await mkdir(dirname(marketRoot), { recursive: true });
   await cp(fixture.root, marketRoot, { recursive: true });
+  await writeLastGoodAnchorAtomically(projectRoot, await writeLastGoodFixture(join(projectRoot, "work/pages-last-good"), "2026-07-25-saturday", "a".repeat(64), "verified baseline"));
   const review = JSON.parse(
     await readFile(
       join(marketRoot, "reviews", "2026-08-01-saturday.json"),
@@ -1020,13 +982,9 @@ test("orchestration binds the authorized candidate hash to candidate export", as
         outputDirectory: String(options.outputDirectory),
         routes: ["/"],
         runId:
-          exportCount === 1
-            ? "2026-07-25-saturday"
-            : "2026-08-01-saturday",
+          candidate ? "2026-08-01-saturday" : "2026-07-25-saturday",
         dataCutoff:
-          exportCount === 1
-            ? "2026-07-25T01:00:00.000Z"
-            : "2026-08-01T01:00:00.000Z",
+          candidate ? "2026-08-01T01:00:00.000Z" : "2026-07-25T01:00:00.000Z",
         archiveMonths: [],
         sourceIds: ["atlas-model"],
         archiveSourceIds: {},
@@ -1051,4 +1009,5 @@ test("orchestration binds the authorized candidate hash to candidate export", as
   await runDeployPagesAtProjectRoot(projectRoot, runtime);
 
   assert.equal(candidateExportHash, review.candidateSha256);
+  assert.equal(exportCount, 1);
 });

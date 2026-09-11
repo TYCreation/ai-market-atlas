@@ -100,6 +100,7 @@ async function isolatedExportProject(build: boolean): Promise<string> {
       "utf8",
     ),
   ) as MarketSnapshot;
+  await cp(join(projectRoot, "tests/fixtures/market/monthly-index-baseline.json"), join(isolatedRoot, "data/market/monthly/index.json"));
   await writeFile(
     join(isolatedRoot, "data", "market", "current.json"),
     `${JSON.stringify(julySnapshot)}\n`,

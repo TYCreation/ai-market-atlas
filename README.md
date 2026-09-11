@@ -213,6 +213,27 @@ not replace the reviewed production hash.
 
 ### Promotion, archives, and retention
 
+### Cited editions (snapshot schema 2)
+
+New evidence-led editions declare 1–4 bilingual `pages[slug].kpis` entries. Each
+references a required, published, same-page metric with an explicit code-owned
+freshness policy. Schema 2 retires the legacy modeled KPI/stock-quote catalog;
+it does not refresh old timestamps or waive freshness checks. Legacy snapshots
+remain readable under schema 1 and are never rewritten to satisfy new rules.
+The reader builds KPI labels, values, evidence and observations from the edition,
+without the legacy static model charts, quote tables or forecast panels.
+
+Quarterly observations retain their announcement dates and expire after 110 days.
+Event/benchmark observations are always labeled dated, not live measurements.
+Source delivery mirrors must contain the same issuer disclosure, be cited openly,
+and pass the normal public-address-pinned health check. Mirrors are not independent
+corroboration. Failed source endpoints must not be reported as successful checks.
+
+An accepted schema-2 current edition also appears at its cutoff-date brief URL
+and in discovery feeds. A review without a matching current/retained snapshot
+cannot create a published page. Archive files now use the contained snapshot's
+run ID rather than the next publication's run ID.
+
 Promotion is allowed only through the reviewed storage gate. It first archives
 the prior snapshot, then atomically switches `current.json`. Weekly run
 snapshots and their review reports are retained indefinitely because dated URLs
@@ -232,6 +253,13 @@ This is the only production entry point. It authorizes the persisted review,
 exports the candidate, deploys and verifies an isolated preview, promotes the
 snapshot, deploys the same artifact to production, and verifies every route and
 the canonical market-brief JSON. A publication lock prevents concurrent runs.
+
+Both deployment modes require an existing independently verified rollback anchor;
+they never build a rollback baseline with unproven new code. For the one-time
+August production migration only, `node --experimental-strip-types
+scripts/import-legacy-rollback.ts` verifies the exact preserved artifact against
+the code-pinned manifest/tree hashes and the live page, brief and referenced asset
+bytes before importing an anchor. It cannot upload or overwrite an anchor.
 
 If any post-promotion step fails, the command restores the authenticated prior
 snapshot and redeploys the independently anchored last-known-good directory.
@@ -254,7 +282,8 @@ external call. It deploys the current snapshot to an isolated preview and then
 to `main`; it never reads or promotes `candidate.json`, rewrites market
 storage, or restores a snapshot. A production failure rolls back only the
 site to the independently anchored last-good export. If that anchor is absent,
-the mode first bootstraps it from a verified export of the current snapshot.
+the mode stops before export or deployment. A build of new code cannot serve
+as the rollback artifact for the version already running in production.
 
 ## Learn More
 

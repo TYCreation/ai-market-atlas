@@ -44,6 +44,7 @@ export async function MarketDashboardPage({
     ? createMarketViewModel(snapshot, { historical: true })
     : await loadMarketViewModel();
   const historical = snapshot !== undefined;
+  const citedEdition = viewModel.snapshot.schemaVersion === 2;
   const edition = {
     en: toReaderEdition(viewModel.getEditionMeta("en")),
     zh: toReaderEdition(viewModel.getEditionMeta("zh")),
@@ -69,8 +70,8 @@ export async function MarketDashboardPage({
       />
       <ReportStructuredData
         path={path}
-        headline={historical ? pageEdition[locale].report.title : dashboardHeadings[basePath][locale]}
-        description={historical ? pageEdition[locale].report.summary : (locale === "en" ? pageSeoEn : pageSeo)[basePath].description}
+        headline={historical || citedEdition ? pageEdition[locale].report.title : dashboardHeadings[basePath][locale]}
+        description={historical || citedEdition ? pageEdition[locale].report.summary : (locale === "en" ? pageSeoEn : pageSeo)[basePath].description}
         dateModified={viewModel.snapshot.dataCutoff}
       />
       <MarketDashboard

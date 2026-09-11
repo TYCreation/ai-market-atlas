@@ -180,6 +180,7 @@ export type DashboardConfig = {
   deepDive?: DeepDiveConfig;
   equityDive?: EquityDeepDiveConfig;
   report?: LocalizedPageReport;
+  evidenceOnly?: boolean;
 };
 
 export function hydrateDashboard(
@@ -191,6 +192,8 @@ export function hydrateDashboard(
   const report = viewModel.getPageReport(config.slug, locale);
   const edition = viewModel.getEditionMeta(locale);
   const historical = options.historical === true;
+  const citedEdition = viewModel.snapshot.schemaVersion === 2;
+  const snapshotOnly = historical || citedEdition;
   const equityDive = config.equityDive
     ? {
         ...config.equityDive,
@@ -218,13 +221,20 @@ export function hydrateDashboard(
   };
 
   return {
-    ...(historical ? snapshotOnlyConfig : config),
+    ...(snapshotOnly ? snapshotOnlyConfig : config),
+    ...(citedEdition ? { evidenceOnly: true } : {}),
     eyebrow: report.eyebrow,
     title: report.title,
     summary: report.summary,
     signal: report.signal,
     thesis: report.thesis,
-    kpis: historical
+    kpis: citedEdition
+      ? viewModel.snapshot.pages[config.slug].kpis!.map(({ metricId, label }) => {
+          const metric = viewModel.getMetric(metricId, locale);
+          if (!metric) throw new Error(`Edition KPI is unavailable: ${metricId}`);
+          return { metricId, label: label[locale], value: metric.value, foot: metric.asOf, delta: "", status: viewModel.getMetricStatus(metricId), provenance: metric };
+        })
+      : historical
       ? KPI_CATALOG.filter(([page]) => page === config.slug).map(([, , metricId]) => {
           const metric = viewModel.getMetric(metricId, locale);
           if (!metric) throw new Error(`Historical KPI is unavailable: ${metricId}`);
@@ -250,7 +260,7 @@ export function hydrateDashboard(
     watchlist: Array.from({ length: Math.max(report.risks.length, report.nextObservations.length) }, (_, index) => {
       const risk = report.risks[index];
       const observation = report.nextObservations[index];
-      const fallback = historical ? undefined : (config.watchlist[index] ?? config.watchlist[0]);
+      const fallback = snapshotOnly ? undefined : (config.watchlist[index] ?? config.watchlist[0]);
       const comparison = risk?.comparison ?? observation?.comparison;
       return {
         priority: historical ? `${index + 1}` : (fallback?.priority ?? `${index + 1}`),
@@ -266,8 +276,8 @@ export function hydrateDashboard(
       };
     }),
     report,
-    ...(!historical && config.deepDive ? { deepDive: config.deepDive } : {}),
-    ...(!historical && equityDive ? { equityDive } : {}),
+    ...(!snapshotOnly && config.deepDive ? { deepDive: config.deepDive } : {}),
+    ...(!snapshotOnly && equityDive ? { equityDive } : {}),
   };
 }
 

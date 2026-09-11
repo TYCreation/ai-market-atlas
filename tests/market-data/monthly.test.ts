@@ -32,8 +32,9 @@ test("rejects an invalid archive month path before lookup", () => {
   assert.throws(() => getMonthlyArchive("../2026-07"), /Invalid archive month/);
 });
 
-test("lists the permanent archive month for static route generation", () => {
-  assert.deepEqual(listMonthlyArchives().map(({ month }) => month), ["2026-07"]);
+test("lists every retained permanent archive month for static route generation", async () => {
+  const index = JSON.parse(await readFile(new URL("../../data/market/monthly/index.json", import.meta.url), "utf8"));
+  assert.deepEqual(listMonthlyArchives().map(({ month }) => month).sort(), Object.keys(index).sort());
 });
 
 test("parses a real month-end promotion with immutable sources and review provenance", async () => {

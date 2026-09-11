@@ -46,6 +46,15 @@ export const REQUIRED_STOCK_METRIC_IDS = new Set(
 );
 
 export const QUARTERLY_PUBLISHED_METRIC_IDS = new Set([
+  "pulse.broadcom_ai_revenue",
+  "stocks.broadcom_revenue",
+  "stocks.broadcom_gaap_eps",
+  "stocks.broadcom_adjusted_eps",
+  "compute.broadcom_ai_revenue_growth",
+  "sic.onsemi_gaap_gross_margin",
+  "pulse.nvidia_data_center_revenue",
+  "stocks.nvidia_q2_revenue_growth",
+  "compute.nvidia_data_center_growth",
   "compute.amd_data_center_growth",
   "compute.amd_data_center_revenue",
   "compute.cisco_ai_infrastructure_orders",
@@ -57,6 +66,14 @@ export const QUARTERLY_PUBLISHED_METRIC_IDS = new Set([
 ]);
 
 export const EVENT_DRIVEN_PUBLISHED_METRIC_IDS = new Set([
+  "pulse.openai_serving_cost_reduction",
+  "compute.openai_inference_throughput_per_watt_lower_bound",
+  "energy.openai_inference_throughput_per_watt_lower_bound",
+  "models.openai_business_count",
+  "pulse.humain_phase_two_capacity",
+  "compute.humain_phase_two_capacity",
+  "pulse.openai_frontier_output_intensity",
+  "models.openai_frontier_output_intensity",
   "compute.openai_ports_capacity",
   "compute.sharon_ai_contract_value",
   "energy.openai_ports_capacity",

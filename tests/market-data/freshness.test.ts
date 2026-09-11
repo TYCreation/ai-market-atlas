@@ -7,6 +7,15 @@ import type { MarketSnapshot, MetricRecord } from "../../market-data/types.ts";
 
 const snapshot = candidate as unknown as MarketSnapshot;
 
+test("September carry-forward metrics have explicit policies without refreshing their observations", () => {
+  for (const id of ["pulse.nvidia_data_center_revenue", "stocks.nvidia_q2_revenue_growth", "compute.nvidia_data_center_growth"]) {
+    assert.deepEqual(freshnessPolicyFor(id, "published"), { class: "periodic", maxAgeHours: 2640 });
+  }
+  for (const id of ["pulse.humain_phase_two_capacity", "compute.humain_phase_two_capacity", "pulse.openai_frontier_output_intensity", "models.openai_frontier_output_intensity"]) {
+    assert.deepEqual(freshnessPolicyFor(id, "published"), { class: "event-driven" });
+  }
+});
+
 function marketCloseMetric(
   market: string,
   marketTimezone: string,

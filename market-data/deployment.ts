@@ -924,9 +924,9 @@ export async function redeployCurrentWithRestore(
       : "site restoration not required";
     if (mainTouched) {
       try {
-        await dependencies.revalidate();
+        // deploy/verify validate the independently anchored last-good assets.
+        // Candidate corruption must not prevent restoration of production.
         await dependencies.deploy(options.lastGoodDirectory, "main");
-        await dependencies.revalidate();
         await dependencies.verify(options.productionBaseUrl, options.lastGoodDirectory);
       } catch (restoreError) {
         siteOutcome = `site restoration failed: ${errorMessage(restoreError)}`;

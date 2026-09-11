@@ -95,6 +95,9 @@ async function makeCliWorkspace(): Promise<string> {
     await mkdir(dirname(target), { recursive: true });
     await cp(source, target, { recursive: true });
   }
+  // The default-path CLI test exercises historical compatibility, not whatever
+  // live edition happens to be checked out on the day the suite runs.
+  await cp(new URL("tests/fixtures/market/published-baseline.json", repositoryRootUrl), join(root, "data/market/current.json"));
   return root;
 }
 

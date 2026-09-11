@@ -1,4 +1,5 @@
 import { REQUIRED_METRIC_IDS, REQUIRED_STOCK_METRIC_IDS } from "./catalog.ts";
+import { freshnessPolicyFor } from "./freshness.ts";
 import type { MarketSnapshot, MetricRecord, PageSlug, SourceRecord } from "./types.ts";
 
 const PAGE_SLUGS = ["/", "/stocks", "/compute", "/energy", "/models", "/sic"] as const;
@@ -388,7 +389,7 @@ function assertSnapshot(
   allowLegacyEditorialPayload: boolean,
 ): asserts value is MarketSnapshot {
   const snapshot = requireRecord(value, "snapshot");
-  if (snapshot.schemaVersion !== 1) fail("schemaVersion must be 1");
+  if (snapshot.schemaVersion !== 1 && snapshot.schemaVersion !== 2) fail("schemaVersion must be 1 or 2");
   requireString(snapshot.runId, "runId");
   if (!CADENCES.has(requireString(snapshot.cadence, "cadence"))) fail("cadence is unsupported");
   requireIsoTimestamp(snapshot.generatedAt, "generatedAt");
@@ -399,16 +400,41 @@ function assertSnapshot(
   const metrics = requireRecord(snapshot.metrics, "metrics");
   const metricIds = new Set<string>();
   for (const [key, metric] of Object.entries(metrics)) assertMetric(key, metric, metricIds, sources);
-  for (const id of REQUIRED_METRIC_IDS) {
+  for (const id of snapshot.schemaVersion === 1 ? REQUIRED_METRIC_IDS : []) {
     if (!metrics[id]) fail(`required catalog metric is missing: ${id}`);
   }
-  for (const id of REQUIRED_STOCK_METRIC_IDS) {
+  for (const id of snapshot.schemaVersion === 1 ? REQUIRED_STOCK_METRIC_IDS : []) {
     if (!metrics[id]) fail(`required equity metric is missing: ${id}`);
   }
   const pages = requireRecord(snapshot.pages, "pages");
   for (const slug of PAGE_SLUGS) {
     if (!pages[slug]) fail(`page is missing: ${slug}`);
-    assertPage(slug, pages[slug], metrics, allowLegacyMissingThesisSurvivalRationale, allowLegacyEditorialPayload);
+    assertPage(slug, pages[slug], metrics, snapshot.schemaVersion === 1 && allowLegacyMissingThesisSurvivalRationale, snapshot.schemaVersion === 1 && allowLegacyEditorialPayload);
+    if (snapshot.schemaVersion === 2) {
+      const kpis = requireRecord(pages[slug], `pages.${slug}`).kpis;
+      if (!Array.isArray(kpis) || kpis.length < 1 || kpis.length > 4) fail(`pages.${slug}.kpis must contain 1 to 4 cited KPIs`);
+      const seen = new Set<string>();
+      for (const [index, value] of kpis.entries()) {
+        const kpi = requireRecord(value, `pages.${slug}.kpis[${index}]`);
+        const id = requireString(kpi.metricId, `pages.${slug}.kpis[${index}].metricId`);
+        const metric = requireRecord(metrics[id], `metrics.${id}`);
+        if (metric.page !== slug || metric.required !== true || metric.kind !== "published") fail(`KPI ${id} must be a required published metric on ${slug}`);
+        if (seen.has(id)) fail(`duplicate KPI ${id}`);
+        seen.add(id);
+        const label = requireRecord(kpi.label, `pages.${slug}.kpis[${index}].label`);
+        requireString(label.zh, `pages.${slug}.kpis[${index}].label.zh`);
+        requireString(label.en, `pages.${slug}.kpis[${index}].label.en`);
+        freshnessPolicyFor(id, "published");
+      }
+    }
+  }
+  if (snapshot.schemaVersion === 2) {
+    for (const [id, value] of Object.entries(metrics)) {
+      const metric = requireRecord(value, `metrics.${id}`);
+      if ((REQUIRED_METRIC_IDS as ReadonlySet<string>).has(id) || REQUIRED_STOCK_METRIC_IDS.has(id)) fail(`Version 2 retires legacy modeled/quote metric ${id}`);
+      if (metric.kind !== "published") fail(`Version 2 requires sourced published metrics: ${id}`);
+      freshnessPolicyFor(id, "published");
+    }
   }
   assertMetricReferences(requireStringArray(snapshot.keySignalIds, "keySignalIds"), "keySignalIds", metrics);
 }

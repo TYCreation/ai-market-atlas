@@ -7,7 +7,6 @@ import test from "node:test";
 import {
   buildSourceBundles,
   createMarketViewModel,
-  getPageMeta,
   loadMarketSnapshot,
 } from "../../market-data/view-model.ts";
 import { hydrateDashboard, marketPulse, stocks } from "../../app/content.ts";
@@ -48,7 +47,7 @@ test("localizes falsifiable risks and dated threshold observations without fixed
 
 test("marks legacy published observation thresholds as unavailable without relaxing candidates", () => {
   const snapshot = JSON.parse(
-    readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8"),
   ) as MarketSnapshot;
   const report = createMarketViewModel(snapshot).getPageReport("/compute", "en");
 
@@ -60,7 +59,8 @@ test("marks legacy published observation thresholds as unavailable without relax
 });
 
 test("marks an unchanged page without replacing its thesis", () => {
-  const meta = getPageMeta("/models", "zh");
+  const baseline = JSON.parse(readFileSync(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8"));
+  const meta = createMarketViewModel(baseline).getPageMeta("/models", "zh");
   assert.equal(meta.changeLabel, "本期無重大變化");
   assert.equal(meta.changed, false);
   assert.equal(meta.report.thesis.title, "勝出的代理是重新設計的工作流程，不是聊天視窗。");
@@ -68,7 +68,7 @@ test("marks an unchanged page without replacing its thesis", () => {
 
 test("builds each page source bundle only from referenced snapshot sources", async () => {
   const snapshot = JSON.parse(
-    await readFile(new URL("../../data/market/current.json", import.meta.url), "utf8"),
+    await readFile(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8"),
   ) as MarketSnapshot;
   const bundles = buildSourceBundles(snapshot);
 
@@ -87,7 +87,7 @@ test("loads and validates an explicitly selected preview snapshot", async () => 
   const root = await mkdtemp(join(tmpdir(), "atlas-view-model-"));
   const previewPath = join(root, "preview.json");
   const snapshot = JSON.parse(
-    await readFile(new URL("../../data/market/current.json", import.meta.url), "utf8"),
+    await readFile(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8"),
   ) as MarketSnapshot;
   snapshot.runId = "preview-safe-path";
   await writeFile(previewPath, `${JSON.stringify(snapshot)}\n`);
@@ -115,7 +115,7 @@ test("exposes presentation-safe metric provenance", () => {
 
 test("omits an optional stale stock observation", () => {
   const snapshot = structuredClone(
-    JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,
+    JSON.parse(readFileSync(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8")) as MarketSnapshot,
   );
   snapshot.metrics["stocks.nvda.price"].required = false;
   snapshot.metrics["stocks.nvda.price"].asOf = "2026-07-01T20:00:00.000Z";
@@ -125,7 +125,7 @@ test("omits an optional stale stock observation", () => {
 
 test("renders required stale facts from an immutable historical edition without relaxing current reads", () => {
   const snapshot = structuredClone(
-    JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,
+    JSON.parse(readFileSync(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8")) as MarketSnapshot,
   );
   snapshot.dataCutoff = "2026-08-01T01:00:00.000Z";
   snapshot.metrics["pulse.infrastructure_spend"].asOf = "2026-01-01T00:00:00.000Z";
@@ -139,7 +139,7 @@ test("renders required stale facts from an immutable historical edition without 
 
 test("hydrates the stocks reader without loading stale per-ticker quotes", () => {
   const snapshot = structuredClone(
-    JSON.parse(readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8")) as MarketSnapshot,
+    JSON.parse(readFileSync(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8")) as MarketSnapshot,
   );
   snapshot.metrics["stocks.nvda.price"].asOf = "2026-07-01T20:00:00.000Z";
 
@@ -154,7 +154,7 @@ test("hydrates the stocks reader without loading stale per-ticker quotes", () =>
 
 test("hydrates a permanent brief without serializing live dashboard configuration", () => {
   const snapshot = JSON.parse(
-    readFileSync(new URL("../../data/market/current.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../fixtures/market/published-baseline.json", import.meta.url), "utf8"),
   ) as MarketSnapshot;
   const viewModel = createMarketViewModel(snapshot, { historical: true });
   const historical = hydrateDashboard(marketPulse, "en", viewModel, { historical: true });

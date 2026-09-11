@@ -139,6 +139,22 @@ test("current-only redeployment restores only the site on production failure", a
   assert.deepEqual(deps.copies, []);
 });
 
+test("current-site rollback survives candidate revalidation failure after production upload", async () => {
+  const options = await authorizedCurrentRedeployOptions();
+  let candidateCorrupted = false;
+  const deps = fakeDependencies({
+    onDeploy: (directory, branch) => {
+      if (branch === "main" && directory === options.candidateDirectory) candidateCorrupted = true;
+    },
+  });
+  deps.revalidate = async () => {
+    if (candidateCorrupted) throw new Error("candidate corrupted");
+  };
+  await assert.rejects(() => redeployCurrentWithRestore(deps, options), /candidate corrupted.*site restoration succeeded/);
+  assert.equal(deps.deployments.at(-1)?.directory, options.lastGoodDirectory);
+  assert.equal(deps.copies.length, 0);
+});
+
 test("redeploys last-known-good assets when production verification fails", async () => {
   const options = await authorizedOptions();
   const deployments: Array<{ directory: string; branch: string }> = [];

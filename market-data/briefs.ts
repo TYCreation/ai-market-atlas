@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { assertAutoPublishReview, hashCandidate, isSafeMarketRunId, type AutomatedReview } from "./review.ts";
 import { assertPublishedMarketSnapshot } from "./schema.ts";
 import type { MarketSnapshot } from "./types.ts";
+import selectedSnapshot from "#market-snapshot" with { type: "json" };
 
 export type PublishedBrief = {
   date: string;
@@ -48,6 +49,7 @@ async function readDirectJsonFiles(directory: string, label: string): Promise<Ar
 export async function loadPublishedBriefs(
   runsDirectory: string,
   reviewsDirectory: string,
+  current?: MarketSnapshot,
 ): Promise<PublishedBrief[]> {
   const [runFiles, reviewFiles] = await Promise.all([
     readDirectJsonFiles(runsDirectory, "brief runs"),
@@ -59,6 +61,19 @@ export async function loadPublishedBriefs(
     }
     return { name, review: value as AutomatedReview };
   });
+  // A reviewed version-2 current/candidate also owns its dated reader route.
+  // Export passes the selected snapshot; the built worker uses the same alias.
+  // Orphan reviews never create pages, and rollback removes the current input.
+  if (current?.schemaVersion === 2 && current.cadence !== "month-end") {
+    assertPublishedMarketSnapshot(current);
+    const identity = hashCandidate(current);
+    const accepted = reviews.filter(({ review }) => review.candidateSha256 === identity);
+    if (accepted.length !== 1) throw new Error("Current brief requires exactly one matching accepted review");
+    assertAutoPublishReview(accepted[0].review, current);
+    if (!runFiles.some(({ value }) => hashCandidate(value) === identity)) {
+      runFiles.push({ name: `${current.runId}.json`, value: current });
+    }
+  }
   const dates = new Set<string>();
   const briefs: PublishedBrief[] = [];
   for (const { name, value } of runFiles) {
@@ -68,12 +83,12 @@ export async function loadPublishedBriefs(
       throw new Error(`Invalid brief run file ${name}: ${error instanceof Error ? error.message : String(error)}`);
     }
     const snapshot = value as MarketSnapshot;
-    if (snapshot.cadence !== "wednesday" && snapshot.cadence !== "saturday") {
-      throw new Error(`Brief snapshot must have weekly cadence: ${snapshot.runId}`);
-    }
     if (!isSafeMarketRunId(snapshot.runId, snapshot.cadence)) {
       throw new Error(`Brief snapshot run ID and cadence do not match: ${snapshot.runId}`);
     }
+    // Month-end snapshots are retained for rollback and the permanent monthly
+    // archive, but do not create duplicate weekly brief routes.
+    if (snapshot.cadence === "month-end") continue;
     const matching = reviews.filter(({ review }) => review.candidateSha256 === hashCandidate(snapshot));
     // A retained run without an exact accepted review is not a permanent brief.
     // This permits current pipeline workspaces to retain unrelated prior runs while
@@ -131,7 +146,7 @@ const defaultReviewsDirectory = sourceReviewsDirectory.includes("/dist/")
 let defaultBriefs: Promise<PublishedBrief[]> | undefined;
 
 export function listPublishedBriefs(): Promise<PublishedBrief[]> {
-  defaultBriefs ??= loadPublishedBriefs(defaultRunsDirectory, defaultReviewsDirectory)
+  defaultBriefs ??= loadPublishedBriefs(defaultRunsDirectory, defaultReviewsDirectory, selectedSnapshot as MarketSnapshot)
     // Vinext's development worker cannot always expose project data directories to
     // its edge filesystem. Static export still reads and validates them explicitly.
     .catch((error: unknown) => {

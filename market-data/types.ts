@@ -85,6 +85,8 @@ export type PageReport = {
 };
 
 export type PageState = {
+  /** Version 2 replaces the legacy modeled dashboard with cited, edition-owned KPIs. */
+  kpis?: Array<{ metricId: string; label: BilingualText }>;
   changed: boolean;
   changeReasons: Array<
     | "first-party-event"
@@ -101,7 +103,7 @@ export type PageState = {
 };
 
 export type MarketSnapshot = {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   runId: string;
   cadence: RunCadence;
   generatedAt: string;

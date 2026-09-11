@@ -50,7 +50,7 @@ test("promotes only a publishable candidate and archives the previous snapshot",
     JSON.parse(await readFile(result.archivedPath, "utf8")),
     JSON.parse(previous),
   );
-  assert.deepEqual(await readdir(paths.runsDir), ["2026-08-01-saturday.json"]);
+  assert.deepEqual(await readdir(paths.runsDir), [`${JSON.parse(previous).runId}.json`]);
 });
 
 test("does not change current.json when the gate blocks", async () => {
@@ -314,7 +314,8 @@ test("rejects a stale same-run rollback result but accepts the newest result", a
 test("rejects a mismatched existing archive before promotion", async () => {
   const paths = await makeFixtureWorkspace();
   const candidate = JSON.parse(await readFile(paths.candidatePath, "utf8")) as MarketSnapshot;
-  await writeFile(join(paths.runsDir, `${candidate.runId}.json`), JSON.stringify(candidate));
+  const previous = JSON.parse(await readFile(paths.currentPath, "utf8"));
+  await writeFile(join(paths.runsDir, `${previous.runId}.json`), JSON.stringify(candidate));
 
   await assert.rejects(
     async () => promoteCandidate(paths, await reviewedSha(paths)),

@@ -192,7 +192,9 @@ function kpiFor(
   locale: Locale,
   historical = false,
 ): KpiView {
-  const catalog = KPI_CATALOG.find(
+  const catalog = snapshot.schemaVersion === 2
+    ? snapshot.pages[slug].kpis?.[index] && [slug, index, snapshot.pages[slug].kpis![index].metricId] as const
+    : KPI_CATALOG.find(
     ([page, kpiIndex]) => page === slug && kpiIndex === index,
   );
   if (!catalog) throw new Error(`No KPI mapping for ${slug} index ${index}`);
@@ -204,9 +206,10 @@ function kpiFor(
 export function buildSourceBundles(snapshot: MarketSnapshot): Record<PageSlug, SourceBundle> {
   return Object.fromEntries(
     PAGE_SLUGS.map((slug) => {
-      const kpiSources = KPI_CATALOG
-        .filter(([page]) => page === slug)
-        .map(([, , metricId]) => [...snapshot.metrics[metricId].sourceIds]);
+      const kpiIds = snapshot.schemaVersion === 2
+        ? snapshot.pages[slug].kpis!.map(({ metricId }) => metricId)
+        : KPI_CATALOG.filter(([page]) => page === slug).map(([, , metricId]) => metricId);
+      const kpiSources = kpiIds.map((metricId) => [...snapshot.metrics[metricId].sourceIds]);
       const referencedIds = new Set(
         Object.values(snapshot.metrics)
           .filter((metric) => metric.page === slug)

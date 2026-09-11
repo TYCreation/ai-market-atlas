@@ -1,0 +1,1400 @@
+{
+  "schemaVersion": 2,
+  "runId": "2026-09-12-saturday",
+  "cadence": "saturday",
+  "generatedAt": "2026-09-11T08:39:06.856Z",
+  "dataCutoff": "2026-09-11T08:39:06.856Z",
+  "sources": {
+    "broadcom-q3-2026-prn": {
+      "id": "broadcom-q3-2026-prn",
+      "kind": "company",
+      "publisher": "Broadcom via PR Newswire",
+      "title": "Third Quarter Fiscal Year 2026 Financial Results",
+      "url": "https://www.prnewswire.com/news-releases/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial-results-and-quarterly-dividend-302868129.html",
+      "publishedAt": "2026-09-02T20:15:00.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "en": "Issuer-distributed mirror of the same quarterly release; not independent corroboration.",
+        "zh": "同一公司季報的發行人分發版本，並非獨立佐證。"
+      }
+    },
+    "onsemi-q2-2026-exhibit-mirror": {
+      "id": "onsemi-q2-2026-exhibit-mirror",
+      "kind": "company",
+      "publisher": "onsemi filing exhibit hosted by Yahoo Finance",
+      "title": "onsemi quarterly results, Exhibit 99.1",
+      "url": "https://cdn.yahoofinance.com/prod/sec-filings/0001097864/000114036126030989/ef20079200_ex99-1.htm",
+      "publishedAt": "2026-08-03T20:54:23.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "en": "Mirror of the issuer's financial-results filing exhibit, not a Yahoo editorial article or an SEC-hosted endpoint.",
+        "zh": "公司財報申報附件鏡像，非 Yahoo 編輯報導，亦非 SEC 託管端點。"
+      }
+    },
+    "onsemi-q2-2026-nasdaq": {
+      "id": "onsemi-q2-2026-nasdaq",
+      "kind": "company",
+      "publisher": "onsemi via GlobeNewswire / Nasdaq",
+      "title": "onsemi Reports Second Quarter 2026 Results",
+      "url": "https://www.nasdaq.com/press-release/onsemi-reports-second-quarter-2026-results-2026-08-03",
+      "publishedAt": "2026-08-03T20:05:00.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "en": "Issuer press release distributed by GlobeNewswire and hosted by Nasdaq, including company revenue and GAAP margin. This is the same release, not independent corroboration.",
+        "zh": "GlobeNewswire 分發、Nasdaq 刊載的公司新聞稿，含營收與 GAAP 毛利率；同一公告並非獨立佐證。"
+      }
+    },
+    "openai-research-september": {
+      "id": "openai-research-september",
+      "kind": "company",
+      "publisher": "OpenAI",
+      "title": "Research acceleration: The view inside OpenAI",
+      "url": "https://openai.com/index/research-acceleration-view-inside-openai/",
+      "publishedAt": "2026-09-06T00:00:00.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "en": "Publication reporting internal research agent-workday intensity from mid-August; not an economy-wide productivity measurement.",
+        "zh": "公告回顧八月中旬內部研究代理工作日強度；不是整體經濟生產力。"
+      }
+    },
+    "openai-work-september": {
+      "id": "openai-work-september",
+      "kind": "company",
+      "publisher": "OpenAI",
+      "title": "The Work Now Within Reach",
+      "url": "https://openai.com/index/the-work-now-within-reach/",
+      "publishedAt": "2026-09-08T00:00:00.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "en": "Company-reported adoption, serving software cost reduction and chip benchmark. Rated chip power is not facility power; benchmark endpoints are not fleet averages.",
+        "zh": "公司揭露的採用、服務軟體成本降幅與晶片基準；額定晶片功率不是機房用電，區間端點不是全機群平均。"
+      }
+    },
+    "vertiv-q2-2026": {
+      "id": "vertiv-q2-2026",
+      "kind": "company",
+      "publisher": "Vertiv Investor Relations",
+      "title": "Vertiv Reports Strong Second Quarter 2026 and Raises Full-Year Guidance",
+      "url": "https://investors.vertiv.com/news/news-details/2026/Vertiv-Reports-Strong-Second-Quarter-2026-with-Diluted-EPS-Growth-of-53-Adjusted-Diluted-EPS-Growth-of-60-Raises-Full-Year-2026-Guidance-Across-All-Key-Metrics/default.aspx",
+      "publishedAt": "2026-07-29T00:00:00.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "zh": "Vertiv 第二季淨銷售額、成長、現金流與上調後的 2026 全年指引。",
+        "en": "Vertiv second-quarter net sales, growth, cash flow, and raised full-year 2026 guidance."
+      }
+    },
+    "vertiv-q2-2026-prn": {
+      "id": "vertiv-q2-2026-prn",
+      "kind": "company",
+      "publisher": "Vertiv Holdings Co via PR Newswire",
+      "title": "Vertiv Reports Strong Second Quarter 2026 and Raises Full-Year Guidance",
+      "url": "https://www.prnewswire.com/news-releases/vertiv-reports-strong-second-quarter-2026-with-diluted-eps-growth-of-53-adjusted-diluted-eps-growth-of-60-raises-full-year-2026-guidance-across-all-key-metrics-302837598.html",
+      "publishedAt": "2026-07-29T00:00:00.000Z",
+      "retrievedAt": "2026-09-11T08:39:06.856Z",
+      "scope": {
+        "zh": "Vertiv 公司發布之第二季結果公開鏡像，涵蓋淨銷售額、成長與上調後的全年指引。",
+        "en": "Company-issued public mirror of Vertiv's second-quarter results, covering net sales, growth, and raised full-year guidance."
+      }
+    }
+  },
+  "metrics": {
+    "compute.broadcom_ai_revenue_growth": {
+      "id": "compute.broadcom_ai_revenue_growth",
+      "page": "/compute",
+      "required": true,
+      "kind": "published",
+      "numericValue": 221,
+      "unit": "%",
+      "display": {
+        "en": "+221% YoY",
+        "zh": "年增 221%"
+      },
+      "asOf": "2026-09-02T20:15:00.000Z",
+      "sourceIds": [
+        "broadcom-q3-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "broadcom-q3-2026-prn",
+          "numericValue": 221,
+          "asOf": "2026-09-02T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "compute.openai_inference_throughput_per_watt_lower_bound": {
+      "id": "compute.openai_inference_throughput_per_watt_lower_bound",
+      "page": "/compute",
+      "required": true,
+      "kind": "published",
+      "numericValue": 1.5,
+      "unit": "x",
+      "display": {
+        "en": "1.5–1.9x benchmark range",
+        "zh": "基準區間 1.5–1.9 倍"
+      },
+      "asOf": "2026-09-08T00:00:00.000Z",
+      "sourceIds": [
+        "openai-work-september"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-work-september",
+          "numericValue": 1.5,
+          "asOf": "2026-09-08T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "energy.openai_inference_throughput_per_watt_lower_bound": {
+      "id": "energy.openai_inference_throughput_per_watt_lower_bound",
+      "page": "/energy",
+      "required": true,
+      "kind": "published",
+      "numericValue": 1.5,
+      "unit": "x",
+      "display": {
+        "en": "1.5–1.9x benchmark range",
+        "zh": "基準區間 1.5–1.9 倍"
+      },
+      "asOf": "2026-09-08T00:00:00.000Z",
+      "sourceIds": [
+        "openai-work-september"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-work-september",
+          "numericValue": 1.5,
+          "asOf": "2026-09-08T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "energy.vertiv_q2_revenue_growth": {
+      "id": "energy.vertiv_q2_revenue_growth",
+      "page": "/energy",
+      "required": true,
+      "kind": "published",
+      "numericValue": 24,
+      "display": {
+        "en": "+24% YoY",
+        "zh": "年增 24%"
+      },
+      "unit": "%",
+      "asOf": "2026-07-29T00:00:00.000Z",
+      "sourceIds": [
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "vertiv-q2-2026",
+          "numericValue": 24,
+          "asOf": "2026-07-29T00:00:00.000Z"
+        },
+        {
+          "sourceId": "vertiv-q2-2026-prn",
+          "numericValue": 24,
+          "asOf": "2026-07-29T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified",
+      "previousNumericValue": 24
+    },
+    "models.openai_business_count": {
+      "id": "models.openai_business_count",
+      "page": "/models",
+      "required": true,
+      "kind": "published",
+      "numericValue": 2.5,
+      "unit": "million businesses",
+      "display": {
+        "en": "2.5 million businesses",
+        "zh": "250 萬家企業"
+      },
+      "asOf": "2026-09-08T00:00:00.000Z",
+      "sourceIds": [
+        "openai-work-september"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-work-september",
+          "numericValue": 2.5,
+          "asOf": "2026-09-08T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "models.openai_frontier_output_intensity": {
+      "id": "models.openai_frontier_output_intensity",
+      "page": "/models",
+      "required": true,
+      "kind": "published",
+      "numericValue": 3.1,
+      "unit": "agent-workdays / human-workday",
+      "display": {
+        "en": "3.1 agent-workdays",
+        "zh": "3.1 個代理工作日"
+      },
+      "asOf": "2026-09-06T00:00:00.000Z",
+      "sourceIds": [
+        "openai-research-september"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-research-september",
+          "numericValue": 3.1,
+          "asOf": "2026-09-06T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "pulse.broadcom_ai_revenue": {
+      "id": "pulse.broadcom_ai_revenue",
+      "page": "/",
+      "required": true,
+      "kind": "published",
+      "numericValue": 16.7,
+      "unit": "$B",
+      "display": {
+        "en": "$16.7B",
+        "zh": "$16.7B"
+      },
+      "asOf": "2026-09-02T20:15:00.000Z",
+      "sourceIds": [
+        "broadcom-q3-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "broadcom-q3-2026-prn",
+          "numericValue": 16.7,
+          "asOf": "2026-09-02T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified",
+      "currency": "USD"
+    },
+    "pulse.openai_serving_cost_reduction": {
+      "id": "pulse.openai_serving_cost_reduction",
+      "page": "/",
+      "required": true,
+      "kind": "published",
+      "numericValue": 20,
+      "unit": "%",
+      "display": {
+        "en": "20% reduction",
+        "zh": "降低 20%"
+      },
+      "asOf": "2026-09-08T00:00:00.000Z",
+      "sourceIds": [
+        "openai-work-september"
+      ],
+      "observations": [
+        {
+          "sourceId": "openai-work-september",
+          "numericValue": 20,
+          "asOf": "2026-09-08T00:00:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "sic.onsemi_gaap_gross_margin": {
+      "id": "sic.onsemi_gaap_gross_margin",
+      "page": "/sic",
+      "required": true,
+      "kind": "published",
+      "numericValue": 38.4,
+      "unit": "%",
+      "display": {
+        "en": "38.4% GAAP",
+        "zh": "38.4% GAAP"
+      },
+      "asOf": "2026-08-03T20:05:00.000Z",
+      "sourceIds": [
+        "onsemi-q2-2026-exhibit-mirror",
+        "onsemi-q2-2026-nasdaq"
+      ],
+      "observations": [
+        {
+          "sourceId": "onsemi-q2-2026-nasdaq",
+          "numericValue": 38.4,
+          "asOf": "2026-08-03T20:05:00.000Z"
+        },
+        {
+          "sourceId": "onsemi-q2-2026-exhibit-mirror",
+          "numericValue": 38.4,
+          "asOf": "2026-08-03T20:54:23.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified"
+    },
+    "sic.onsemi_q2_revenue": {
+      "id": "sic.onsemi_q2_revenue",
+      "page": "/sic",
+      "required": true,
+      "kind": "published",
+      "numericValue": 1.6035,
+      "display": {
+        "en": "$1.604B",
+        "zh": "$1.604B"
+      },
+      "unit": "$B",
+      "currency": "USD",
+      "asOf": "2026-08-03T20:05:00.000Z",
+      "sourceIds": [
+        "onsemi-q2-2026-exhibit-mirror",
+        "onsemi-q2-2026-nasdaq"
+      ],
+      "observations": [
+        {
+          "sourceId": "onsemi-q2-2026-nasdaq",
+          "numericValue": 1.6035,
+          "asOf": "2026-08-03T20:05:00.000Z"
+        },
+        {
+          "sourceId": "onsemi-q2-2026-exhibit-mirror",
+          "numericValue": 1.6035,
+          "asOf": "2026-08-03T20:54:23.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified",
+      "previousNumericValue": 1.6035
+    },
+    "stocks.broadcom_adjusted_eps": {
+      "id": "stocks.broadcom_adjusted_eps",
+      "page": "/stocks",
+      "required": true,
+      "kind": "published",
+      "numericValue": 3.32,
+      "unit": "USD",
+      "display": {
+        "en": "$3.32 adjusted",
+        "zh": "$3.32 調整後"
+      },
+      "asOf": "2026-09-02T20:15:00.000Z",
+      "sourceIds": [
+        "broadcom-q3-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "broadcom-q3-2026-prn",
+          "numericValue": 3.32,
+          "asOf": "2026-09-02T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified",
+      "currency": "USD"
+    },
+    "stocks.broadcom_gaap_eps": {
+      "id": "stocks.broadcom_gaap_eps",
+      "page": "/stocks",
+      "required": true,
+      "kind": "published",
+      "numericValue": 2.68,
+      "unit": "USD",
+      "display": {
+        "en": "$2.68 GAAP",
+        "zh": "$2.68 GAAP"
+      },
+      "asOf": "2026-09-02T20:15:00.000Z",
+      "sourceIds": [
+        "broadcom-q3-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "broadcom-q3-2026-prn",
+          "numericValue": 2.68,
+          "asOf": "2026-09-02T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified",
+      "currency": "USD"
+    },
+    "stocks.broadcom_revenue": {
+      "id": "stocks.broadcom_revenue",
+      "page": "/stocks",
+      "required": true,
+      "kind": "published",
+      "numericValue": 29.6,
+      "unit": "$B",
+      "display": {
+        "en": "$29.6B",
+        "zh": "$29.6B"
+      },
+      "asOf": "2026-09-02T20:15:00.000Z",
+      "sourceIds": [
+        "broadcom-q3-2026-prn"
+      ],
+      "observations": [
+        {
+          "sourceId": "broadcom-q3-2026-prn",
+          "numericValue": 29.6,
+          "asOf": "2026-09-02T20:15:00.000Z"
+        }
+      ],
+      "confidence": "high",
+      "status": "verified",
+      "currency": "USD"
+    }
+  },
+  "pages": {
+    "/": {
+      "kpis": [
+        {
+          "metricId": "pulse.broadcom_ai_revenue",
+          "label": {
+            "en": "Broadcom quarterly AI revenue",
+            "zh": "Broadcom 季度 AI 營收"
+          }
+        },
+        {
+          "metricId": "pulse.openai_serving_cost_reduction",
+          "label": {
+            "en": "OpenAI reported serving-cost reduction",
+            "zh": "OpenAI 揭露服務成本降幅"
+          }
+        }
+      ],
+      "changed": true,
+      "changeReasons": [
+        "thesis-reexamined-restated",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-09-11T08:39:06.856Z",
+      "thesisStance": "bullish",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "pulse.broadcom_ai_revenue",
+        "pulse.openai_serving_cost_reduction"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Evidence-led market review",
+          "zh": "證據導向市場檢視"
+        },
+        "title": {
+          "en": "AI spending grows; efficiency changes who captures it",
+          "zh": "AI 支出成長，效率改變獲利分配"
+        },
+        "summary": {
+          "en": "Constructive on realized infrastructure demand, with less conviction in spending extrapolations. Company revenue and serving efficiency point in different directions for revenue per task.",
+          "zh": "看好已實現的基礎設施需求，但降低對支出線性外推的信心。公司營收與服務效率，對每項任務收入的含義並不相同。"
+        },
+        "signal": {
+          "en": "Broadcom quarterly AI revenue",
+          "zh": "Broadcom 季度 AI 營收"
+        },
+        "thesis": {
+          "title": {
+            "en": "AI spending grows; efficiency changes who captures it",
+            "zh": "AI 支出成長，效率改變獲利分配"
+          },
+          "body": {
+            "en": "Constructive on realized infrastructure demand, with less conviction in spending extrapolations. Company revenue and serving efficiency point in different directions for revenue per task.",
+            "zh": "看好已實現的基礎設施需求，但降低對支出線性外推的信心。公司營收與服務效率，對每項任務收入的含義並不相同。"
+          },
+          "tags": {
+            "en": [
+              "Company disclosure",
+              "Analyst interpretation"
+            ],
+            "zh": [
+              "公司揭露",
+              "分析判斷"
+            ]
+          }
+        },
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "Analyst interpretation: adoption can absorb efficiency gains, but neither disclosure establishes aggregate market size. The obsolete model estimates are retired, not refreshed.",
+            "zh": "分析判斷：採用可能吸收效率提升，但兩項揭露都不能證明整體市場規模。舊模型估值已退役，並非更新日期。"
+          },
+          "metricIds": [
+            "pulse.broadcom_ai_revenue",
+            "pulse.openai_serving_cost_reduction"
+          ]
+        },
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "Broadcom reports AI semiconductor revenue of $16.7B.",
+              "zh": "Broadcom 揭露 AI 半導體營收 $16.7B。"
+            },
+            "metricIds": [
+              "pulse.broadcom_ai_revenue"
+            ]
+          }
+        ],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "OpenAI reports a 20% serving-cost reduction; this challenges a constant-cost demand model.",
+              "zh": "OpenAI 揭露服務成本降低 20%，對固定成本需求模型構成反證。"
+            },
+            "metricIds": [
+              "pulse.openai_serving_cost_reduction"
+            ]
+          }
+        ],
+        "catalysts": [
+          {
+            "en": "The next comparable issuer disclosure and independently measured customer outcomes.",
+            "zh": "下次可比發行人揭露與獨立量測的客戶成果。"
+          }
+        ],
+        "analystNotes": [
+          {
+            "en": "Analyst interpretation: adoption can absorb efficiency gains, but neither disclosure establishes aggregate market size. The obsolete model estimates are retired, not refreshed.",
+            "zh": "分析判斷：採用可能吸收效率提升，但兩項揭露都不能證明整體市場規模。舊模型估值已退役，並非更新日期。"
+          }
+        ],
+        "risks": [
+          {
+            "condition": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "by": "2026-12-15",
+            "comparison": {
+              "metricId": "pulse.broadcom_ai_revenue",
+              "operator": "<",
+              "value": 16.7,
+              "unit": "$B",
+              "currency": "USD"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Recheck the cited metric on the same reporting basis.",
+              "zh": "以相同揭露口徑重新查核引用指標。"
+            },
+            "by": "2026-12-15",
+            "threshold": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "comparison": {
+              "metricId": "pulse.broadcom_ai_revenue",
+              "operator": "<",
+              "value": 16.7,
+              "unit": "$B",
+              "currency": "USD"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ]
+      }
+    },
+    "/stocks": {
+      "kpis": [
+        {
+          "metricId": "stocks.broadcom_revenue",
+          "label": {
+            "en": "Broadcom quarterly revenue",
+            "zh": "Broadcom 季度營收"
+          }
+        },
+        {
+          "metricId": "stocks.broadcom_gaap_eps",
+          "label": {
+            "en": "Broadcom GAAP EPS",
+            "zh": "Broadcom GAAP 每股盈餘"
+          }
+        },
+        {
+          "metricId": "stocks.broadcom_adjusted_eps",
+          "label": {
+            "en": "Broadcom adjusted EPS",
+            "zh": "Broadcom 調整後每股盈餘"
+          }
+        }
+      ],
+      "changed": true,
+      "changeReasons": [
+        "thesis-reexamined-restated",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-09-11T08:39:06.856Z",
+      "thesisStance": "bullish",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "stocks.broadcom_revenue",
+        "stocks.broadcom_gaap_eps",
+        "stocks.broadcom_adjusted_eps"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Evidence-led market review",
+          "zh": "證據導向市場檢視"
+        },
+        "title": {
+          "en": "Broadcom earnings strengthen the operating case",
+          "zh": "Broadcom 財報強化營運論點"
+        },
+        "summary": {
+          "en": "Constructive on operating momentum, without a valuation or share-price call. Reported sales support demand; adjusted earnings alone overstate what GAAP shareholders earned.",
+          "zh": "看好營運動能，但不作估值或股價判斷。已認列營收支持需求，僅看調整後盈餘則會高估 GAAP 股東盈餘。"
+        },
+        "signal": {
+          "en": "Broadcom quarterly revenue",
+          "zh": "Broadcom 季度營收"
+        },
+        "thesis": {
+          "title": {
+            "en": "Broadcom earnings strengthen the operating case",
+            "zh": "Broadcom 財報強化營運論點"
+          },
+          "body": {
+            "en": "Constructive on operating momentum, without a valuation or share-price call. Reported sales support demand; adjusted earnings alone overstate what GAAP shareholders earned.",
+            "zh": "看好營運動能，但不作估值或股價判斷。已認列營收支持需求，僅看調整後盈餘則會高估 GAAP 股東盈餘。"
+          },
+          "tags": {
+            "en": [
+              "Company disclosure",
+              "Analyst interpretation"
+            ],
+            "zh": [
+              "公司揭露",
+              "分析判斷"
+            ]
+          }
+        },
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "Analyst interpretation: the demand case is stronger than a blanket stock-buying case. No quote provider is configured, so this edition does not publish prices, returns or multiples.",
+            "zh": "分析判斷：需求論點比全面買股論點更有依據。未配置報價供應商，本期不發布股價、報酬或本益比。"
+          },
+          "metricIds": [
+            "stocks.broadcom_revenue",
+            "stocks.broadcom_gaap_eps",
+            "stocks.broadcom_adjusted_eps"
+          ]
+        },
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "Broadcom reports quarterly revenue of $29.6B.",
+              "zh": "Broadcom 揭露季度營收 $29.6B。"
+            },
+            "metricIds": [
+              "stocks.broadcom_revenue"
+            ]
+          }
+        ],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "GAAP EPS is $2.68 versus adjusted EPS of $3.32; the earnings basis matters.",
+              "zh": "GAAP 每股盈餘 $2.68，調整後為 $3.32；盈餘口徑影響判讀。"
+            },
+            "metricIds": [
+              "stocks.broadcom_gaap_eps",
+              "stocks.broadcom_adjusted_eps"
+            ]
+          }
+        ],
+        "catalysts": [
+          {
+            "en": "The next comparable issuer disclosure and independently measured customer outcomes.",
+            "zh": "下次可比發行人揭露與獨立量測的客戶成果。"
+          }
+        ],
+        "analystNotes": [
+          {
+            "en": "Analyst interpretation: the demand case is stronger than a blanket stock-buying case. No quote provider is configured, so this edition does not publish prices, returns or multiples.",
+            "zh": "分析判斷：需求論點比全面買股論點更有依據。未配置報價供應商，本期不發布股價、報酬或本益比。"
+          }
+        ],
+        "risks": [
+          {
+            "condition": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "by": "2026-12-15",
+            "comparison": {
+              "metricId": "stocks.broadcom_revenue",
+              "operator": "<",
+              "value": 29.6,
+              "unit": "$B",
+              "currency": "USD"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Recheck the cited metric on the same reporting basis.",
+              "zh": "以相同揭露口徑重新查核引用指標。"
+            },
+            "by": "2026-12-15",
+            "threshold": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "comparison": {
+              "metricId": "stocks.broadcom_revenue",
+              "operator": "<",
+              "value": 29.6,
+              "unit": "$B",
+              "currency": "USD"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ]
+      }
+    },
+    "/compute": {
+      "kpis": [
+        {
+          "metricId": "compute.broadcom_ai_revenue_growth",
+          "label": {
+            "en": "Broadcom AI revenue growth",
+            "zh": "Broadcom AI 營收年增率"
+          }
+        },
+        {
+          "metricId": "compute.openai_inference_throughput_per_watt_lower_bound",
+          "label": {
+            "en": "OpenAI chip benchmark, not fleet average",
+            "zh": "OpenAI 晶片基準，非機群平均"
+          }
+        }
+      ],
+      "changed": true,
+      "changeReasons": [
+        "thesis-reexamined-restated",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-09-11T08:39:06.856Z",
+      "thesisStance": "bullish",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "compute.broadcom_ai_revenue_growth",
+        "compute.openai_inference_throughput_per_watt_lower_bound"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Evidence-led market review",
+          "zh": "證據導向市場檢視"
+        },
+        "title": {
+          "en": "Accelerator demand meets a tougher efficiency benchmark",
+          "zh": "加速器需求面對更高效率基準"
+        },
+        "summary": {
+          "en": "Constructive on delivered AI silicon demand; cautious on assuming the same revenue for each unit of useful output. Efficiency is a competitive variable, not proof of falling total demand.",
+          "zh": "看好已交付 AI 晶片需求，但不假設每單位有效產出的收入固定。效率是競爭變數，並非總需求下降的證明。"
+        },
+        "signal": {
+          "en": "Broadcom AI revenue growth",
+          "zh": "Broadcom AI 營收年增率"
+        },
+        "thesis": {
+          "title": {
+            "en": "Accelerator demand meets a tougher efficiency benchmark",
+            "zh": "加速器需求面對更高效率基準"
+          },
+          "body": {
+            "en": "Constructive on delivered AI silicon demand; cautious on assuming the same revenue for each unit of useful output. Efficiency is a competitive variable, not proof of falling total demand.",
+            "zh": "看好已交付 AI 晶片需求，但不假設每單位有效產出的收入固定。效率是競爭變數，並非總需求下降的證明。"
+          },
+          "tags": {
+            "en": [
+              "Company disclosure",
+              "Analyst interpretation"
+            ],
+            "zh": [
+              "公司揭露",
+              "分析判斷"
+            ]
+          }
+        },
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "Analyst interpretation: compare useful workload delivery, not peak claims alone. The benchmark range is dated and company-reported; its lower endpoint is the numeric observation.",
+            "zh": "分析判斷：應比較有效工作交付，不只峰值宣稱。區間是具日期的公司基準揭露，數值觀測採下限。"
+          },
+          "metricIds": [
+            "compute.broadcom_ai_revenue_growth",
+            "compute.openai_inference_throughput_per_watt_lower_bound"
+          ]
+        },
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "Broadcom reports AI semiconductor revenue growth of 221% year over year.",
+              "zh": "Broadcom 揭露 AI 半導體營收年增 221%。"
+            },
+            "metricIds": [
+              "compute.broadcom_ai_revenue_growth"
+            ]
+          }
+        ],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "OpenAI reports 1.5–1.9x peak tokens per rated chip watt in selected benchmarks; this challenges a fixed hardware-intensity assumption.",
+              "zh": "OpenAI 揭露指定基準每額定晶片瓦的峰值 Token 為 1.5–1.9 倍，挑戰固定硬體強度假設。"
+            },
+            "metricIds": [
+              "compute.openai_inference_throughput_per_watt_lower_bound"
+            ]
+          }
+        ],
+        "catalysts": [
+          {
+            "en": "The next comparable issuer disclosure and independently measured customer outcomes.",
+            "zh": "下次可比發行人揭露與獨立量測的客戶成果。"
+          }
+        ],
+        "analystNotes": [
+          {
+            "en": "Analyst interpretation: compare useful workload delivery, not peak claims alone. The benchmark range is dated and company-reported; its lower endpoint is the numeric observation.",
+            "zh": "分析判斷：應比較有效工作交付，不只峰值宣稱。區間是具日期的公司基準揭露，數值觀測採下限。"
+          }
+        ],
+        "risks": [
+          {
+            "condition": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "by": "2026-12-15",
+            "comparison": {
+              "metricId": "compute.broadcom_ai_revenue_growth",
+              "operator": "<",
+              "value": 221,
+              "unit": "%"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Recheck the cited metric on the same reporting basis.",
+              "zh": "以相同揭露口徑重新查核引用指標。"
+            },
+            "by": "2026-12-15",
+            "threshold": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "comparison": {
+              "metricId": "compute.broadcom_ai_revenue_growth",
+              "operator": "<",
+              "value": 221,
+              "unit": "%"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ]
+      }
+    },
+    "/energy": {
+      "kpis": [
+        {
+          "metricId": "energy.vertiv_q2_revenue_growth",
+          "label": {
+            "en": "Vertiv quarterly revenue growth",
+            "zh": "Vertiv 季度營收年增率"
+          }
+        },
+        {
+          "metricId": "energy.openai_inference_throughput_per_watt_lower_bound",
+          "label": {
+            "en": "Chip benchmark range, not grid savings",
+            "zh": "晶片基準區間，非電網節省量"
+          }
+        }
+      ],
+      "changed": true,
+      "changeReasons": [
+        "thesis-reexamined-restated",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-09-11T08:39:06.856Z",
+      "thesisStance": "bullish",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "energy.vertiv_q2_revenue_growth",
+        "energy.openai_inference_throughput_per_watt_lower_bound"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Evidence-led market review",
+          "zh": "證據導向市場檢視"
+        },
+        "title": {
+          "en": "Power infrastructure growth needs workload-level checks",
+          "zh": "電力基礎設施成長需以工作負載核對"
+        },
+        "summary": {
+          "en": "Constructive on realized power and cooling supplier demand. Do not translate a chip-efficiency benchmark into a forecast of grid demand or project energization.",
+          "zh": "看好電力與冷卻供應商的已實現需求。但不能把晶片效率基準換算成電網需求或專案通電預測。"
+        },
+        "signal": {
+          "en": "Vertiv quarterly revenue growth",
+          "zh": "Vertiv 季度營收年增率"
+        },
+        "thesis": {
+          "title": {
+            "en": "Power infrastructure growth needs workload-level checks",
+            "zh": "電力基礎設施成長需以工作負載核對"
+          },
+          "body": {
+            "en": "Constructive on realized power and cooling supplier demand. Do not translate a chip-efficiency benchmark into a forecast of grid demand or project energization.",
+            "zh": "看好電力與冷卻供應商的已實現需求。但不能把晶片效率基準換算成電網需求或專案通電預測。"
+          },
+          "tags": {
+            "en": [
+              "Company disclosure",
+              "Analyst interpretation"
+            ],
+            "zh": [
+              "公司揭露",
+              "分析判斷"
+            ]
+          }
+        },
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "Analyst interpretation: equipment revenue is stronger evidence than an announced power queue. This page carries forward a still-valid quarterly result; it does not imply a new earnings release.",
+            "zh": "分析判斷：設備營收比公告電力排隊量更具證據力。本頁沿用仍在有效期內的季報，並非宣稱發布了新財報。"
+          },
+          "metricIds": [
+            "energy.vertiv_q2_revenue_growth",
+            "energy.openai_inference_throughput_per_watt_lower_bound"
+          ]
+        },
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "Vertiv reported quarterly revenue growth of 24%; the original publication date is retained.",
+              "zh": "Vertiv 已公布季度營收年增 24%；保留原公告日期。"
+            },
+            "metricIds": [
+              "energy.vertiv_q2_revenue_growth"
+            ]
+          }
+        ],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "The cited chip-efficiency range challenges constant energy per token; facility-wide savings remain unmeasured here.",
+              "zh": "所引晶片效率區間挑戰固定每 Token 能耗；此處並無機房整體節能實測。"
+            },
+            "metricIds": [
+              "energy.openai_inference_throughput_per_watt_lower_bound"
+            ]
+          }
+        ],
+        "catalysts": [
+          {
+            "en": "The next comparable issuer disclosure and independently measured customer outcomes.",
+            "zh": "下次可比發行人揭露與獨立量測的客戶成果。"
+          }
+        ],
+        "analystNotes": [
+          {
+            "en": "Analyst interpretation: equipment revenue is stronger evidence than an announced power queue. This page carries forward a still-valid quarterly result; it does not imply a new earnings release.",
+            "zh": "分析判斷：設備營收比公告電力排隊量更具證據力。本頁沿用仍在有效期內的季報，並非宣稱發布了新財報。"
+          }
+        ],
+        "risks": [
+          {
+            "condition": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "by": "2026-11-15",
+            "comparison": {
+              "metricId": "energy.vertiv_q2_revenue_growth",
+              "operator": "<",
+              "value": 24,
+              "unit": "%"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Recheck the cited metric on the same reporting basis.",
+              "zh": "以相同揭露口徑重新查核引用指標。"
+            },
+            "by": "2026-11-15",
+            "threshold": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "comparison": {
+              "metricId": "energy.vertiv_q2_revenue_growth",
+              "operator": "<",
+              "value": 24,
+              "unit": "%"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ]
+      }
+    },
+    "/models": {
+      "kpis": [
+        {
+          "metricId": "models.openai_business_count",
+          "label": {
+            "en": "OpenAI reported business reach",
+            "zh": "OpenAI 揭露企業觸及"
+          }
+        },
+        {
+          "metricId": "models.openai_frontier_output_intensity",
+          "label": {
+            "en": "Internal research effort ratio",
+            "zh": "內部研究投入比率"
+          }
+        }
+      ],
+      "changed": true,
+      "changeReasons": [
+        "thesis-reexamined-restated",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-09-11T08:39:06.856Z",
+      "thesisStance": "bullish",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "models.openai_business_count",
+        "models.openai_frontier_output_intensity"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Evidence-led market review",
+          "zh": "證據導向市場檢視"
+        },
+        "title": {
+          "en": "Business reach expands; internal agent effort is not ROI",
+          "zh": "企業觸及擴大，內部代理工時不等於投資報酬"
+        },
+        "summary": {
+          "en": "Constructive on distribution into business workflows. Keep internal research intensity separate from customer productivity, retention and profitability.",
+          "zh": "看好企業工作流程的分發能力，但將內部研究使用強度與客戶生產力、留存及獲利分開。"
+        },
+        "signal": {
+          "en": "OpenAI reported business reach",
+          "zh": "OpenAI 揭露企業觸及"
+        },
+        "thesis": {
+          "title": {
+            "en": "Business reach expands; internal agent effort is not ROI",
+            "zh": "企業觸及擴大，內部代理工時不等於投資報酬"
+          },
+          "body": {
+            "en": "Constructive on distribution into business workflows. Keep internal research intensity separate from customer productivity, retention and profitability.",
+            "zh": "看好企業工作流程的分發能力，但將內部研究使用強度與客戶生產力、留存及獲利分開。"
+          },
+          "tags": {
+            "en": [
+              "Company disclosure",
+              "Analyst interpretation"
+            ],
+            "zh": [
+              "公司揭露",
+              "分析判斷"
+            ]
+          }
+        },
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "Analyst interpretation: distribution is necessary but insufficient for durable economics. The research figure describes a mid-August internal observation published later, not a fresh weekly measurement.",
+            "zh": "分析判斷：分發是持續獲利的必要而非充分條件。研究數字是稍後公布的八月中旬內部觀測，不是新的每週量測。"
+          },
+          "metricIds": [
+            "models.openai_business_count",
+            "models.openai_frontier_output_intensity"
+          ]
+        },
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "OpenAI reports reaching 2.5 million businesses.",
+              "zh": "OpenAI 揭露觸及 250 萬家企業。"
+            },
+            "metricIds": [
+              "models.openai_business_count"
+            ]
+          }
+        ],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "The internal research figure is 3.1 agent-workdays per human-workday, not verified customer output or paid-seat retention.",
+              "zh": "內部研究數字是每人類工作日 3.1 個代理工作日，不是已驗證的客戶產出或付費席次留存。"
+            },
+            "metricIds": [
+              "models.openai_frontier_output_intensity"
+            ]
+          }
+        ],
+        "catalysts": [
+          {
+            "en": "The next comparable issuer disclosure and independently measured customer outcomes.",
+            "zh": "下次可比發行人揭露與獨立量測的客戶成果。"
+          }
+        ],
+        "analystNotes": [
+          {
+            "en": "Analyst interpretation: distribution is necessary but insufficient for durable economics. The research figure describes a mid-August internal observation published later, not a fresh weekly measurement.",
+            "zh": "分析判斷：分發是持續獲利的必要而非充分條件。研究數字是稍後公布的八月中旬內部觀測，不是新的每週量測。"
+          }
+        ],
+        "risks": [
+          {
+            "condition": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "by": "2026-12-15",
+            "comparison": {
+              "metricId": "models.openai_business_count",
+              "operator": "<",
+              "value": 2.5,
+              "unit": "million businesses"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Recheck the cited metric on the same reporting basis.",
+              "zh": "以相同揭露口徑重新查核引用指標。"
+            },
+            "by": "2026-12-15",
+            "threshold": {
+              "en": "The next comparable company disclosure falls below this edition's cited level.",
+              "zh": "下次可比公司揭露低於本期引用水準。"
+            },
+            "comparison": {
+              "metricId": "models.openai_business_count",
+              "operator": "<",
+              "value": 2.5,
+              "unit": "million businesses"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ]
+      }
+    },
+    "/sic": {
+      "kpis": [
+        {
+          "metricId": "sic.onsemi_q2_revenue",
+          "label": {
+            "en": "onsemi quarterly company revenue",
+            "zh": "onsemi 季度全公司營收"
+          }
+        },
+        {
+          "metricId": "sic.onsemi_gaap_gross_margin",
+          "label": {
+            "en": "onsemi company GAAP gross margin",
+            "zh": "onsemi 全公司 GAAP 毛利率"
+          }
+        }
+      ],
+      "changed": true,
+      "changeReasons": [
+        "thesis-reexamined-restated",
+        "conclusion-changing-evidence"
+      ],
+      "verifiedAt": "2026-09-11T08:39:06.856Z",
+      "thesisStance": "bearish",
+      "previousThesisStance": "neutral",
+      "thesisMetricIds": [
+        "sic.onsemi_gaap_gross_margin",
+        "sic.onsemi_q2_revenue"
+      ],
+      "report": {
+        "eyebrow": {
+          "en": "Evidence-led market review",
+          "zh": "證據導向市場檢視"
+        },
+        "title": {
+          "en": "Do not treat diversified power revenue as pure SiC demand",
+          "zh": "勿將多元功率營收當成純 SiC 需求"
+        },
+        "summary": {
+          "en": "Bearish on using diversified company results as a pure SiC growth proxy. Operating recovery is real evidence, but material-specific demand needs separate disclosure.",
+          "zh": "不看好將多元公司業績當作純 SiC 成長代理指標。營運復甦具證據，但材料別需求需要獨立揭露。"
+        },
+        "signal": {
+          "en": "onsemi quarterly company revenue",
+          "zh": "onsemi 季度全公司營收"
+        },
+        "thesis": {
+          "title": {
+            "en": "Do not treat diversified power revenue as pure SiC demand",
+            "zh": "勿將多元功率營收當成純 SiC 需求"
+          },
+          "body": {
+            "en": "Bearish on using diversified company results as a pure SiC growth proxy. Operating recovery is real evidence, but material-specific demand needs separate disclosure.",
+            "zh": "不看好將多元公司業績當作純 SiC 成長代理指標。營運復甦具證據，但材料別需求需要獨立揭露。"
+          },
+          "tags": {
+            "en": [
+              "Company disclosure",
+              "Analyst interpretation"
+            ],
+            "zh": [
+              "公司揭露",
+              "分析判斷"
+            ]
+          }
+        },
+        "thesisSurvivalRationale": {
+          "text": {
+            "en": "Analyst interpretation: the company release covers multiple power technologies. A stronger company margin would weaken our cautious proxy thesis, but would still not isolate SiC revenue.",
+            "zh": "分析判斷：公司公告涵蓋多種功率技術。全公司毛利率走強會削弱我們對代理指標的審慎論點，但仍無法拆出 SiC 營收。"
+          },
+          "metricIds": [
+            "sic.onsemi_gaap_gross_margin",
+            "sic.onsemi_q2_revenue"
+          ]
+        },
+        "supportingEvidence": [
+          {
+            "text": {
+              "en": "The reported GAAP gross margin of 38.4% is company-wide, not a disclosed SiC margin; it does not establish a material-specific advantage.",
+              "zh": "揭露的 GAAP 毛利率 38.4% 屬全公司而非 SiC 毛利率，不能證明特定材料優勢。"
+            },
+            "metricIds": [
+              "sic.onsemi_gaap_gross_margin"
+            ]
+          }
+        ],
+        "opposingEvidence": [
+          {
+            "text": {
+              "en": "onsemi reported $1.604B revenue, evidence of operating scale that argues against dismissing the supplier's recovery.",
+              "zh": "onsemi 揭露營收 $1.604B，營運規模是不能忽視供應商復甦的反向證據。"
+            },
+            "metricIds": [
+              "sic.onsemi_q2_revenue"
+            ]
+          }
+        ],
+        "catalysts": [
+          {
+            "en": "The next comparable issuer disclosure and independently measured customer outcomes.",
+            "zh": "下次可比發行人揭露與獨立量測的客戶成果。"
+          }
+        ],
+        "analystNotes": [
+          {
+            "en": "Analyst interpretation: the company release covers multiple power technologies. A stronger company margin would weaken our cautious proxy thesis, but would still not isolate SiC revenue.",
+            "zh": "分析判斷：公司公告涵蓋多種功率技術。全公司毛利率走強會削弱我們對代理指標的審慎論點，但仍無法拆出 SiC 營收。"
+          }
+        ],
+        "risks": [
+          {
+            "condition": {
+              "en": "The next comparable company margin exceeds this edition's cited level.",
+              "zh": "下次可比全公司毛利率超過本期引用水準。"
+            },
+            "by": "2026-11-15",
+            "comparison": {
+              "metricId": "sic.onsemi_gaap_gross_margin",
+              "operator": ">",
+              "value": 38.4,
+              "unit": "%"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ],
+        "nextObservations": [
+          {
+            "what": {
+              "en": "Recheck the cited metric on the same reporting basis.",
+              "zh": "以相同揭露口徑重新查核引用指標。"
+            },
+            "by": "2026-11-15",
+            "threshold": {
+              "en": "The next comparable company margin exceeds this edition's cited level.",
+              "zh": "下次可比全公司毛利率超過本期引用水準。"
+            },
+            "comparison": {
+              "metricId": "sic.onsemi_gaap_gross_margin",
+              "operator": ">",
+              "value": 38.4,
+              "unit": "%"
+            },
+            "consequence": {
+              "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+              "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "keySignalIds": [
+    "pulse.broadcom_ai_revenue",
+    "stocks.broadcom_revenue",
+    "compute.broadcom_ai_revenue_growth",
+    "energy.vertiv_q2_revenue_growth",
+    "models.openai_business_count",
+    "sic.onsemi_q2_revenue"
+  ]
+}

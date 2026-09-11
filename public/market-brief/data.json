@@ -1,108 +1,100 @@
 {
   "schemaVersion": 1,
   "cadence": "saturday",
-  "dataCutoff": "2026-08-08T01:00:00.000Z",
+  "dataCutoff": "2026-09-11T08:39:06.856Z",
   "sourceIds": [
-    "amd-q2-2026",
-    "amd-q2-2026-gnw",
-    "amd-q2-2026-sec",
-    "atlas-model",
-    "onsemi-q2-2026-gnw",
-    "onsemi-q2-2026-sec",
-    "stanford-economy",
-    "vistra-q2-2026"
+    "broadcom-q3-2026-prn",
+    "onsemi-q2-2026-exhibit-mirror",
+    "onsemi-q2-2026-nasdaq",
+    "openai-work-september",
+    "vertiv-q2-2026",
+    "vertiv-q2-2026-prn"
   ],
   "signals": [
     {
-      "id": "energy.vistra_helix_commitment",
-      "page": "/energy",
-      "kind": "published-fact",
-      "asOf": "2026-08-07T00:00:00.000Z",
-      "sourceIds": [
-        "vistra-q2-2026"
-      ],
-      "zh": {
-        "label": "電力受限",
-        "value": "最高 $1.0B"
-      },
-      "en": {
-        "label": "Power constrained",
-        "value": "up to $1.0B"
-      }
-    },
-    {
-      "id": "pulse.amd_data_center_revenue",
+      "id": "pulse.broadcom_ai_revenue",
       "page": "/",
       "kind": "published-fact",
-      "asOf": "2026-08-04T20:15:00.000Z",
+      "asOf": "2026-09-02T20:15:00.000Z",
       "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
+        "broadcom-q3-2026-prn"
       ],
       "zh": {
-        "label": "制約輪動",
-        "value": "$6.7B"
+        "label": "Broadcom 季度 AI 營收",
+        "value": "$16.7B"
       },
       "en": {
-        "label": "Constraint rotation",
-        "value": "$6.7B"
+        "label": "Broadcom quarterly AI revenue",
+        "value": "$16.7B"
       }
     },
     {
-      "id": "stocks.amd_q2_revenue_growth",
+      "id": "stocks.broadcom_revenue",
       "page": "/stocks",
       "kind": "published-fact",
-      "asOf": "2026-08-04T20:15:00.000Z",
+      "asOf": "2026-09-02T20:15:00.000Z",
       "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
+        "broadcom-q3-2026-prn"
       ],
       "zh": {
-        "label": "領漲範圍擴大",
-        "value": "年增 50%"
+        "label": "Broadcom 季度營收",
+        "value": "$29.6B"
       },
       "en": {
-        "label": "Leadership broadening",
-        "value": "+50% YoY"
+        "label": "Broadcom quarterly revenue",
+        "value": "$29.6B"
       }
     },
     {
-      "id": "compute.amd_data_center_growth",
+      "id": "compute.broadcom_ai_revenue_growth",
       "page": "/compute",
       "kind": "published-fact",
-      "asOf": "2026-08-04T20:15:00.000Z",
+      "asOf": "2026-09-02T20:15:00.000Z",
       "sourceIds": [
-        "amd-q2-2026",
-        "amd-q2-2026-gnw",
-        "amd-q2-2026-sec"
+        "broadcom-q3-2026-prn"
       ],
       "zh": {
-        "label": "選擇性緊張",
-        "value": "年增 107%"
+        "label": "Broadcom AI 營收年增率",
+        "value": "年增 221%"
       },
       "en": {
-        "label": "Selective tightness",
-        "value": "+107% YoY"
+        "label": "Broadcom AI revenue growth",
+        "value": "+221% YoY"
       }
     },
     {
-      "id": "models.api_deployment_share",
-      "page": "/models",
-      "kind": "atlas-model",
-      "asOf": "2026-08-01T01:00:00.000Z",
+      "id": "energy.vertiv_q2_revenue_growth",
+      "page": "/energy",
+      "kind": "published-fact",
+      "asOf": "2026-07-29T00:00:00.000Z",
       "sourceIds": [
-        "atlas-model",
-        "stanford-economy"
+        "vertiv-q2-2026",
+        "vertiv-q2-2026-prn"
       ],
       "zh": {
-        "label": "採用面擴大",
-        "value": "68%"
+        "label": "Vertiv 季度營收年增率",
+        "value": "年增 24%"
       },
       "en": {
-        "label": "Adoption broadening",
-        "value": "68%"
+        "label": "Vertiv quarterly revenue growth",
+        "value": "+24% YoY"
+      }
+    },
+    {
+      "id": "models.openai_business_count",
+      "page": "/models",
+      "kind": "published-fact",
+      "asOf": "2026-09-08T00:00:00.000Z",
+      "sourceIds": [
+        "openai-work-september"
+      ],
+      "zh": {
+        "label": "OpenAI 揭露企業觸及",
+        "value": "250 萬家企業"
+      },
+      "en": {
+        "label": "OpenAI reported business reach",
+        "value": "2.5 million businesses"
       }
     },
     {
@@ -111,372 +103,198 @@
       "kind": "published-fact",
       "asOf": "2026-08-03T20:05:00.000Z",
       "sourceIds": [
-        "onsemi-q2-2026-gnw",
-        "onsemi-q2-2026-sec"
+        "onsemi-q2-2026-exhibit-mirror",
+        "onsemi-q2-2026-nasdaq"
       ],
       "zh": {
-        "label": "跨入 AI 封裝",
+        "label": "onsemi 季度全公司營收",
         "value": "$1.604B"
       },
       "en": {
-        "label": "AI packaging crossover",
+        "label": "onsemi quarterly company revenue",
         "value": "$1.604B"
       }
     }
   ],
   "featuredSignalIds": [
-    "pulse.amd_data_center_revenue",
-    "stocks.amd_q2_revenue_growth",
-    "compute.amd_data_center_growth",
-    "energy.vistra_helix_commitment",
-    "models.api_deployment_share",
+    "pulse.broadcom_ai_revenue",
+    "stocks.broadcom_revenue",
+    "compute.broadcom_ai_revenue_growth",
+    "energy.vertiv_q2_revenue_growth",
+    "models.openai_business_count",
     "sic.onsemi_q2_revenue"
   ],
   "nextWeekObservations": [
     {
       "what": {
-        "en": "Next read · utility queue",
-        "zh": "下一讀 · 公用事業排隊"
+        "en": "Recheck the cited metric on the same reporting basis.",
+        "zh": "以相同揭露口徑重新查核引用指標。"
       },
-      "by": null,
+      "by": "2026-12-15",
       "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
+        "en": "The next comparable company disclosure falls below this edition's cited level.",
+        "zh": "下次可比公司揭露低於本期引用水準。"
       },
-      "comparison": null,
+      "comparison": {
+        "metricId": "pulse.broadcom_ai_revenue",
+        "operator": "<",
+        "value": 16.7,
+        "unit": "$B",
+        "currency": "USD"
+      },
       "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
+        "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+        "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
       },
-      "legacy": true
+      "legacy": false
     },
     {
       "what": {
-        "en": "Next read · API pricing",
-        "zh": "下一讀 · API 定價"
+        "en": "Recheck the cited metric on the same reporting basis.",
+        "zh": "以相同揭露口徑重新查核引用指標。"
       },
-      "by": null,
+      "by": "2026-12-15",
       "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
+        "en": "The next comparable company disclosure falls below this edition's cited level.",
+        "zh": "下次可比公司揭露低於本期引用水準。"
       },
-      "comparison": null,
+      "comparison": {
+        "metricId": "stocks.broadcom_revenue",
+        "operator": "<",
+        "value": 29.6,
+        "unit": "$B",
+        "currency": "USD"
+      },
       "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
+        "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+        "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
       },
-      "legacy": true
+      "legacy": false
     },
     {
       "what": {
-        "en": "Next read · production cohort",
-        "zh": "下一讀 · 正式環境群組"
+        "en": "Recheck the cited metric on the same reporting basis.",
+        "zh": "以相同揭露口徑重新查核引用指標。"
       },
-      "by": null,
+      "by": "2026-12-15",
       "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
+        "en": "The next comparable company disclosure falls below this edition's cited level.",
+        "zh": "下次可比公司揭露低於本期引用水準。"
       },
-      "comparison": null,
+      "comparison": {
+        "metricId": "compute.broadcom_ai_revenue_growth",
+        "operator": "<",
+        "value": 221,
+        "unit": "%"
+      },
       "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
+        "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+        "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
       },
-      "legacy": true
+      "legacy": false
     },
     {
       "what": {
-        "en": "Next read · revision breadth",
-        "zh": "下一讀 · 上修廣度"
+        "en": "Recheck the cited metric on the same reporting basis.",
+        "zh": "以相同揭露口徑重新查核引用指標。"
       },
-      "by": null,
+      "by": "2026-11-15",
       "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
+        "en": "The next comparable company disclosure falls below this edition's cited level.",
+        "zh": "下次可比公司揭露低於本期引用水準。"
       },
-      "comparison": null,
+      "comparison": {
+        "metricId": "energy.vertiv_q2_revenue_growth",
+        "operator": "<",
+        "value": 24,
+        "unit": "%"
+      },
       "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
+        "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+        "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
       },
-      "legacy": true
+      "legacy": false
     },
     {
       "what": {
-        "en": "Next read · fifty-day participation",
-        "zh": "下一讀 · 五十日線參與率"
+        "en": "Recheck the cited metric on the same reporting basis.",
+        "zh": "以相同揭露口徑重新查核引用指標。"
       },
-      "by": null,
+      "by": "2026-12-15",
       "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
+        "en": "The next comparable company disclosure falls below this edition's cited level.",
+        "zh": "下次可比公司揭露低於本期引用水準。"
       },
-      "comparison": null,
+      "comparison": {
+        "metricId": "models.openai_business_count",
+        "operator": "<",
+        "value": 2.5,
+        "unit": "million businesses"
+      },
       "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
+        "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+        "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
       },
-      "legacy": true
+      "legacy": false
     },
     {
       "what": {
-        "en": "Next read · cash conversion",
-        "zh": "下一讀 · 現金轉化"
+        "en": "Recheck the cited metric on the same reporting basis.",
+        "zh": "以相同揭露口徑重新查核引用指標。"
       },
-      "by": null,
+      "by": "2026-11-15",
       "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
+        "en": "The next comparable company margin exceeds this edition's cited level.",
+        "zh": "下次可比全公司毛利率超過本期引用水準。"
       },
-      "comparison": null,
+      "comparison": {
+        "metricId": "sic.onsemi_gaap_gross_margin",
+        "operator": ">",
+        "value": 38.4,
+        "unit": "%"
+      },
       "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
+        "en": "Reassess the directional thesis; do not carry it forward automatically. No new disclosure means this test remains unresolved.",
+        "zh": "重新檢驗方向性論點，不自動沿用；若無新揭露，此檢驗仍未決。"
       },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · supplier mix",
-        "zh": "下一讀 · 供應商組合"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · workload density",
-        "zh": "下一讀 · 工作負載密度"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · volume ramps",
-        "zh": "下一讀 · 出貨放量"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · Helix project conversion",
-        "zh": "下一讀 · Helix 專案轉化"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · signed power capacity",
-        "zh": "下一讀 · 已簽約電力容量"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · PPA quality",
-        "zh": "下一讀 · PPA 品質"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · outcome cohort",
-        "zh": "下一讀 · 成果群組"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · data flywheel",
-        "zh": "下一讀 · 資料飛輪"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · gross margin",
-        "zh": "下一讀 · 毛利率"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · packaging customers",
-        "zh": "下一讀 · 封裝客戶"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · injunction status",
-        "zh": "下一讀 · 禁制令進度"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
-    },
-    {
-      "what": {
-        "en": "Next read · design wins",
-        "zh": "下一讀 · 設計導入"
-      },
-      "by": null,
-      "threshold": {
-        "en": "Legacy observation; threshold unavailable.",
-        "zh": "舊版觀察；門檻未提供。"
-      },
-      "comparison": null,
-      "consequence": {
-        "en": "Legacy observation cannot test the thesis.",
-        "zh": "舊版觀察無法檢驗論點。"
-      },
-      "legacy": true
+      "legacy": false
     }
   ],
   "labels": {
     "eyebrow": {
-      "en": "AI economy · executive overview",
-      "zh": "AI 經濟 · 高層總覽"
+      "en": "Evidence-led market review",
+      "zh": "證據導向市場檢視"
     },
     "title": {
-      "en": "Markets move. Signals remain.",
-      "zh": "市場變動，信號留存。"
+      "en": "AI spending grows; efficiency changes who captures it",
+      "zh": "AI 支出成長，效率改變獲利分配"
     },
     "summary": {
-      "en": "A weekly operating view of the AI economy—connecting compute supply, power availability, model economics, and enterprise adoption in one decision-ready brief.",
-      "zh": "每週掌握 AI 經濟的營運全貌，將算力供給、電力可用性、模型經濟與企業採用整合成一份可直接決策的情報簡報。"
+      "en": "Constructive on realized infrastructure demand, with less conviction in spending extrapolations. Company revenue and serving efficiency point in different directions for revenue per task.",
+      "zh": "看好已實現的基礎設施需求，但降低對支出線性外推的信心。公司營收與服務效率，對每項任務收入的含義並不相同。"
     },
     "signal": {
-      "en": "Constraint rotation",
-      "zh": "制約輪動"
+      "en": "Broadcom quarterly AI revenue",
+      "zh": "Broadcom 季度 AI 營收"
     },
     "thesis": {
-      "en": "The constraint stack is rotating from silicon to electrons.",
-      "zh": "制約堆疊正從矽晶片轉向電力。"
+      "en": "AI spending grows; efficiency changes who captures it",
+      "zh": "AI 支出成長，效率改變獲利分配"
     },
     "tags": {
       "en": [
-        "Compute supply",
-        "Power access",
-        "Agent economics"
+        "Company disclosure",
+        "Analyst interpretation"
       ],
       "zh": [
-        "算力供給",
-        "電力取得",
-        "代理經濟"
+        "公司揭露",
+        "分析判斷"
       ]
     }
   },
   "methodology": {
-    "zh": "模型值由 AI Market Atlas 依已列來源建模；請查閱來源與方法說明。",
-    "en": "Modeled values are produced by AI Market Atlas from the listed sources; review the sources and methodology."
+    "zh": "本期僅引用具日期的公司揭露，不含模擬報價。季度資料保留原日期；事件與基準不是持續量測。分析判斷與公司宣稱分列。",
+    "en": "This edition cites dated company disclosures, not modeled quotes. Quarterly facts retain their original dates; events and benchmarks are not continuous measurements. Analyst interpretations are separate from company claims."
   },
   "notInvestmentAdvice": {
     "zh": "本快報不構成投資建議。",

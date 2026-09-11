@@ -317,7 +317,8 @@ export function buildMarketBrief(
   assertSnapshotBriefCardinality(snapshot);
   const freshSignals = freshKeySignals(snapshot);
   const signals = freshSignals.map((metric): MarketBriefSignal => {
-    const label = snapshot.pages[metric.page].report.signal;
+    const label = snapshot.pages[metric.page].kpis?.find((kpi) => kpi.metricId === metric.id)?.label
+      ?? snapshot.pages[metric.page].report.signal;
     return {
       id: metric.id,
       page: metric.page,
@@ -347,7 +348,10 @@ export function buildMarketBrief(
       thesis: report.thesis.title,
       tags: report.thesis.tags,
     },
-    methodology: {
+    methodology: snapshot.schemaVersion === 2 ? {
+      zh: "本期僅引用具日期的公司揭露，不含模擬報價。季度資料保留原日期；事件與基準不是持續量測。分析判斷與公司宣稱分列。",
+      en: "This edition cites dated company disclosures, not modeled quotes. Quarterly facts retain their original dates; events and benchmarks are not continuous measurements. Analyst interpretations are separate from company claims.",
+    } : {
       zh: "模型值由 AI Market Atlas 依已列來源建模；請查閱來源與方法說明。",
       en: "Modeled values are produced by AI Market Atlas from the listed sources; review the sources and methodology.",
     },

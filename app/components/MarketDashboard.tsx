@@ -125,6 +125,7 @@ export function MarketDashboard({
   const [horizon, setHorizon] = useState<(typeof horizons)[number]>("Q3");
   const locale = initialLocale;
   const activeConfig = locale === "zh" ? chineseConfig : config;
+  const showModelPanels = !historical && !activeConfig.evidenceOnly;
   const ui = copy[locale];
   const searchHeading = historical
     ? activeConfig.title
@@ -273,7 +274,7 @@ export function MarketDashboard({
             <EditionStatus locale={locale} edition={edition} page={pageEdition} />
           </div>
 
-          {!historical ? <div className="signal-orbit" aria-label={`${activeConfig.orbitLabel}: ${activeConfig.orbitValue}`}>
+          {showModelPanels ? <div className="signal-orbit" aria-label={`${activeConfig.orbitLabel}: ${activeConfig.orbitValue}`}>
             <span className="orbit-axis" aria-hidden="true" />
             <span className="orbit-dot one" aria-hidden="true" />
             <span className="orbit-dot two" aria-hidden="true" />
@@ -294,7 +295,7 @@ export function MarketDashboard({
               </div>
               <EditionStatus locale={locale} metricStatus={kpi.status} />
               {kpi.provenance ? <MetricProvenance metric={kpi.provenance} locale={locale} /> : null}
-              {!historical ? <div className="metric-foot">
+              {showModelPanels ? <div className="metric-foot">
                 <span>{kpi.foot}</span>
                 <MarketDelta value={kpi.delta} className="metric-delta" />
               </div> : null}
@@ -341,7 +342,7 @@ export function MarketDashboard({
               <p className="section-kicker">{ui.sectionOneKicker}</p>
               <h2>{ui.sectionOneTitle}</h2>
             </div>
-            {!historical ? <div className="horizon-selector" aria-label={ui.horizonLabel}>
+            {showModelPanels ? <div className="horizon-selector" aria-label={ui.horizonLabel}>
               {horizons.map((item) => (
                 <button
                   className={horizon === item ? "active" : ""}
@@ -370,7 +371,7 @@ export function MarketDashboard({
               </div>
             </article>
 
-            {!historical ? <aside className="panel chart-panel" aria-label={activeConfig.chart.label}>
+            {showModelPanels ? <aside className="panel chart-panel" aria-label={activeConfig.chart.label}>
               <span className="panel-label">{activeConfig.chart.label} · {horizon}</span>
               <div className="bar-chart" aria-hidden="true">
                 {activeConfig.chart.values.map((value, index) => (
@@ -386,7 +387,7 @@ export function MarketDashboard({
           </div>
         </section>
 
-        {!historical ? <section className="section">
+        {showModelPanels ? <section className="section">
           <div className="section-head">
             <div>
               <p className="section-kicker">{ui.sectionTwoKicker}</p>
@@ -413,7 +414,7 @@ export function MarketDashboard({
           </div>
         </section> : null}
 
-        {!historical ? <section className="section">
+        {showModelPanels ? <section className="section">
           <div className="section-head">
             <div>
               <p className="section-kicker">{ui.sectionThreeKicker}</p>

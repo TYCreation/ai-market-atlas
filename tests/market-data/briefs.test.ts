@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -105,7 +105,7 @@ test("rejects a matching accepted review whose run ID does not bind to the snaps
   }
 });
 
-test("rejects an otherwise accepted month-end snapshot", async () => {
+test("retains month-end provenance without duplicating it as a weekly brief", async () => {
   const root = await mkdtemp(join(tmpdir(), "market-briefs-month-end-"));
   const runs = join(root, "runs");
   const reviews = join(root, "reviews");
@@ -118,7 +118,8 @@ test("rejects an otherwise accepted month-end snapshot", async () => {
       writeFile(join(reviews, "2026-08-29-month-end.json"), JSON.stringify(acceptedReview(value))),
     ]);
 
-    await assert.rejects(loadPublishedBriefs(runs, reviews), /weekly cadence/i);
+    assert.deepEqual(await loadPublishedBriefs(runs, reviews), []);
+    assert.equal(JSON.parse(await readFile(join(runs, "2026-08-29-month-end.json"), "utf8")).runId, value.runId);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
