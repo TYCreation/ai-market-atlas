@@ -42,9 +42,10 @@ npx hyperframes lint --json     # machine-readable output for CI
 npx hyperframes docs <topic> # reference docs in terminal
 ```
 
-> **`npm run dev` is a long-running server, not a one-shot command.** It blocks until stopped.
-> In Claude Code, always run it with `run_in_background: true`. Never run it as a foreground
-> command — it will time out and the server will die, breaking the browser preview.
+> **Agents must use `npx hyperframes preview --background` for Studio handoff.** Do not rely
+> on a shell/tool `run_in_background` wrapper around `npm run dev`: that foreground process
+> remains owned by the invoking session and can disappear while the browser stays open.
+> Verify with `preview --status`, and stop it with `preview --stop` after review.
 
 > **Pinned CLI version.** These scripts pin an exact `hyperframes@X.Y.Z` so this project re-renders identically over time. Weeks later that pin lags fixes shipped since. To move up: `npx hyperframes@latest upgrade --project . --check` (shows the delta), then `npx hyperframes@latest upgrade --project .` to rewrite the pins. Always unpinned — the pinned script re-runs the old version against itself.
 
@@ -83,13 +84,13 @@ Fix all errors before presenting the result. Warnings should be reviewed before 
 
 ## Key Rules
 
-1. Every timed element needs `data-start`, `data-duration`, and `data-track-index`
-2. Elements with timing **MUST** have `class="clip"` — the framework uses this for visibility control
+1. Every timed element needs `data-start` and a duration. `data-track-index` is an optional Studio display lane the render never reads
+2. Give timed visual elements `class="clip"`. Visibility keys off `data-start`, but the shared `.clip` CSS gives a scene its full-frame box, and `lint` warns without it
 3. Timelines must be paused and registered on `window.__timelines`:
    ```js
    window.__timelines = window.__timelines || {};
    window.__timelines["composition-id"] = gsap.timeline({ paused: true });
    ```
-4. Videos use `muted` with a separate `<audio>` element for the audio track
+4. A video with sound keeps it on the `<video>` (`data-has-audio="true"`, no `muted`). Use a separate `<audio>` for music, voiceover, replacement audio or J/L cuts. Silent footage and b-roll: `muted`.
 5. Sub-compositions use `data-composition-src="compositions/file.html"` to reference other HTML files
 6. Only deterministic logic — no `Date.now()`, no `Math.random()`, no network fetches
